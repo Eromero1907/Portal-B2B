@@ -1,0 +1,58 @@
+{
+  "caso_1_orden_300_lineas": {
+    "id": 1,
+    "descripcion": "Orden con 300 líneas de detalle (estrés de payload y memoria de transacción)",
+    "tabla": "ordenes.ordenes_compra y ordenes.lineas_orden",
+    "orden_id": 101,
+    "total_lineas": 300
+  },
+  "caso_2_contrato_vencido_ayer": {
+    "id": 2,
+    "descripcion": "Contrato de suministro que venció ayer (frontera temporal estricta de validación)",
+    "tabla": "proveedores.contratos_suministro",
+    "contrato_id": 2,
+    "fecha_fin": "2026-09-15"
+  },
+  "caso_3_contrato_vence_hoy_mediodia": {
+    "id": 3,
+    "descripcion": "Contrato que vence hoy a mediodía (evalúa zona horaria y comparador >= vs >)",
+    "tabla": "proveedores.contratos_suministro",
+    "contrato_id": 3,
+    "fecha_fin": "2026-09-16"
+  },
+  "caso_4_ultima_franja_disponible": {
+    "id": 4,
+    "descripcion": "Última franja horaria disponible del día en un CEDI (capacidad_total=10, capacidad_reservada=9)",
+    "tabla": "logistica.franjas_cedi",
+    "franja_id": 91150,
+    "cedi_id": 1,
+    "fecha": "2026-09-16"
+  },
+  "caso_5_proveedor_sin_contrato": {
+    "id": 5,
+    "descripcion": "Proveedor registrado pero sin contrato de suministro vigente (camino de rechazo)",
+    "tabla": "proveedores.proveedores",
+    "proveedor_id": 55555,
+    "condicion": "El proveedor_id 55555 NO existe en contratos.csv"
+  },
+  "caso_6_sku_fuera_catalogo": {
+    "id": 6,
+    "descripcion": "SKU fuera del catálogo negociado del proveedor de la orden (camino de rechazo de negocio)",
+    "tabla": "ordenes.lineas_orden",
+    "orden_id": 606
+  },
+  "caso_7_proveedor_hot": {
+    "id": 7,
+    "descripcion": "Proveedor 'Hot' con más de 5,000 órdenes de compra (evalúa hot-partitioning y sesgo de caché)",
+    "tabla": "proveedores.proveedores y ordenes.ordenes_compra",
+    "proveedor_id": 1,
+    "ordenes_generadas": 5348
+  },
+  "caso_8_mes_sin_ordenes": {
+    "id": 8,
+    "descripcion": "Proveedor activo con contrato pero con 0 órdenes en un mes específico (rompe cálculos OTIF)",
+    "tabla": "ordenes.ordenes_compra",
+    "proveedor_id": 10,
+    "mes_sin_ordenes": "2025-06"
+  }
+}

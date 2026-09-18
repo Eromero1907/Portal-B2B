@@ -1,0 +1,32 @@
+.DS_Store
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Archivos pesados generados
+datos/csv/*.csv
+
+# Documentación del proyecto (no incluir en repositorio)
+Entregable 1/
+Entregable 2/
+*.md
+*.docx
+*.xlsx
+*.txt
+*.html
+.agents/
+
+# Scripts auxiliares de edición de documentos del Entregable 1
+check_style*.py
+clean_spanish.py
+edit_docx.py
+find_*.py
+fix_*.py
+get_tables*.py
+inspect_*.py
+list_styles.py
+modify_docx.py
+replace_*.py
+update_docx*.py
+verify_docx.py
+view_41.py
