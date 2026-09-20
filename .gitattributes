@@ -1,0 +1,8 @@
+# Los scripts que corren en bash/make/psql deben conservar fin de línea LF aunque el
+# checkout ocurra en Windows con core.autocrlf=true (un \r al final rompe "bash cargar.sh").
+*.sh        text eol=lf
+Makefile    text eol=lf
+*.sql       text eol=lf
+*.py        text eol=lf
+*.yml       text eol=lf
+*.json      text eol=lf

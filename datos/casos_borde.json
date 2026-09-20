@@ -39,14 +39,17 @@
     "id": 6,
     "descripcion": "SKU fuera del catálogo negociado del proveedor de la orden (camino de rechazo de negocio)",
     "tabla": "ordenes.lineas_orden",
-    "orden_id": 606
+    "orden_id": 606,
+    "linea_id": 4081,
+    "sku_id_ajeno": 2,
+    "condicion": "Única línea de una orden con contrato cuyo SKU no es oferta del proveedor de la orden"
   },
   "caso_7_proveedor_hot": {
     "id": 7,
     "descripcion": "Proveedor 'Hot' con más de 5,000 órdenes de compra (evalúa hot-partitioning y sesgo de caché)",
     "tabla": "proveedores.proveedores y ordenes.ordenes_compra",
     "proveedor_id": 1,
-    "ordenes_generadas": 5348
+    "ordenes_generadas": 5293
   },
   "caso_8_mes_sin_ordenes": {
     "id": 8,

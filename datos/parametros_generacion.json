@@ -1,0 +1,33 @@
+{
+  "seed": 42,
+  "scale": "min",
+  "fecha_pivote": "2026-09-16",
+  "volumenes": {
+    "proveedores": 100000,
+    "contratos": 10000,
+    "skus": 200000,
+    "franjas_dias": 730,
+    "franjas_por_dia_cedi": 25,
+    "ordenes": 300000,
+    "eventos": 500000
+  },
+  "zipf_proveedores": {
+    "modelo": "Zipf-Mandelbrot",
+    "s": 1.15,
+    "q": 1940,
+    "peso": "1 / (rango + q) ** s",
+    "ordenes_forzadas_proveedor_1": 5250
+  },
+  "zipf_catalogo_global": {
+    "s": 0.8,
+    "aplica_a": "líneas de órdenes de proveedores sin contrato"
+  },
+  "sesgo_catalogo": {
+    "p_oferta_popular": 0.57,
+    "fraccion_ofertas_populares": 0.1
+  },
+  "entrega": {
+    "max_retraso_dias": 5,
+    "fiabilidad": "0.72 + 0.26 * ((id * m) % 1000 / 999), m=2654435761 (a tiempo), m=40503 (completa)"
+  }
+}

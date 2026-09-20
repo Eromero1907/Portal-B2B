@@ -8,8 +8,10 @@ Cumple con:
 - Streaming directo a disco en CSV (bajo consumo de memoria RAM)
 - Determinismo total con parámetro --seed (por defecto 42)
 - Resolución aritmética de llaves foráneas (cero consultas a BD)
-- Distribución Zipf de proveedores (s=0.92, q=420): 5% concentra ~40%, 1% concentra ~18%
-- Sesgo de catálogo: top 10% de SKU concentra ~60% de líneas (s=0.80)
+- Distribución Zipf-Mandelbrot de proveedores (s=1.15, q=1940): 5% concentra ~40%, 1% concentra ~15%
+- Sesgo de catálogo: top 10% de SKU concentra ~60% de líneas
+- Integridad de negocio: cada línea es una oferta del propio proveedor (RN-04) al precio negociado (RN-05)
+- Datos de entrega (fecha_compromiso, fecha_entrega, cantidad_entregada) para OTIF y fill rate
 - Estacionalidad mensual: últimos 3 días hábiles concentran el 25% de órdenes
 - Estacionalidad horaria: pico 8:00 - 11:00 a.m., valle nocturno
 - Siembra determinista de los 8 casos borde con manifiesto JSON
@@ -58,10 +60,19 @@ SCALES = {
     }
 }
 
-# Parámetros estadísticos documentados
-ZIPF_PROV_S = 0.92
-ZIPF_PROV_Q = 420
-ZIPF_CATALOG_S = 0.80
+# Parámetros estadísticos documentados (calibrados numéricamente: con las 5 250 órdenes forzadas al
+# proveedor 1 (caso borde 7) el modelo esperado da top 1 % ≈ 15,0 % · top 5 % ≈ 39,9 % · top 20 % ≈ 68,6 %)
+ZIPF_PROV_S = 1.15      # exponente s de Zipf-Mandelbrot sobre proveedores: peso(i) = 1 / (i + q)^s
+ZIPF_PROV_Q = 1940      # desplazamiento q (aplana la cabeza de la distribución)
+ZIPF_CATALOG_S = 0.80   # Zipf global sobre SKU: solo para líneas de órdenes de proveedores SIN contrato (rechazadas)
+
+# Órdenes de proveedores con contrato: cada línea toma una oferta del PROPIO proveedor (RN-04).
+# Con prob. P_OFERTA_POPULAR la oferta sale del 10 % "popular" de las ofertas del proveedor (sesgo de catálogo).
+P_OFERTA_POPULAR = 0.57
+FRACCION_OFERTAS_POPULARES = 0.10
+
+# Entrega (insumo de OTIF y fill rate, Q4). Fiabilidad por proveedor derivada aritméticamente de su id (sin RNG).
+ENTREGA_MAX_RETRASO_DIAS = 5
 
 CATEGORIAS = [
     "Abarrotes", "Lácteos y Huevos", "Carnes y Aves", "Frutas y Verduras",
@@ -88,6 +99,26 @@ def muestrear_zipf(cdf, rng):
     """Muestrea un índice 1-based según la CDF provista."""
     u = rng.random()
     return bisect.bisect_left(cdf, u) + 1
+
+
+def precio_negociado(sku_id):
+    """Precio negociado del SKU: se usa en sku_catalogo.csv y se copia a la línea (RN-05: precio = negociado)."""
+    return round(1500.0 + (sku_id % 500) * 150.5, 2)
+
+
+def oferta_sku(proveedor_id, k, num_contratos):
+    """SKU (id) de la k-ésima oferta de un proveedor con contrato: inversa aritmética de
+    proveedor_id = ((sku_id - 1) % num_contratos) + 1. Sin consultar la base."""
+    return proveedor_id + k * num_contratos
+
+
+def num_ofertas(proveedor_id, num_skus, num_contratos):
+    return (num_skus - proveedor_id) // num_contratos + 1
+
+
+def fiabilidad(proveedor_id, multiplicador):
+    """Probabilidad de cumplimiento del proveedor en [0.72, 0.98], determinista a partir de su id."""
+    return 0.72 + 0.26 * (((proveedor_id * multiplicador) % 1000) / 999.0)
 
 
 def generar_fechas_24_meses(fecha_fin_base, num_dias):
@@ -186,7 +217,8 @@ def main():
         for c_id in range(1, num_contratos + 1):
             p_id = c_id
             num_contrato = f"CTR-2026-{c_id:06d}"
-            f_ini = fecha_pivote - timedelta(days=rng.randint(400, 700))
+            # inicio anterior a la ventana de 24 meses: el contrato cubre todo el histórico de órdenes (RN-02)
+            f_ini = fecha_pivote - timedelta(days=rng.randint(740, 900))
 
             if c_id == 2:
                 f_fin = fecha_pivote - timedelta(days=1)
@@ -239,7 +271,7 @@ def main():
             p_id = ((sku_id - 1) % num_contratos) + 1
             cat = CATEGORIAS[sku_id % len(CATEGORIAS)]
             nombre = f"Producto {cat} Ref {sku_id}"
-            precio = round(1500.0 + (sku_id % 500) * 150.5, 2)
+            precio = precio_negociado(sku_id)
             v_desde = (fecha_pivote - timedelta(days=730)).isoformat()
             v_hasta = (fecha_pivote + timedelta(days=365)).isoformat()
             created_at = v_desde + "T00:00:00Z"
@@ -334,17 +366,27 @@ def main():
     linea_id = 1
     cb1_orden_id = 101
     cb6_orden_id = 606
+    cb6_sku_ajeno = None
+    cb6_linea_id = None
     cb7_hot_prov_id = 1
     cb8_zero_prov_id = 10
     mes_excluido = (2025, 6)
 
     conteo_ordenes_por_prov = {}
 
+    # Aritmética de llaves (sin consultar la base):
+    #   franja_id = dia_idx * (5 * franjas_por_dia) + (cedi - 1) * franjas_por_dia + slot + 1
+    #   sku_id de la k-ésima oferta del proveedor p = p + k * num_contratos
+    dias_sim = len(fechas_simulacion)
+    inicio_sim = fechas_simulacion[0]
+    franjas_por_dia_total = len(CEDIS) * franjas_por_dia
+    ofertas_populares = max(1, round(FRACCION_OFERTAS_POPULARES * (num_skus // num_contratos)))
+
     with open(f_ord_path, "w", newline="", encoding="utf-8") as f_ord, \
          open(f_lin_path, "w", newline="", encoding="utf-8") as f_lin:
 
-        f_ord.write("id,numero_orden,proveedor_id,franja_id,fecha_emision,estado,total_orden,idempotency_key,created_at\n")
-        f_lin.write("id,orden_id,sku_id,cantidad,precio_unitario,subtotal\n")
+        f_ord.write("id,numero_orden,proveedor_id,franja_id,fecha_emision,estado,total_orden,idempotency_key,created_at,fecha_compromiso,fecha_entrega\n")
+        f_lin.write("id,orden_id,sku_id,cantidad,precio_unitario,subtotal,cantidad_entregada\n")
 
         ord_lines = []
         lin_lines = []
@@ -380,7 +422,12 @@ def main():
             segundo = rng.randint(0, 59)
             f_emision = f"{f_date.isoformat()}T{hora:02d}:{minuto:02d}:{segundo:02d}Z"
 
-            franja_fk = rng.randint(1, total_franjas)
+            # La franja reservada cae 1-7 días después de la emisión; la fecha de la franja se copia a la
+            # orden como fecha_compromiso (snapshot: evita un JOIN entre esquemas para calcular OTIF).
+            dia_idx = (f_date - inicio_sim).days
+            comp_idx = min(dia_idx + rng.randint(1, 7), dias_sim - 1)
+            franja_fk = comp_idx * franjas_por_dia_total + rng.randrange(franjas_por_dia_total) + 1
+            fecha_compromiso = fechas_simulacion[comp_idx]
 
             # Si el proveedor no tiene contrato vigente (> num_contratos), orden rechazada
             if p_id > num_contratos:
@@ -402,27 +449,60 @@ def main():
                 else:
                     num_lineas = rng.randint(16, 35)
 
+            # Entrega (solo órdenes CONFIRMADAS cuya entrega ya ocurrió a la fecha pivote):
+            # a tiempo con prob. fiabilidad(p); completa con prob. fiabilidad'(p). Insumo de OTIF y fill rate.
+            fecha_entrega = None
+            entrega_completa = False
+            if estado_ord == "CONFIRMADA":
+                retraso = 0 if rng.random() < fiabilidad(p_id, 2654435761) else rng.randint(1, ENTREGA_MAX_RETRASO_DIAS)
+                f_ent = fecha_compromiso + timedelta(days=retraso)
+                if f_ent <= fecha_pivote:
+                    fecha_entrega = f_ent
+                    entrega_completa = rng.random() < fiabilidad(p_id, 40503)
+
             total_orden = 0.0
+            n_ofertas = num_ofertas(p_id, num_skus, num_contratos) if p_id <= num_contratos else 0
+            n_pop = min(ofertas_populares, n_ofertas)
 
             for l_idx in range(num_lineas):
-                sku_fk = muestrear_zipf(cdf_skus, rng)
+                if p_id <= num_contratos:
+                    # Proveedor con contrato: la línea es una oferta de SU catálogo negociado (RN-04)
+                    if n_pop == n_ofertas or rng.random() < P_OFERTA_POPULAR:
+                        k = rng.randrange(n_pop)
+                    else:
+                        k = n_pop + rng.randrange(n_ofertas - n_pop)
+                    sku_fk = oferta_sku(p_id, k, num_contratos)
+                else:
+                    # Proveedor sin contrato (orden RECHAZADA): no tiene ofertas; SKU global con sesgo Zipf
+                    sku_fk = muestrear_zipf(cdf_skus, rng)
 
+                # Caso Borde 6: una línea con SKU de OTRO proveedor (fuera de su catálogo negociado)
                 if o_id == cb6_orden_id and l_idx == 0:
-                    sku_fk = (sku_fk % num_skus) + 1
+                    sku_fk = oferta_sku(p_id % num_contratos + 1, 0, num_contratos)
+                    cb6_sku_ajeno = sku_fk
+                    cb6_linea_id = linea_id
 
                 cantidad = rng.randint(5, 100)
-                precio_unitario = 2000.0 + (sku_fk % 300) * 120.0
+                precio_unitario = precio_negociado(sku_fk)   # RN-05: precio de la línea = precio negociado
                 subtotal = cantidad * precio_unitario
                 total_orden += subtotal
 
-                lin_lines.append(f"{linea_id},{o_id},{sku_fk},{cantidad},{precio_unitario:.2f},{subtotal:.2f}\n")
+                if fecha_entrega is None:
+                    cant_entregada = ""
+                elif entrega_completa or rng.random() < 0.5:
+                    cant_entregada = cantidad
+                else:
+                    cant_entregada = max(0, int(cantidad * rng.uniform(0.4, 0.95)))
+
+                lin_lines.append(f"{linea_id},{o_id},{sku_fk},{cantidad},{precio_unitario:.2f},{subtotal:.2f},{cant_entregada}\n")
                 linea_id += 1
 
                 if len(lin_lines) >= 10000:
                     f_lin.writelines(lin_lines)
                     lin_lines.clear()
 
-            ord_lines.append(f"{o_id},{num_orden},{p_id},{franja_fk},{f_emision},{estado_ord},{total_orden:.2f},{idemp_key},{f_emision}\n")
+            ord_lines.append(f"{o_id},{num_orden},{p_id},{franja_fk},{f_emision},{estado_ord},{total_orden:.2f},{idemp_key},{f_emision},"
+                             f"{fecha_compromiso.isoformat()},{fecha_entrega.isoformat() if fecha_entrega else ''}\n")
             conteo_ordenes_por_prov[p_id] = conteo_ordenes_por_prov.get(p_id, 0) + 1
 
             if len(ord_lines) >= 10000:
@@ -457,7 +537,10 @@ def main():
         "id": 6,
         "descripcion": "SKU fuera del catálogo negociado del proveedor de la orden (camino de rechazo de negocio)",
         "tabla": "ordenes.lineas_orden",
-        "orden_id": cb6_orden_id
+        "orden_id": cb6_orden_id,
+        "linea_id": cb6_linea_id,
+        "sku_id_ajeno": cb6_sku_ajeno,
+        "condicion": "Única línea de una orden con contrato cuyo SKU no es oferta del proveedor de la orden"
     }
     manifiesto_casos_borde["caso_7_proveedor_hot"] = {
         "id": 7,
@@ -491,7 +574,9 @@ def main():
             tipo, modulo = rng.choice(tipos_evento)
             ent_id = rng.randint(1, num_ordenes)
             payload = f'{{"evento_id":{e_id},"tipo":"{tipo}","usuario":"system_b2b","status":"SUCCESS"}}'
-            lines.append(f"{e_id},{f_evt},{tipo},{modulo},{ent_id},{payload}\n")
+            # El JSON contiene comas y comillas: se entrecomilla (RFC 4180) para que COPY ... CSV lo lea como un solo campo
+            payload_csv = '"' + payload.replace('"', '""') + '"'
+            lines.append(f"{e_id},{f_evt},{tipo},{modulo},{ent_id},{payload_csv}\n")
 
             if len(lines) >= 10000:
                 f.writelines(lines)
@@ -508,10 +593,28 @@ def main():
     # -----------------------------------------------------------------------
     # GUARDAR MANIFIESTO DE CASOS BORDE Y REPORTE
     # -----------------------------------------------------------------------
+    import json
     f_json_path = os.path.join("datos", "casos_borde.json")
-    with open(f_json_path, "w", encoding="utf-8") as f_json:
-        import json
-        json.dump(manifiesto_casos_borde, f_json, indent=2, ensure_ascii=False)
+    with open(f_json_path, "w", encoding="utf-8", newline="\n") as f_json:
+        json.dump(dict(sorted(manifiesto_casos_borde.items(), key=lambda kv: kv[1]["id"])),
+                  f_json, indent=2, ensure_ascii=False)
+
+    # Parámetros de generación: fuente única para documentar s (Zipf) y reproducir el conjunto
+    f_par_path = os.path.join("datos", "parametros_generacion.json")
+    with open(f_par_path, "w", encoding="utf-8", newline="\n") as f_par:
+        json.dump({
+            "seed": args.seed,
+            "scale": args.scale,
+            "fecha_pivote": fecha_pivote.isoformat(),
+            "volumenes": cfg,
+            "zipf_proveedores": {"modelo": "Zipf-Mandelbrot", "s": ZIPF_PROV_S, "q": ZIPF_PROV_Q,
+                                 "peso": "1 / (rango + q) ** s", "ordenes_forzadas_proveedor_1": 5250},
+            "zipf_catalogo_global": {"s": ZIPF_CATALOG_S, "aplica_a": "líneas de órdenes de proveedores sin contrato"},
+            "sesgo_catalogo": {"p_oferta_popular": P_OFERTA_POPULAR,
+                               "fraccion_ofertas_populares": FRACCION_OFERTAS_POPULARES},
+            "entrega": {"max_retraso_dias": ENTREGA_MAX_RETRASO_DIAS,
+                        "fiabilidad": "0.72 + 0.26 * ((id * m) % 1000 / 999), m=2654435761 (a tiempo), m=40503 (completa)"},
+        }, f_par, indent=2, ensure_ascii=False)
 
     duracion_total = round(time.time() - t_inicio, 2)
     total_filas = sum(m["filas"] for m in metricas_archivos.values())

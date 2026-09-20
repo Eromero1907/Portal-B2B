@@ -1,0 +1,43 @@
+# docker-compose.yml — PostgreSQL del proyecto (Entregable 2)
+# `make db-up` lo levanta y espera a que esté sano. Todo el flujo (`make datos`) solo necesita Docker:
+# psql corre dentro de este contenedor con el repo montado en /workspace (ver datos/psql.sh).
+#
+# Parámetros del servidor declarados aquí porque las mediciones (p50/p95/p99) dependen de ellos:
+#   shared_buffers / effective_cache_size  memoria para caché de páginas (afecta "frío" vs "caliente")
+#   work_mem                               memoria por sort/hash de Q4
+#   max_wal_size                           evita checkpoints forzados durante la carga masiva
+#   track_io_timing                        muestra I/O read time en EXPLAIN (ANALYZE, BUFFERS)
+# Se dejan por defecto (a propósito): fsync=on, synchronous_commit=on, random_page_cost=4. Así el INSERT fila
+# por fila con autocommit paga su costo real de commit y los planes son los del planeador sin ajustes.
+services:
+  db:
+    image: postgres:16
+    container_name: pg-portal-b2b
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: portal        # solo desarrollo local; el puerto no debe exponerse fuera de tu máquina
+    ports:
+      - "127.0.0.1:5433:5432"          # acceso desde el host: localhost:5433 (usuario postgres, base portal_b2b)
+    command:
+      - postgres
+      - -c
+      - shared_buffers=512MB
+      - -c
+      - effective_cache_size=1GB
+      - -c
+      - work_mem=32MB
+      - -c
+      - max_wal_size=2GB
+      - -c
+      - track_io_timing=on
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - .:/workspace:ro                # CSV, modelo-fisico.sql y consultas visibles para psql \copy y -f
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+volumes:
+  pgdata:
