@@ -1,3 +1,6 @@
+import os
+from pathlib import Path
+
 from db import conectar, preparar_sesion, cargar_pools, RAIZ
 from queries import (
     medir_consulta, construir_params_q2, construir_params_q4,
@@ -57,8 +60,11 @@ if __name__ == "__main__":
     res_keyset = medir_q5_keyset(conn)
     agregar_resultado(todas_mediciones, todos_percentiles, "q5", "keyset", res_keyset)
 
-    guardar_mediciones_csv(todas_mediciones, RAIZ / "reportes" / "mediciones.csv")
-    guardar_percentiles_csv(todos_percentiles, RAIZ / "reportes" / "percentiles.csv")
-    print("\nGuardado: reportes/mediciones.csv y reportes/percentiles.csv")
+    # SALIDA_DIR (opcional, Entregable 3): carpeta de una corrida de línea base. Por defecto reportes/, como en el E2.
+    salida = Path(os.environ["SALIDA_DIR"]) if os.environ.get("SALIDA_DIR") else RAIZ / "reportes"
+    salida.mkdir(parents=True, exist_ok=True)
+    guardar_mediciones_csv(todas_mediciones, salida / "mediciones.csv")
+    guardar_percentiles_csv(todos_percentiles, salida / "percentiles.csv")
+    print(f"\nGuardado: {salida / 'mediciones.csv'} y {salida / 'percentiles.csv'}")
 
     conn.close()

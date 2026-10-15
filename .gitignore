@@ -30,3 +30,19 @@ replace_*.py
 update_docx*.py
 verify_docx.py
 view_41.py
+
+# ---------------------------------------------------------------------
+# Entregable 3: excepciones a las reglas de documentación de arriba
+# (la rúbrica exige instrucciones y evidencia EN el repositorio)
+# ---------------------------------------------------------------------
+!README.md
+!baseline/*.md
+!**/requirements.txt
+!requirements-dev.txt
+!resultados/**/*.txt
+!baseline/corridas/**/*.txt
+
+# Entorno virtual del host (make venv) y subconjunto S que regenera baseline/estrategias.py
+.venv/
+datos/csv/subset_*.csv
+.pytest_cache/

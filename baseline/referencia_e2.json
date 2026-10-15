@@ -1,0 +1,194 @@
+{
+  "fuente": "Entregable2_Informe_Final.docx (informe final entregado del E2): secciones 4.1, 4.2, 5.2 y 5.3",
+  "nota": "Referencia oficial del E2 para la meta -10 %. reportes/percentiles.csv del repo es una corrida posterior (commit e988169, 21-sep-2026) y no se usa como referencia.",
+  "maquina_e2": "Intel Core i5-12500H, 16 GB RAM, Windows 11, PostgreSQL 16.15 en Docker Desktop (WSL2)",
+  "consultas": [
+    {
+      "consulta": "q1",
+      "escenario": "caliente",
+      "n": 200,
+      "p50_ms": 0.52,
+      "p95_ms": 0.7,
+      "p99_ms": 1.05
+    },
+    {
+      "consulta": "q1",
+      "escenario": "frio",
+      "n": 200,
+      "p50_ms": 0.53,
+      "p95_ms": 0.6,
+      "p99_ms": 0.69
+    },
+    {
+      "consulta": "q2",
+      "escenario": "caliente",
+      "n": 200,
+      "p50_ms": 0.54,
+      "p95_ms": 0.64,
+      "p99_ms": 0.74
+    },
+    {
+      "consulta": "q2",
+      "escenario": "frio",
+      "n": 200,
+      "p50_ms": 0.54,
+      "p95_ms": 0.66,
+      "p99_ms": 0.78
+    },
+    {
+      "consulta": "q3",
+      "escenario": "caliente",
+      "n": 35,
+      "p50_ms": 0.53,
+      "p95_ms": 0.81,
+      "p99_ms": 0.98
+    },
+    {
+      "consulta": "q3",
+      "escenario": "frio",
+      "n": 200,
+      "p50_ms": 0.54,
+      "p95_ms": 0.97,
+      "p99_ms": 1.89
+    },
+    {
+      "consulta": "q4",
+      "escenario": "caliente",
+      "n": 200,
+      "p50_ms": 1.15,
+      "p95_ms": 11.17,
+      "p99_ms": 11.48
+    },
+    {
+      "consulta": "q4",
+      "escenario": "frio",
+      "n": 200,
+      "p50_ms": 1.14,
+      "p95_ms": 1.75,
+      "p99_ms": 2.13
+    },
+    {
+      "consulta": "q5",
+      "escenario": "pagina1",
+      "n": 200,
+      "p50_ms": 0.69,
+      "p95_ms": 0.77,
+      "p99_ms": 0.98
+    },
+    {
+      "consulta": "q5",
+      "escenario": "offset5000",
+      "n": 200,
+      "p50_ms": 2.23,
+      "p95_ms": 2.67,
+      "p99_ms": 3.04
+    },
+    {
+      "consulta": "q5",
+      "escenario": "keyset",
+      "n": 200,
+      "p50_ms": 0.63,
+      "p95_ms": 0.85,
+      "p99_ms": 1.11
+    }
+  ],
+  "concurrencia_q3": [
+    {
+      "clave": "caliente",
+      "n_hilos": 16,
+      "p50_ms": 2.78,
+      "p95_ms": 5.03,
+      "p99_ms": 6.41,
+      "throughput_por_s": 197.2
+    },
+    {
+      "clave": "fria",
+      "n_hilos": 16,
+      "p50_ms": 2.81,
+      "p95_ms": 5.05,
+      "p99_ms": 6.45,
+      "throughput_por_s": 195.2
+    },
+    {
+      "clave": "caliente",
+      "n_hilos": 32,
+      "p50_ms": 5.82,
+      "p95_ms": 12.36,
+      "p99_ms": 40.17,
+      "throughput_por_s": 171.2
+    },
+    {
+      "clave": "fria",
+      "n_hilos": 32,
+      "p50_ms": 5.66,
+      "p95_ms": 10.94,
+      "p99_ms": 14.24,
+      "throughput_por_s": 193.5
+    },
+    {
+      "clave": "caliente",
+      "n_hilos": 64,
+      "p50_ms": 10.79,
+      "p95_ms": 21.55,
+      "p99_ms": 27.59,
+      "throughput_por_s": 204.1
+    },
+    {
+      "clave": "fria",
+      "n_hilos": 64,
+      "p50_ms": 11.56,
+      "p95_ms": 23.22,
+      "p99_ms": 29.5,
+      "throughput_por_s": 189.9
+    }
+  ],
+  "carga_masiva": [
+    {
+      "fase": "copy_total",
+      "segundos": 15.628,
+      "filas_por_s": 201257
+    },
+    {
+      "fase": "total",
+      "segundos": 24.905
+    }
+  ],
+  "estrategias_inyeccion": [
+    {
+      "estrategia": "E1b",
+      "descripcion": "COPY sin índices",
+      "filas": 375199,
+      "segundos": 0.709,
+      "filas_por_s": 528996
+    },
+    {
+      "estrategia": "E1a",
+      "descripcion": "COPY con índices",
+      "filas": 375199,
+      "segundos": 1.294,
+      "filas_por_s": 289967
+    },
+    {
+      "estrategia": "E2",
+      "descripcion": "Lotes de 1000",
+      "filas": 375199,
+      "segundos": 11.146,
+      "filas_por_s": 33664
+    },
+    {
+      "estrategia": "E3",
+      "descripcion": "Fila a fila (muestra)",
+      "filas": 37478,
+      "segundos": 56.629,
+      "filas_por_s": 662
+    },
+    {
+      "estrategia": "E4",
+      "descripcion": "Ruta transaccional",
+      "filas": 219720,
+      "segundos": 486.42,
+      "filas_por_s": 452
+    }
+  ],
+  "nota_concurrencia_q3": "El throughput_por_s del E2 es un artefacto: el código versionado midió 5 s por hilo (DURACION_S=5; ejecuciones × p50 / hilos ≈ 4,6 s) pero dividió entre ~135 s de tiempo de pared, que incluye ~130 s de arranque de hilos y conexiones. El throughput real fue ≈ hilos / p50 ≈ 5 500–5 900 consultas/s. Se conserva como dato histórico pero NO se usa como objetivo; los percentiles sí (miden latencia por consulta)."
+}

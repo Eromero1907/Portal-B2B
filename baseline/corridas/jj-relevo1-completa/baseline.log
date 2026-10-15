@@ -1,0 +1,400 @@
+
+===== [18:48:56] Línea base jj-relevo1-completa: CORRIDAS=3 COMPLETA=1 DURACION_Q3=135s ruta=100 flujos/s × 300s =====
+
+===== [18:48:56] 0. Plataforma detenida (las consultas del E2 se midieron sin aplicación) =====
+
+===== [18:48:57] 1. Datos desde cero: --seed 42 --scale min + carga COPY =====
+ Container pg-portal-b2b Running 
+ Container pg-portal-b2b Waiting 
+ Container pg-portal-b2b Healthy 
+=====================================================================
+🚀 INICIANDO GENERACIÓN DE DATOS · ESCALA: MIN · SEMILLA: 42
+=====================================================================
+[1/7] Generando 100,000 proveedores en datos/csv\proveedores.csv...
+[2/7] Generando 10,000 contratos en datos/csv\contratos.csv...
+[3/7] Generando 200,000 SKUs en datos/csv\sku_catalogo.csv...
+[4/7] Generando franjas CEDI (25 franjas/día/CEDI × 5 CEDIs × 730 días)...
+-> Precalculando funciones acumuladas (CDF) para Zipf y catálogo...
+[5/7 y 6/7] Generando 300,000 órdenes y sus líneas en streaming...
+[7/7] Generando 500,000 eventos de auditoría en datos/csv\eventos_auditoria.csv...
+
+=====================================================================
+GENERACIÓN COMPLETADA CON ÉXITO
+=====================================================================
+Tiempo total: 18.83 s
+Total de registros: 3,145,251 filas
+Tamaño en disco: 237.68 MB
+Manifiesto de Casos Borde: datos\casos_borde.json
+---------------------------------------------------------------------
+ - proveedores.csv          :    100,000 filas |   9.91 MB |  0.36 s
+ - contratos.csv            :     10,000 filas |   0.73 MB |  0.04 s
+ - sku_catalogo.csv         :    200,000 filas |  24.02 MB |  1.13 s
+ - franjas_cedi.csv         :     91,250 filas |   5.47 MB |  0.21 s
+ - ordenes_compra.csv       :    300,000 filas |  38.53 MB | 13.64 s
+ - lineas_orden.csv         :  1,944,001 filas |  80.97 MB | 13.64 s
+ - eventos_auditoria.csv    :    500,000 filas |  78.05 MB |  3.32 s
+=====================================================================
+=====================================================================
+CARGA MASIVA · base 'portal_b2b' · PostgreSQL 16.15 (Debian 16.15-1.pgdg13+2)
+=====================================================================
+[0] Esquema limpio
+  · Recreando los 5 esquemas vacíos en 'portal_b2b' (solo tablas, sin índices secundarios)...
+  ✓ Esquemas listos.
+[1] COPY por tabla (sin índices secundarios)
+  tabla                                     filas   segundos      filas/seg
+  proveedores.proveedores                  100000      1.602          62422
+  proveedores.contratos_suministro          10000      0.598          16722
+  catalogo.sku_catalogo                    200000      2.953          67728
+  logistica.franjas_cedi                    91250      1.036          88079
+  ordenes.ordenes_compra                   300000      3.719          80667
+  ordenes.lineas_orden                    1944001      8.042         241731
+  auditoria.eventos_auditoria              500000      7.124          70185
+  TOTAL COPY                              3145251     31.027         101371
+[2] Restricciones (UNIQUE + FK) e índices de rendimiento (post-carga)
+  restricciones UNIQUE + FK creadas en 1.598 s
+  índices de rendimiento creados en 2.077 s
+[3] ANALYZE
+  ANALYZE en 4.949 s
+[4] VACUUM
+  VACUUM en 1.026 s
+---------------------------------------------------------------------
+Tamaño en disco (tabla + índices + TOAST)
+              tabla               | tabla_heap | indices |  total  
+----------------------------------+------------+---------+---------
+ ordenes.lineas_orden             | 128 MB     | 100 MB  | 228 MB
+ auditoria.eventos_auditoria      | 83 MB      | 15 MB   | 99 MB
+ ordenes.ordenes_compra           | 41 MB      | 41 MB   | 82 MB
+ catalogo.sku_catalogo            | 24 MB      | 16 MB   | 40 MB
+ proveedores.proveedores          | 12 MB      | 5312 kB | 17 MB
+ logistica.franjas_cedi           | 8992 kB    | 4416 kB | 13 MB
+ proveedores.contratos_suministro | 784 kB     | 984 kB  | 1768 kB
+
+=====================================================================
+✓ CARGA COMPLETA · 3145251 filas en 43.261 s
+  COPY 31.027 s · restricciones 1.598 s · índices 2.077 s · ANALYZE 4.949 s · VACUUM 1.026 s
+  Evidencia cruda: datos/resultados/carga_tiempos.csv · datos/resultados/entorno_bd.csv
+=====================================================================
+
+===== [18:50:03] 2. Verificación de volumen, sesgo, integridad y casos borde =====
+RESULTADO GLOBAL: TODOS LOS CRITERIOS PASAN
+Evidencia para gráficas: datos\resultados/zipf_proveedores.csv, ordenes_por_dia.csv, ordenes_por_hora.csv
+=====================================================================
+
+===== [18:50:30] 2b. Manifest (volumen heredado del E2, configuración, máquina; antes de que la plataforma escriba nada) =====
+Manifest → baseline\corridas\jj-relevo1-completa\manifest.json
+
+===== [18:50:49] 3. Q1–Q5 frío/caliente, corrida 1 de 3 =====
+Conectado: portal_b2b postgres
+Midiendo q1 caliente (200 ejecuciones)...
+  {'consulta': 'q1', 'escenario': 'caliente', 'n': 200, 'p50_ms': 0.8144, 'p95_ms': 1.4912, 'p99_ms': 1.8865, 'min_ms': 0.6129, 'max_ms': 2.1487}
+Midiendo q1 frio (200 ejecuciones)...
+  {'consulta': 'q1', 'escenario': 'frio', 'n': 200, 'p50_ms': 0.9608, 'p95_ms': 1.9166, 'p99_ms': 2.276, 'min_ms': 0.6244, 'max_ms': 2.9195}
+Midiendo q3 caliente (35 ejecuciones)...
+  {'consulta': 'q3', 'escenario': 'caliente', 'n': 35, 'p50_ms': 1.3582, 'p95_ms': 2.3791, 'p99_ms': 2.5001, 'min_ms': 0.9452, 'max_ms': 2.5089}
+Midiendo q3 frio (200 ejecuciones)...
+  {'consulta': 'q3', 'escenario': 'frio', 'n': 200, 'p50_ms': 0.938, 'p95_ms': 2.2337, 'p99_ms': 2.5913, 'min_ms': 0.6779, 'max_ms': 2.7638}
+Midiendo q2 caliente (200 ejecuciones)...
+  {'consulta': 'q2', 'escenario': 'caliente', 'n': 200, 'p50_ms': 1.0151, 'p95_ms': 2.715, 'p99_ms': 3.2481, 'min_ms': 0.6931, 'max_ms': 3.3972}
+Midiendo q2 frio (200 ejecuciones)...
+  {'consulta': 'q2', 'escenario': 'frio', 'n': 200, 'p50_ms': 1.2052, 'p95_ms': 2.3787, 'p99_ms': 2.9405, 'min_ms': 0.7372, 'max_ms': 5.9765}
+Midiendo q4 caliente (200 ejecuciones)...
+  {'consulta': 'q4', 'escenario': 'caliente', 'n': 200, 'p50_ms': 2.5143, 'p95_ms': 21.2607, 'p99_ms': 27.3289, 'min_ms': 1.3649, 'max_ms': 30.721}
+Midiendo q4 frio (200 ejecuciones)...
+  {'consulta': 'q4', 'escenario': 'frio', 'n': 200, 'p50_ms': 1.851, 'p95_ms': 2.9078, 'p99_ms': 3.3536, 'min_ms': 1.0906, 'max_ms': 3.4425}
+Midiendo q5 pagina1 / offset5000 (200 c/u)...
+  {'consulta': 'q5', 'escenario': 'pagina1', 'n': 200, 'p50_ms': 1.5056, 'p95_ms': 3.1821, 'p99_ms': 4.1067, 'min_ms': 0.802, 'max_ms': 4.3486}
+  {'consulta': 'q5', 'escenario': 'offset5000', 'n': 200, 'p50_ms': 3.7062, 'p95_ms': 4.8466, 'p99_ms': 7.6913, 'min_ms': 2.9475, 'max_ms': 9.0975}
+Midiendo q5 keyset (200)...
+  {'consulta': 'q5', 'escenario': 'keyset', 'n': 200, 'p50_ms': 1.1391, 'p95_ms': 2.445, 'p99_ms': 3.7163, 'min_ms': 0.7926, 'max_ms': 4.0032}
+
+Guardado: baseline\corridas\jj-relevo1-completa\q1q5_1\mediciones.csv y baseline\corridas\jj-relevo1-completa\q1q5_1\percentiles.csv
+
+===== [18:50:58] 3. Q1–Q5 frío/caliente, corrida 2 de 3 =====
+Conectado: portal_b2b postgres
+Midiendo q1 caliente (200 ejecuciones)...
+  {'consulta': 'q1', 'escenario': 'caliente', 'n': 200, 'p50_ms': 0.8182, 'p95_ms': 1.4132, 'p99_ms': 1.9048, 'min_ms': 0.6141, 'max_ms': 2.1295}
+Midiendo q1 frio (200 ejecuciones)...
+  {'consulta': 'q1', 'escenario': 'frio', 'n': 200, 'p50_ms': 0.7804, 'p95_ms': 1.2856, 'p99_ms': 1.6841, 'min_ms': 0.6272, 'max_ms': 2.0729}
+Midiendo q3 caliente (35 ejecuciones)...
+  {'consulta': 'q3', 'escenario': 'caliente', 'n': 35, 'p50_ms': 0.8246, 'p95_ms': 1.6979, 'p99_ms': 1.9832, 'min_ms': 0.6215, 'max_ms': 2.0866}
+Midiendo q3 frio (200 ejecuciones)...
+  {'consulta': 'q3', 'escenario': 'frio', 'n': 200, 'p50_ms': 0.9664, 'p95_ms': 2.8229, 'p99_ms': 4.4835, 'min_ms': 0.6416, 'max_ms': 10.0264}
+Midiendo q2 caliente (200 ejecuciones)...
+  {'consulta': 'q2', 'escenario': 'caliente', 'n': 200, 'p50_ms': 0.9106, 'p95_ms': 1.4186, 'p99_ms': 1.6554, 'min_ms': 0.6735, 'max_ms': 2.1007}
+Midiendo q2 frio (200 ejecuciones)...
+  {'consulta': 'q2', 'escenario': 'frio', 'n': 200, 'p50_ms': 0.8395, 'p95_ms': 1.284, 'p99_ms': 1.8548, 'min_ms': 0.6244, 'max_ms': 1.9316}
+Midiendo q4 caliente (200 ejecuciones)...
+  {'consulta': 'q4', 'escenario': 'caliente', 'n': 200, 'p50_ms': 2.037, 'p95_ms': 18.4114, 'p99_ms': 20.658, 'min_ms': 1.2109, 'max_ms': 39.9394}
+Midiendo q4 frio (200 ejecuciones)...
+  {'consulta': 'q4', 'escenario': 'frio', 'n': 200, 'p50_ms': 1.3826, 'p95_ms': 2.44, 'p99_ms': 3.0793, 'min_ms': 1.0164, 'max_ms': 3.3555}
+Midiendo q5 pagina1 / offset5000 (200 c/u)...
+  {'consulta': 'q5', 'escenario': 'pagina1', 'n': 200, 'p50_ms': 0.9254, 'p95_ms': 1.4791, 'p99_ms': 1.6904, 'min_ms': 0.711, 'max_ms': 2.1692}
+  {'consulta': 'q5', 'escenario': 'offset5000', 'n': 200, 'p50_ms': 3.4657, 'p95_ms': 4.2289, 'p99_ms': 4.6175, 'min_ms': 2.9504, 'max_ms': 4.6548}
+Midiendo q5 keyset (200)...
+  {'consulta': 'q5', 'escenario': 'keyset', 'n': 200, 'p50_ms': 0.981, 'p95_ms': 1.7804, 'p99_ms': 2.3068, 'min_ms': 0.7518, 'max_ms': 8.4543}
+
+Guardado: baseline\corridas\jj-relevo1-completa\q1q5_2\mediciones.csv y baseline\corridas\jj-relevo1-completa\q1q5_2\percentiles.csv
+
+===== [18:51:05] 3. Q1–Q5 frío/caliente, corrida 3 de 3 =====
+Conectado: portal_b2b postgres
+Midiendo q1 caliente (200 ejecuciones)...
+  {'consulta': 'q1', 'escenario': 'caliente', 'n': 200, 'p50_ms': 0.8376, 'p95_ms': 1.7798, 'p99_ms': 1.9866, 'min_ms': 0.6442, 'max_ms': 2.501}
+Midiendo q1 frio (200 ejecuciones)...
+  {'consulta': 'q1', 'escenario': 'frio', 'n': 200, 'p50_ms': 0.7906, 'p95_ms': 1.4184, 'p99_ms': 1.6869, 'min_ms': 0.5975, 'max_ms': 2.1623}
+Midiendo q3 caliente (35 ejecuciones)...
+  {'consulta': 'q3', 'escenario': 'caliente', 'n': 35, 'p50_ms': 0.9162, 'p95_ms': 1.5008, 'p99_ms': 1.7575, 'min_ms': 0.6543, 'max_ms': 1.8567}
+Midiendo q3 frio (200 ejecuciones)...
+  {'consulta': 'q3', 'escenario': 'frio', 'n': 200, 'p50_ms': 0.7305, 'p95_ms': 1.1734, 'p99_ms': 1.4197, 'min_ms': 0.5896, 'max_ms': 1.5234}
+Midiendo q2 caliente (200 ejecuciones)...
+  {'consulta': 'q2', 'escenario': 'caliente', 'n': 200, 'p50_ms': 0.9385, 'p95_ms': 1.8467, 'p99_ms': 2.3447, 'min_ms': 0.6086, 'max_ms': 4.2646}
+Midiendo q2 frio (200 ejecuciones)...
+  {'consulta': 'q2', 'escenario': 'frio', 'n': 200, 'p50_ms': 0.8974, 'p95_ms': 1.8014, 'p99_ms': 2.0998, 'min_ms': 0.6998, 'max_ms': 5.6581}
+Midiendo q4 caliente (200 ejecuciones)...
+  {'consulta': 'q4', 'escenario': 'caliente', 'n': 200, 'p50_ms': 2.207, 'p95_ms': 18.8445, 'p99_ms': 27.6538, 'min_ms': 1.3152, 'max_ms': 30.7774}
+Midiendo q4 frio (200 ejecuciones)...
+  {'consulta': 'q4', 'escenario': 'frio', 'n': 200, 'p50_ms': 1.5912, 'p95_ms': 2.7966, 'p99_ms': 3.9449, 'min_ms': 1.062, 'max_ms': 5.2506}
+Midiendo q5 pagina1 / offset5000 (200 c/u)...
+  {'consulta': 'q5', 'escenario': 'pagina1', 'n': 200, 'p50_ms': 0.9748, 'p95_ms': 2.0769, 'p99_ms': 2.5831, 'min_ms': 0.7385, 'max_ms': 2.8265}
+  {'consulta': 'q5', 'escenario': 'offset5000', 'n': 200, 'p50_ms': 3.9672, 'p95_ms': 7.4714, 'p99_ms': 9.3461, 'min_ms': 3.0028, 'max_ms': 9.9073}
+Midiendo q5 keyset (200)...
+  {'consulta': 'q5', 'escenario': 'keyset', 'n': 200, 'p50_ms': 1.2812, 'p95_ms': 2.3509, 'p99_ms': 2.6586, 'min_ms': 0.8116, 'max_ms': 2.8324}
+
+Guardado: baseline\corridas\jj-relevo1-completa\q1q5_3\mediciones.csv y baseline\corridas\jj-relevo1-completa\q1q5_3\percentiles.csv
+
+===== [18:51:13] 4. Q3 concurrente 16/32/64 hilos, 135 s por punto =====
+
+== Concurrencia caliente, 16 hilos, 135.0s ==
+  total=526436 ejecuciones, throughput=3838.2/s, {'p50_ms': 3.5803, 'p95_ms': 7.7942, 'p99_ms': 11.7745, 'min_ms': 0.8105, 'max_ms': 63.9945}
+== Concurrencia fria (repartida), 16 hilos, 135.0s ==
+  total=474268 ejecuciones, throughput=3456.3/s, {'p50_ms': 3.87, 'p95_ms': 9.1206, 'p99_ms': 13.5648, 'min_ms': 0.8413, 'max_ms': 52.179}
+
+== Concurrencia caliente, 32 hilos, 135.0s ==
+  total=376589 ejecuciones, throughput=2738.5/s, {'p50_ms': 10.3543, 'p95_ms': 22.6539, 'p99_ms': 30.3552, 'min_ms': 0.7407, 'max_ms': 102.451}
+== Concurrencia fria (repartida), 32 hilos, 135.0s ==
+  total=332807 ejecuciones, throughput=2421.8/s, {'p50_ms': 11.5296, 'p95_ms': 26.4289, 'p99_ms': 36.0898, 'min_ms': 0.7479, 'max_ms': 222.7326}
+
+== Concurrencia caliente, 64 hilos, 135.0s ==
+  total=372997 ejecuciones, throughput=2710.2/s, {'p50_ms': 21.0976, 'p95_ms': 45.984, 'p99_ms': 60.1274, 'min_ms': 0.7713, 'max_ms': 144.1858}
+== Concurrencia fria (repartida), 64 hilos, 135.0s ==
+  total=437765 ejecuciones, throughput=3177.3/s, {'p50_ms': 16.9684, 'p95_ms': 42.3128, 'p99_ms': 59.6119, 'min_ms': 0.7509, 'max_ms': 268.5511}
+
+Guardado: baseline\corridas\jj-relevo1-completa\concurrencia_q3.csv
+
+===== [19:05:03] 5. Estrategias de inyección E1a, E1b, E2, E3, E4 (subconjunto S) =====
+Subconjunto S: 50000 órdenes + 325199 líneas = 375199 filas
+E1a  COPY con índices           375199 filas en    2.672 s =    140396 filas/s 
+E1b  COPY sin índices           375199 filas en    1.706 s =    219973 filas/s 
+E2   Lotes de 1000              375199 filas en   30.044 s =     12488 filas/s 
+E3   Fila a fila (muestra)       37478 filas en  172.273 s =       218 filas/s muestra de 5000 órdenes
+E4   Ruta transaccional         219720 filas en  883.083 s =       249 filas/s aceptadas=29235/50000 motivos={'confirmada': 29235, 'sku_invalido_o_precio': 1, 'sin_proveedor_o_contrato': 20764}
+Guardado baseline\corridas\jj-relevo1-completa\estrategias.csv  (19:23:19)
+
+===== [19:23:19] 6. Plataforma y carga estable de la ruta de confirmación =====
+ setval 
+--------
+ 300000
+(1 row)
+
+ setval  
+---------
+ 1944001
+(1 row)
+
+ Image portal-b2b-app:e3 Building 
+ Image portal-b2b-stub:e3 Building 
+ Image portal-b2b-app:e3 Building 
+ Image portal-b2b-app:e3 Building 
+#1 [internal] load local bake definitions
+#1 reading from stdin 2.38kB 0.0s done
+#1 DONE 0.0s
+
+#2 [stub-credito internal] load build definition from Dockerfile
+#2 transferring dockerfile: 387B 0.0s done
+#2 DONE 0.1s
+
+#3 [app3 internal] load build definition from Dockerfile
+#3 transferring dockerfile: 506B 0.0s done
+#3 DONE 0.1s
+
+#4 [stub-credito internal] load metadata for docker.io/library/python:3.12-slim
+#4 ...
+
+#5 [auth] library/python:pull token for registry-1.docker.io
+#5 DONE 0.0s
+
+#4 [stub-credito internal] load metadata for docker.io/library/python:3.12-slim
+#4 DONE 0.9s
+
+#6 [app2 internal] load .dockerignore
+#6 transferring context: 2B done
+#6 DONE 0.0s
+
+#7 [stub-credito internal] load .dockerignore
+#7 transferring context: 2B done
+#7 DONE 0.0s
+
+#8 [stub-credito internal] load build context
+#8 transferring context: 72B done
+#8 DONE 0.0s
+
+#9 [app2 internal] load build context
+#9 transferring context: 1.66kB 0.0s done
+#9 DONE 0.0s
+
+#10 [stub-credito 1/5] FROM docker.io/library/python:3.12-slim@sha256:a6e34c598f2467ed0e9a8d349809fcd8b5c603269512df273a0bb1784edc11b1
+#10 resolve docker.io/library/python:3.12-slim@sha256:a6e34c598f2467ed0e9a8d349809fcd8b5c603269512df273a0bb1784edc11b1 0.0s done
+#10 DONE 0.1s
+
+#11 [stub-credito 3/5] COPY requirements.txt .
+#11 CACHED
+
+#12 [stub-credito 4/5] RUN pip install --no-cache-dir -r requirements.txt
+#12 CACHED
+
+#13 [stub-credito 5/5] COPY stub_credito.py .
+#13 CACHED
+
+#14 [stub-credito 2/5] WORKDIR /srv
+#14 CACHED
+
+#15 [app3 3/5] COPY requirements.txt .
+#15 CACHED
+
+#16 [app3 4/5] RUN pip install --no-cache-dir -r requirements.txt
+#16 CACHED
+
+#17 [app3 5/5] COPY portal ./portal
+#17 CACHED
+
+#18 [stub-credito] exporting to image
+#18 exporting layers done
+#18 exporting manifest sha256:bbc59e174d7ba852e9b873a46f200b636819140de9d820ed459bdb1df1e7c719 0.0s done
+#18 exporting config sha256:341a2db66cb5dc3674fdbe468cb61915aa3643ca0ee75c6d4f15c07084a0107c 0.0s done
+#18 exporting attestation manifest sha256:5f90e3447d19568d58395d3739f3429eb52e48aafe570aef803578871b33d73f
+#18 exporting attestation manifest sha256:5f90e3447d19568d58395d3739f3429eb52e48aafe570aef803578871b33d73f 0.1s done
+#18 exporting manifest list sha256:75e98f1e8c4da555e157f8c236baeab8517243e753d31fc1543d710fb4547a88
+#18 exporting manifest list sha256:75e98f1e8c4da555e157f8c236baeab8517243e753d31fc1543d710fb4547a88 0.1s done
+#18 naming to docker.io/library/portal-b2b-stub:e3 0.0s done
+#18 unpacking to docker.io/library/portal-b2b-stub:e3
+#18 unpacking to docker.io/library/portal-b2b-stub:e3 0.1s done
+#18 DONE 0.5s
+
+#19 [app1] exporting to image
+#19 exporting layers done
+#19 exporting manifest sha256:8e4f144fa4919e2ec440f50ec9b96bd89c4fea4a2cba5538b79d3d40efdb6f17 done
+#19 exporting config sha256:00529eca84d80d7d4845a305697a2d6fa46235173641d4884c7fe698643e6398 0.0s done
+#19 exporting attestation manifest sha256:04897b322ea1f1b62056abc1e8ef6b3fe88c882f1f65200fac2469824e56b5cc 0.1s done
+#19 exporting manifest list sha256:dddc8f9d5b6e9ee95967ce62e8c2523ca49b5462da71d8f1e52e318f3a603a8d 0.1s done
+#19 naming to docker.io/library/portal-b2b-app:e3 0.0s done
+#19 unpacking to docker.io/library/portal-b2b-app:e3 0.1s done
+#19 DONE 0.4s
+
+#20 [app3] exporting to image
+#20 exporting layers done
+#20 exporting manifest sha256:bc119c4ce11a6f5a11c2cc824c9dc75790ab70d658943affd603e6577108d353 0.0s done
+#20 exporting config sha256:3a1e2e0eabfa58f9e04f74b6b6674891fc4507f5b8da4931f8901f5585cd7952 0.0s done
+#20 exporting attestation manifest sha256:dd1ea6618b61a9fe236af453e65891fe42ef587918f7bb3741fb0d6249edeac5 0.1s done
+#20 exporting manifest list sha256:41bc14159516c8040b33f38f10b21d0275db6d2e0b14e6d4e54825642cf6dd35 0.1s done
+#20 naming to docker.io/library/portal-b2b-app:e3 0.0s done
+#20 unpacking to docker.io/library/portal-b2b-app:e3 0.0s done
+#20 DONE 0.5s
+
+#21 [app2] exporting to image
+#21 exporting layers done
+#21 exporting manifest sha256:13485c509251461c8970a55be3cfab0839225a6710791661e39611ee43b1b772 0.0s done
+#21 exporting config sha256:91ba133aac9db3da62cc8f4ff0cf2d3ee5747c0d6fd7b3462a3018d79fb5e0d1 0.1s done
+#21 exporting attestation manifest sha256:dbc83bc6e45e8f25427f0752dec5c02b92c90bde33f94e0d7033e82d5aeb4e0d 0.1s done
+#21 exporting manifest list sha256:62752ac8b88828fca86bac9cac1f5c58733079656d139d7002eac885aa8ea128 0.1s done
+#21 naming to docker.io/library/portal-b2b-app:e3 0.0s done
+#21 unpacking to docker.io/library/portal-b2b-app:e3 0.0s done
+#21 DONE 0.5s
+
+#22 [app1] resolving provenance for metadata file
+#22 DONE 0.2s
+
+#23 [app2] resolving provenance for metadata file
+#23 DONE 0.1s
+
+#24 [stub-credito] resolving provenance for metadata file
+#24 DONE 0.2s
+
+#25 [app3] resolving provenance for metadata file
+#25 DONE 0.0s
+ Image portal-b2b-stub:e3 Built 
+ Image portal-b2b-app:e3 Built 
+ Image portal-b2b-app:e3 Built 
+ Image portal-b2b-app:e3 Built 
+ Container pg-portal-b2b Running 
+ Container portal-app1 Recreate 
+ Container portal-app2 Recreate 
+ Container portal-app3 Recreate 
+ Container portal-app3 Recreated 
+ Container portal-app2 Recreated 
+ Container portal-app1 Recreated 
+ Container portal-stub-credito Starting 
+ Container portal-stub-credito Started 
+ Container pg-portal-b2b Waiting 
+ Container pg-portal-b2b Waiting 
+ Container pg-portal-b2b Waiting 
+ Container pg-portal-b2b Healthy 
+ Container portal-app2 Starting 
+ Container pg-portal-b2b Healthy 
+ Container portal-app3 Starting 
+ Container pg-portal-b2b Healthy 
+ Container portal-app1 Starting 
+ Container portal-app2 Started 
+ Container portal-app3 Started 
+ Container portal-app1 Started 
+ Container portal-app3 Waiting 
+ Container portal-app1 Waiting 
+ Container portal-app2 Waiting 
+ Container portal-app2 Healthy 
+ Container portal-app3 Healthy 
+ Container portal-app1 Healthy 
+ Container portal-nginx Starting 
+ Container portal-nginx Started 
+ Container portal-app3 Waiting 
+ Container portal-stub-credito Waiting 
+ Container portal-nginx Waiting 
+ Container pg-portal-b2b Waiting 
+ Container portal-app1 Waiting 
+ Container portal-app2 Waiting 
+ Container portal-stub-credito Healthy 
+ Container pg-portal-b2b Healthy 
+ Container portal-app3 Healthy 
+ Container portal-app2 Healthy 
+ Container portal-app1 Healthy 
+ Container portal-nginx Healthy 
+[carga] estado limpio...
+[carga] muestreo de recursos cada 5 s -> baseline/corridas/jj-relevo1-completa/ruta/recursos.csv
+ Container pg-portal-b2b Running 
+ Container pg-portal-b2b Waiting 
+ Container pg-portal-b2b Healthy 
+ Container portal-b2b-carga-run-2264715c8d04 Creating 
+ Container portal-b2b-carga-run-2264715c8d04 Created 
+Carga planificada: 32939 flujos (65878 solicitudes) a 100.0 flujos/s, 30 s de calentamiento + 300 s medidos, semilla 42
+{"global": {"p50_ms": 21.764, "p95_ms": 299.319, "p99_ms": 890.313, "tasa_error_pct": 0.003}, "confirmar": 297.605, "throughput_s": 199.55, "slo": "PASA", "generador_retraso_p99_s": 0.003}
+Guardado en baseline/corridas/jj-relevo1-completa/ruta
+[carga] listo: baseline/corridas/jj-relevo1-completa/ruta (solicitudes.csv, resumen.json, resumen.csv, recursos.csv)
+
+===== [19:29:10] 7. Comparación contra el E2 y la meta −10 % =====
+63 de 63 métricas medidas en baseline\corridas\jj-relevo1-completa; 1 ya cumplen el objetivo E3 → baseline\corridas\jj-relevo1-completa\comparacion_e2.csv
+
+===== [19:29:11] 8. Estado limpio para el siguiente uso (se borran las órdenes que creó la carga) =====
+ setval 
+--------
+ 300000
+(1 row)
+
+ setval  
+---------
+ 1944001
+(1 row)
+
+ ordenes_plataforma | reservas | franja_91150_reservada | violaciones_invariante 
+--------------------+----------+------------------------+------------------------
+                  0 |        0 |                      9 |                      0
+(1 row)
+
+
+===== [19:29:12] Listo: baseline/corridas/jj-relevo1-completa =====

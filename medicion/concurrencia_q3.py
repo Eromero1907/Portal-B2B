@@ -1,3 +1,4 @@
+import os
 import threading
 import time
 import random
@@ -65,7 +66,10 @@ if __name__ == "__main__":
     pool_frio = pools["P7"]  # 200 pares (cedi, fecha) repartidos en 24 meses
     conn_inicial.close()
 
-    DURACION_S = 5
+    # DURACION_S (opcional, Entregable 3): segundos de medición POR HILO. El E2 usó 5 s (este valor por defecto).
+    # Ojo: la columna duracion_s es tiempo de pared (incluye abrir las conexiones de los hilos); en el E2 fue ~135 s
+    # con solo ~5 s de medición por hilo, así que su throughput_por_s (~190-200/s) subestima el real (~5 500/s).
+    DURACION_S = float(os.environ.get("DURACION_S", "5"))
     filas_resultado = []
 
     for n_hilos in [16, 32, 64]:
@@ -87,7 +91,9 @@ if __name__ == "__main__":
         filas_resultado.append({"clave": "fria", "n_hilos": n_hilos, "total_ejecuciones": total_f,
                                  "throughput_por_s": round(tput_f, 2), "duracion_s": round(dur_f, 2), **pct_f})
 
-    ruta = RAIZ / "reportes" / "concurrencia_q3.csv"
+    salida = Path(os.environ["SALIDA_DIR"]) if os.environ.get("SALIDA_DIR") else RAIZ / "reportes"
+    salida.mkdir(parents=True, exist_ok=True)
+    ruta = salida / "concurrencia_q3.csv"
     with open(ruta, "w", newline="", encoding="utf-8") as f:
         campos = ["clave", "n_hilos", "total_ejecuciones", "throughput_por_s", "duracion_s",
                   "p50_ms", "p95_ms", "p99_ms", "min_ms", "max_ms"]

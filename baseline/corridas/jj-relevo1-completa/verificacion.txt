@@ -1,0 +1,165 @@
+=====================================================================
+AUDITORÍA AUTOMÁTICA DE ESCALABILIDAD DE DATOS (VERIFICADOR)
+   Universidad EAFIT · Proyecto Integrador Portal B2B · Entrega 2
+=====================================================================
+
+---------------------------------------------------------------------
+1. VOLUMEN DEL CONJUNTO POR TABLA (MÍNIMO VS LOGRADO)
+---------------------------------------------------------------------
+Entidad / Archivo         |     Mínimo |    Logrado | Veredicto
+---------------------------------------------------------------
+proveedores.csv           |    100,000 |    100,000 | PASA
+contratos.csv             |     10,000 |     10,000 | PASA
+sku_catalogo.csv          |    200,000 |    200,000 | PASA
+franjas_cedi.csv          |     90,000 |     91,250 | PASA
+ordenes_compra.csv        |    300,000 |    300,000 | PASA
+lineas_orden.csv          |  1,500,000 |  1,944,001 | PASA
+eventos_auditoria.csv     |    500,000 |    500,000 | PASA
+---------------------------------------------------------------
+TOTAL CONJUNTO            |  2,700,000 |  3,145,251 | PASA
+
+---------------------------------------------------------------------
+2. DISTRIBUCIÓN ACUMULADA DE SESGO ZIPF EN PROVEEDORES
+---------------------------------------------------------------------
+- Top  1% proveedores (1,000 prov): 46,007 órdenes (15.34% de la demanda) -> [Objetivo ~15%, tolerancia 12.5-17.5%] PASA
+- Top  5% proveedores (5,000 prov): 122,522 órdenes (40.84% de la demanda) -> [Objetivo 40%, tolerancia 37.0-43.0%] PASA
+- Top 20% proveedores (20,000 prov): 215,853 órdenes (71.95% de la demanda)
+Parámetros del modelo (datos/parametros_generacion.json): Zipf-Mandelbrot s=1.15, q=1940
+Proveedor más activo: id 1 con 5,293 órdenes · proveedores con al menos una orden: 71,024 de 100,000
+
+---------------------------------------------------------------------
+3. ESTACIONALIDAD MENSUAL: ÓRDENES POR DÍA (ÚLTIMOS 60 DÍAS)
+---------------------------------------------------------------------
+2026-07-19 |   327 órdenes | ██████████
+2026-07-20 |   362 órdenes | ███████████
+2026-07-21 |   338 órdenes | ██████████
+2026-07-22 |   365 órdenes | ███████████
+2026-07-23 |   345 órdenes | ███████████
+2026-07-24 |   312 órdenes | ██████████
+2026-07-25 |   354 órdenes | ███████████
+2026-07-26 |   331 órdenes | ██████████
+2026-07-27 |   330 órdenes | ██████████
+2026-07-28 |   363 órdenes | ███████████
+2026-07-29 |   968 órdenes | ███████████████████████████████  ◄ últimos 3 días hábiles del mes
+2026-07-30 | 1,076 órdenes | ███████████████████████████████████  ◄ últimos 3 días hábiles del mes
+2026-07-31 | 1,071 órdenes | ██████████████████████████████████  ◄ últimos 3 días hábiles del mes
+2026-08-01 |   325 órdenes | ██████████
+2026-08-02 |   345 órdenes | ███████████
+2026-08-03 |   349 órdenes | ███████████
+2026-08-04 |   307 órdenes | █████████
+2026-08-05 |   323 órdenes | ██████████
+2026-08-06 |   369 órdenes | ████████████
+2026-08-07 |   357 órdenes | ███████████
+2026-08-08 |   338 órdenes | ██████████
+2026-08-09 |   320 órdenes | ██████████
+2026-08-10 |   375 órdenes | ████████████
+2026-08-11 |   356 órdenes | ███████████
+2026-08-12 |   334 órdenes | ██████████
+2026-08-13 |   357 órdenes | ███████████
+2026-08-14 |   352 órdenes | ███████████
+2026-08-15 |   311 órdenes | ██████████
+2026-08-16 |   322 órdenes | ██████████
+2026-08-17 |   317 órdenes | ██████████
+2026-08-18 |   325 órdenes | ██████████
+2026-08-19 |   349 órdenes | ███████████
+2026-08-20 |   338 órdenes | ██████████
+2026-08-21 |   318 órdenes | ██████████
+2026-08-22 |   320 órdenes | ██████████
+2026-08-23 |   338 órdenes | ██████████
+2026-08-24 |   376 órdenes | ████████████
+2026-08-25 |   380 órdenes | ████████████
+2026-08-26 |   359 órdenes | ███████████
+2026-08-27 | 1,022 órdenes | █████████████████████████████████  ◄ últimos 3 días hábiles del mes
+2026-08-28 | 1,010 órdenes | ████████████████████████████████  ◄ últimos 3 días hábiles del mes
+2026-08-29 |   326 órdenes | ██████████
+2026-08-30 |   336 órdenes | ██████████
+2026-08-31 |   993 órdenes | ████████████████████████████████  ◄ últimos 3 días hábiles del mes
+2026-09-01 |   365 órdenes | ███████████
+2026-09-02 |   344 órdenes | ███████████
+2026-09-03 |   319 órdenes | ██████████
+2026-09-04 |   377 órdenes | ████████████
+2026-09-05 |   380 órdenes | ████████████
+2026-09-06 |   354 órdenes | ███████████
+2026-09-07 |   337 órdenes | ██████████
+2026-09-08 |   320 órdenes | ██████████
+2026-09-09 |   338 órdenes | ██████████
+2026-09-10 |   343 órdenes | ███████████
+2026-09-11 |   345 órdenes | ███████████
+2026-09-12 |   310 órdenes | ██████████
+2026-09-13 |   329 órdenes | ██████████
+2026-09-14 |   335 órdenes | ██████████
+2026-09-15 |   307 órdenes | █████████
+2026-09-16 |   337 órdenes | ██████████
+
+Últimos 3 días hábiles de cada mes: 75,190 de 300,000 órdenes = 25.1% [Objetivo 25%, tolerancia 22.0-28.0%] PASA
+Promedio por día: 1,044 órdenes en días de cierre vs 342 en el resto (3.1×)
+
+ESTACIONALIDAD HORARIA (hora UTC de emisión)
+  00:00 |   0.0% |       0 | 
+  01:00 |   0.0% |       0 | 
+  02:00 |   0.0% |       0 | 
+  03:00 |   0.0% |       0 | 
+  04:00 |   0.0% |       0 | 
+  05:00 |   0.0% |       0 | 
+  06:00 |   0.8% |   2,313 | █
+  07:00 |   0.8% |   2,319 | █
+  08:00 |  20.0% |  59,987 | ██████████████████████████████████
+  09:00 |  20.0% |  60,006 | ██████████████████████████████████
+  10:00 |  20.0% |  60,113 | ███████████████████████████████████
+  11:00 |   4.5% |  13,434 | ███████
+  12:00 |   4.5% |  13,409 | ███████
+  13:00 |   4.5% |  13,486 | ███████
+  14:00 |   4.6% |  13,683 | ███████
+  15:00 |   4.5% |  13,459 | ███████
+  16:00 |   4.5% |  13,598 | ███████
+  17:00 |   4.5% |  13,384 | ███████
+  18:00 |   4.5% |  13,571 | ███████
+  19:00 |   0.8% |   2,422 | █
+  20:00 |   0.8% |   2,398 | █
+  21:00 |   0.8% |   2,418 | █
+  22:00 |   0.0% |       0 | 
+  23:00 |   0.0% |       0 | 
+Pico 08:00-10:59: 60.0% de las órdenes · valle nocturno 22:00-05:59: 0.00% [Objetivo: pico ≥ 50 %, valle ≤ 1 %] PASA
+
+---------------------------------------------------------------------
+4. SESGO DEL CATÁLOGO: CONCENTRACIÓN DE LÍNEAS POR SKU
+---------------------------------------------------------------------
+- El 10% de los SKU (20,000 de 200,000) aparece en 1,156,580 de 1,944,001 líneas = 59.5% [Objetivo 60%, tolerancia 55.0-65.0%] PASA
+- SKU distintos con al menos una línea: 192,682
+
+---------------------------------------------------------------------
+5. INTEGRIDAD DE NEGOCIO (RN-02, RN-04, RN-05) Y COHERENCIA DE FRANJAS
+---------------------------------------------------------------------
+- RN-04 SKU de la línea es oferta del proveedor de la orden (órdenes de proveedores con contrato): 1,050,436 de 1,050,437 (100.000%); excepciones sembradas: 1 PASA
+- RN-05 precio de la línea = precio negociado del SKU: 1,944,001 de 1,944,001 PASA
+- RN-02 órdenes CONFIRMADAS con contrato vigente en la fecha de emisión: 121,572 de 121,572 (100.000%) PASA
+- Franja reservada existe y su fecha = fecha_compromiso (≥ fecha de emisión): PASA (incoherentes: 0)
+
+---------------------------------------------------------------------
+6. LOS 8 CASOS BORDE SEMBRADOS, COMPROBADOS EN LOS DATOS
+---------------------------------------------------------------------
+Caso 1: Orden con 300 líneas -> orden_id = 101 (300 líneas) PASA
+Caso 2: Contrato vencido ayer -> contrato_id = 2 (fecha_fin 2026-09-15, estado VENCIDO) PASA
+Caso 3: Contrato que vence hoy -> contrato_id = 3 (fecha_fin 2026-09-16, estado VIGENTE) PASA
+Caso 4: Última franja del día en un CEDI -> franja_id = 91150 (CEDI 1, 2026-09-16, capacidad 10, ocupadas 9) PASA
+Caso 5: Proveedor sin contrato vigente -> proveedor_id = 55555 (existe en proveedores, 0 contratos, 3 órdenes) PASA
+Caso 6: SKU fuera del catálogo del proveedor -> orden_id = 606, línea 4081, sku_id = 2 (proveedor de la orden: 1) PASA
+Caso 7: Proveedor 'hot' con >= 5 000 órdenes -> proveedor_id = 1 (5,293 órdenes) PASA
+Caso 8: Mes sin órdenes para un proveedor activo -> proveedor_id = 10 (contrato vigente, 48 órdenes en total, 0 en 2025-06) PASA
+
+---------------------------------------------------------------------
+7. CHECKSUM SHA-256 DE DETERMINISMO (--seed 42)
+---------------------------------------------------------------------
+proveedores.csv          : 8920f123cb79859f3f8268fa41a011288eb244c4ca8a4dc39e705489a4d767ce
+contratos.csv            : cce43fa2ce25649539dc4b370fed8c0da0386aa1f9e4ceec9680645d35cd26ea
+sku_catalogo.csv         : 6ca1758b4c34b36b8353bac31013c8cbd585902164229584215b6c0f459bd869
+franjas_cedi.csv         : 823dcfa5348239338d7ec3ef6fede8e773f009e071e40b338224535136bdb719
+ordenes_compra.csv       : 055e063bc440687c4418687e849aa88d9e52ad03db1b2cb3abf9992091814b2a
+lineas_orden.csv         : 4c406349a8d416c5c211610253e7295f6740fc21b9af486a667d769f57f64664
+eventos_auditoria.csv    : 65af5cc511cf4e8af71218910d359353c202b246b07009e920ce9e0688a16704
+---------------------------------------------------------------------
+(Para demostrar que dos corridas producen el mismo conjunto: `make determinismo`)
+
+RESULTADO GLOBAL: TODOS LOS CRITERIOS PASAN
+Evidencia para gráficas: datos\resultados/zipf_proveedores.csv, ordenes_por_dia.csv, ordenes_por_hora.csv
+=====================================================================

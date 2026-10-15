@@ -1,0 +1,64 @@
+id,grupo,objeto,escenario,metrica,unidad,sentido,valor_e2,objetivo_e3
+consulta:q1:caliente:p50,consulta,q1,caliente,p50,ms,menor_o_igual,0.52,0.468
+consulta:q1:caliente:p95,consulta,q1,caliente,p95,ms,menor_o_igual,0.7,0.63
+consulta:q1:caliente:p99,consulta,q1,caliente,p99,ms,menor_o_igual,1.05,0.945
+consulta:q1:frio:p50,consulta,q1,frio,p50,ms,menor_o_igual,0.53,0.477
+consulta:q1:frio:p95,consulta,q1,frio,p95,ms,menor_o_igual,0.6,0.54
+consulta:q1:frio:p99,consulta,q1,frio,p99,ms,menor_o_igual,0.69,0.621
+consulta:q2:caliente:p50,consulta,q2,caliente,p50,ms,menor_o_igual,0.54,0.486
+consulta:q2:caliente:p95,consulta,q2,caliente,p95,ms,menor_o_igual,0.64,0.576
+consulta:q2:caliente:p99,consulta,q2,caliente,p99,ms,menor_o_igual,0.74,0.666
+consulta:q2:frio:p50,consulta,q2,frio,p50,ms,menor_o_igual,0.54,0.486
+consulta:q2:frio:p95,consulta,q2,frio,p95,ms,menor_o_igual,0.66,0.594
+consulta:q2:frio:p99,consulta,q2,frio,p99,ms,menor_o_igual,0.78,0.702
+consulta:q3:caliente:p50,consulta,q3,caliente,p50,ms,menor_o_igual,0.53,0.477
+consulta:q3:caliente:p95,consulta,q3,caliente,p95,ms,menor_o_igual,0.81,0.729
+consulta:q3:caliente:p99,consulta,q3,caliente,p99,ms,menor_o_igual,0.98,0.882
+consulta:q3:frio:p50,consulta,q3,frio,p50,ms,menor_o_igual,0.54,0.486
+consulta:q3:frio:p95,consulta,q3,frio,p95,ms,menor_o_igual,0.97,0.873
+consulta:q3:frio:p99,consulta,q3,frio,p99,ms,menor_o_igual,1.89,1.701
+consulta:q4:caliente:p50,consulta,q4,caliente,p50,ms,menor_o_igual,1.15,1.035
+consulta:q4:caliente:p95,consulta,q4,caliente,p95,ms,menor_o_igual,11.17,10.053
+consulta:q4:caliente:p99,consulta,q4,caliente,p99,ms,menor_o_igual,11.48,10.332
+consulta:q4:frio:p50,consulta,q4,frio,p50,ms,menor_o_igual,1.14,1.026
+consulta:q4:frio:p95,consulta,q4,frio,p95,ms,menor_o_igual,1.75,1.575
+consulta:q4:frio:p99,consulta,q4,frio,p99,ms,menor_o_igual,2.13,1.917
+consulta:q5:pagina1:p50,consulta,q5,pagina1,p50,ms,menor_o_igual,0.69,0.621
+consulta:q5:pagina1:p95,consulta,q5,pagina1,p95,ms,menor_o_igual,0.77,0.693
+consulta:q5:pagina1:p99,consulta,q5,pagina1,p99,ms,menor_o_igual,0.98,0.882
+consulta:q5:offset5000:p50,consulta,q5,offset5000,p50,ms,menor_o_igual,2.23,2.007
+consulta:q5:offset5000:p95,consulta,q5,offset5000,p95,ms,menor_o_igual,2.67,2.403
+consulta:q5:offset5000:p99,consulta,q5,offset5000,p99,ms,menor_o_igual,3.04,2.736
+consulta:q5:keyset:p50,consulta,q5,keyset,p50,ms,menor_o_igual,0.63,0.567
+consulta:q5:keyset:p95,consulta,q5,keyset,p95,ms,menor_o_igual,0.85,0.765
+consulta:q5:keyset:p99,consulta,q5,keyset,p99,ms,menor_o_igual,1.11,0.999
+q3_concurrente:q3:caliente_16h:p50,q3_concurrente,q3,caliente_16h,p50,ms,menor_o_igual,2.78,2.502
+q3_concurrente:q3:caliente_16h:p95,q3_concurrente,q3,caliente_16h,p95,ms,menor_o_igual,5.03,4.527
+q3_concurrente:q3:caliente_16h:p99,q3_concurrente,q3,caliente_16h,p99,ms,menor_o_igual,6.41,5.769
+q3_concurrente:q3:fria_16h:p50,q3_concurrente,q3,fria_16h,p50,ms,menor_o_igual,2.81,2.529
+q3_concurrente:q3:fria_16h:p95,q3_concurrente,q3,fria_16h,p95,ms,menor_o_igual,5.05,4.545
+q3_concurrente:q3:fria_16h:p99,q3_concurrente,q3,fria_16h,p99,ms,menor_o_igual,6.45,5.805
+q3_concurrente:q3:caliente_32h:p50,q3_concurrente,q3,caliente_32h,p50,ms,menor_o_igual,5.82,5.238
+q3_concurrente:q3:caliente_32h:p95,q3_concurrente,q3,caliente_32h,p95,ms,menor_o_igual,12.36,11.124
+q3_concurrente:q3:caliente_32h:p99,q3_concurrente,q3,caliente_32h,p99,ms,menor_o_igual,40.17,36.153
+q3_concurrente:q3:fria_32h:p50,q3_concurrente,q3,fria_32h,p50,ms,menor_o_igual,5.66,5.094
+q3_concurrente:q3:fria_32h:p95,q3_concurrente,q3,fria_32h,p95,ms,menor_o_igual,10.94,9.846
+q3_concurrente:q3:fria_32h:p99,q3_concurrente,q3,fria_32h,p99,ms,menor_o_igual,14.24,12.816
+q3_concurrente:q3:caliente_64h:p50,q3_concurrente,q3,caliente_64h,p50,ms,menor_o_igual,10.79,9.711
+q3_concurrente:q3:caliente_64h:p95,q3_concurrente,q3,caliente_64h,p95,ms,menor_o_igual,21.55,19.395
+q3_concurrente:q3:caliente_64h:p99,q3_concurrente,q3,caliente_64h,p99,ms,menor_o_igual,27.59,24.831
+q3_concurrente:q3:fria_64h:p50,q3_concurrente,q3,fria_64h,p50,ms,menor_o_igual,11.56,10.404
+q3_concurrente:q3:fria_64h:p95,q3_concurrente,q3,fria_64h,p95,ms,menor_o_igual,23.22,20.898
+q3_concurrente:q3:fria_64h:p99,q3_concurrente,q3,fria_64h,p99,ms,menor_o_igual,29.5,26.55
+carga_masiva:copy_total:make datos:tiempo,carga_masiva,copy_total,make datos,tiempo,s,menor_o_igual,15.628,14.0652
+carga_masiva:total:make datos:tiempo,carga_masiva,total,make datos,tiempo,s,menor_o_igual,24.905,22.4145
+estrategia:E1b:COPY sin índices:tiempo,estrategia,E1b,COPY sin índices,tiempo,s,menor_o_igual,0.709,0.6381
+estrategia:E1b:COPY sin índices:throughput,estrategia,E1b,COPY sin índices,throughput,filas/s,mayor_o_igual,528996,587773.33
+estrategia:E1a:COPY con índices:tiempo,estrategia,E1a,COPY con índices,tiempo,s,menor_o_igual,1.294,1.1646
+estrategia:E1a:COPY con índices:throughput,estrategia,E1a,COPY con índices,throughput,filas/s,mayor_o_igual,289967,322185.56
+estrategia:E2:Lotes de 1000:tiempo,estrategia,E2,Lotes de 1000,tiempo,s,menor_o_igual,11.146,10.0314
+estrategia:E2:Lotes de 1000:throughput,estrategia,E2,Lotes de 1000,throughput,filas/s,mayor_o_igual,33664,37404.44
+estrategia:E3:Fila a fila (muestra):tiempo,estrategia,E3,Fila a fila (muestra),tiempo,s,menor_o_igual,56.629,50.9661
+estrategia:E3:Fila a fila (muestra):throughput,estrategia,E3,Fila a fila (muestra),throughput,filas/s,mayor_o_igual,662,735.56
+estrategia:E4:Ruta transaccional:tiempo,estrategia,E4,Ruta transaccional,tiempo,s,menor_o_igual,486.42,437.778
+estrategia:E4:Ruta transaccional:throughput,estrategia,E4,Ruta transaccional,throughput,filas/s,mayor_o_igual,452,502.22

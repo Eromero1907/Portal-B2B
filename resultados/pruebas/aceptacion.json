@@ -1,0 +1,94 @@
+{
+  "resultados": [
+    {
+      "prueba": "P01",
+      "descripcion": "orden válida se confirma con un solo efecto",
+      "resultado": "PASA",
+      "detalle": "http=200 reservas={'CONFIRMADA': 1} eventos=1 cupo 0->1"
+    },
+    {
+      "prueba": "P02",
+      "descripcion": "proveedor sin contrato (55555) se rechaza",
+      "resultado": "PASA",
+      "detalle": "http=200 causa=sin_contrato_vigente reservas={} eventos=0"
+    },
+    {
+      "prueba": "P03",
+      "descripcion": "contrato vencido ayer (proveedor 2) se rechaza",
+      "resultado": "PASA",
+      "detalle": "http=200 causa=sin_contrato_vigente reservas={} eventos=0"
+    },
+    {
+      "prueba": "P04",
+      "descripcion": "SKU fuera del catálogo del proveedor se rechaza",
+      "resultado": "PASA",
+      "detalle": "http=200 causa=sku_fuera_de_catalogo_o_precio reservas={} eventos=0"
+    },
+    {
+      "prueba": "P05",
+      "descripcion": "precio distinto al negociado se rechaza",
+      "resultado": "PASA",
+      "detalle": "http=200 causa=sku_fuera_de_catalogo_o_precio reservas={} eventos=0"
+    },
+    {
+      "prueba": "P06",
+      "descripcion": "crédito denegado: RECHAZADA y el cupo se devuelve",
+      "resultado": "PASA",
+      "detalle": "causa=credito_denegado reservas={'LIBERADA': 1} cupo 0->0"
+    },
+    {
+      "prueba": "P07",
+      "descripcion": "confirmación sin Idempotency-Key → 400",
+      "resultado": "PASA",
+      "detalle": "http=400"
+    },
+    {
+      "prueba": "P08",
+      "descripcion": "clave reutilizada en otra orden → 422",
+      "resultado": "PASA",
+      "detalle": "http=422"
+    },
+    {
+      "prueba": "P09",
+      "descripcion": "orden inexistente → 404",
+      "resultado": "PASA",
+      "detalle": "http=404"
+    },
+    {
+      "prueba": "P10",
+      "descripcion": "50 reintentos con la misma clave → una orden, una franja, un evento",
+      "resultado": "PASA",
+      "detalle": "concurrentes={200: 50} reservas={'CONFIRMADA': 1} eventos=1 cupo 0->1 respuestas_distintas_tras_completar=1"
+    },
+    {
+      "prueba": "P11",
+      "descripcion": "10 claves distintas sobre la misma orden → un solo efecto",
+      "resultado": "PASA",
+      "detalle": "codigos={200: 9, 409: 1} reservas={'CONFIRMADA': 1} eventos=1"
+    },
+    {
+      "prueba": "P12",
+      "descripcion": "20 órdenes por el último cupo: gana exactamente 1 y no hay sobreventa",
+      "resultado": "PASA",
+      "detalle": "cupos_libres_antes=1 ganadoras=1 sin_cupo=19 final=10/10 instancias={'app2': 7, 'app3': 7, 'app1': 6}"
+    },
+    {
+      "prueba": "P13",
+      "descripcion": "nginx reparte entre las 3 instancias",
+      "resultado": "PASA",
+      "detalle": "{'app3': 20, 'app1': 20, 'app2': 20}"
+    },
+    {
+      "prueba": "INV",
+      "descripcion": "invariante reservada ≤ capacidad en todas las franjas",
+      "resultado": "PASA",
+      "detalle": "violaciones=0"
+    }
+  ],
+  "respuesta_p01": {
+    "orden_id": 300001,
+    "estado": "CONFIRMADA",
+    "causa": null,
+    "trace_id": "17a86223244d67b963a325fc69c20296"
+  }
+}

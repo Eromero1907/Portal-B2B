@@ -1,0 +1,43 @@
+# Prueba del CI de fronteras (2026-10-14T23:44Z)
+## Con un import ilegal (ordenes.interno.servicio -> catalogo.interno.repositorio)
+=============
+Import Linter
+=============
+---------
+Contracts
+---------
+Analyzed 21 files, 24 dependencies.
+-----------------------------------
+Nadie fuera de proveedores importa proveedores.interno KEPT
+Nadie fuera de catalogo importa catalogo.interno BROKEN
+Nadie fuera de logistica importa logistica.interno KEPT
+Nadie fuera de ordenes importa ordenes.interno KEPT
+Proveedores, catalogo y logistica no dependen de ordenes (Ordenes orquesta, ADR-002) KEPT
+Proveedores, catalogo y logistica son independientes entre si KEPT
+Contracts: 5 kept, 1 broken.
+----------------
+Broken contracts
+----------------
+Nadie fuera de catalogo importa catalogo.interno
+------------------------------------------------
+portal.modulos.ordenes is not allowed to import portal.modulos.catalogo.interno:
+-   portal.modulos.ordenes.interno.servicio -> portal.modulos.catalogo.interno.repositorio (l.27)
+make: *** [Makefile:171: fronteras] Error 1
+## Código real
+=============
+Import Linter
+=============
+---------
+Contracts
+---------
+Analyzed 21 files, 23 dependencies.
+-----------------------------------
+Nadie fuera de proveedores importa proveedores.interno KEPT
+Nadie fuera de catalogo importa catalogo.interno KEPT
+Nadie fuera de logistica importa logistica.interno KEPT
+Nadie fuera de ordenes importa ordenes.interno KEPT
+Proveedores, catalogo y logistica no dependen de ordenes (Ordenes orquesta, ADR-002) KEPT
+Proveedores, catalogo y logistica son independientes entre si KEPT
+Contracts: 6 kept, 0 broken.
+...                                                                      [100%]
+3 passed in 0.06s

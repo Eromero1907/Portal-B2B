@@ -1,4 +1,4 @@
-# docker-compose.yml — PostgreSQL del proyecto (Entregable 2)
+# docker-compose.yml — PostgreSQL del proyecto (Entregable 2) + plataforma del Entregable 3
 # `make db-up` lo levanta y espera a que esté sano. Todo el flujo (`make datos`) solo necesita Docker:
 # psql corre dentro de este contenedor con el repo montado en /workspace (ver datos/psql.sh).
 #
@@ -38,6 +38,94 @@ services:
       interval: 2s
       timeout: 3s
       retries: 30
+
+  # =====================================================================
+  # Plataforma del Entregable 3 (`make plataforma`): 3 instancias del monolito modular + nginx + stub externo
+  # =====================================================================
+  app1: &app
+    build: ./app
+    image: portal-b2b-app:e3
+    container_name: portal-app1
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      stub-credito:
+        condition: service_started
+    environment: &app_env
+      INSTANCIA: app1
+      BD_DSN: postgresql://postgres:portal@db:5432/portal_b2b
+      BD_POOL_MIN: "4"
+      BD_POOL_MAX: "10"
+      BD_POOL_TIMEOUT_S: "10"
+      CREDITO_URL: http://stub-credito:9000
+      CREDITO_TIMEOUT_S: "30"
+      RESERVA_TTL_S: "60"
+      FECHA_OPERACION: "2026-09-17"
+    ports:
+      - "127.0.0.1:8001:8000"          # /metrics y acceso directo a la instancia (diagnóstico)
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/salud', timeout=2)\""]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  app2:
+    <<: *app
+    container_name: portal-app2
+    environment:
+      <<: *app_env
+      INSTANCIA: app2
+    ports:
+      - "127.0.0.1:8002:8000"
+
+  app3:
+    <<: *app
+    container_name: portal-app3
+    environment:
+      <<: *app_env
+      INSTANCIA: app3
+    ports:
+      - "127.0.0.1:8003:8000"
+
+  stub-credito:
+    build: ./stub
+    image: portal-b2b-stub:e3
+    container_name: portal-stub-credito
+    restart: unless-stopped
+    environment:
+      LATENCIA_BASE_MS: "20"
+      PORCENTAJE_SIN_CUPO: "3"
+    ports:
+      - "127.0.0.1:9000:9000"
+
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: portal-nginx
+    restart: unless-stopped
+    depends_on:
+      app1: { condition: service_healthy }
+      app2: { condition: service_healthy }
+      app3: { condition: service_healthy }
+    volumes:
+      - ./infra/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "127.0.0.1:8080:80"           # punto de entrada del portal: http://localhost:8080
+
+  # Herramientas (no arrancan con `up`): generador de carga y pruebas de aceptación de la plataforma
+  carga:
+    build: ./carga
+    image: portal-b2b-carga:e3
+    profiles: ["herramientas"]
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      BD_DSN: postgresql://postgres:portal@db:5432/portal_b2b
+      PORTAL_URL: http://nginx:80
+    volumes:
+      - .:/workspace
+    working_dir: /workspace
 
 volumes:
   pgdata:

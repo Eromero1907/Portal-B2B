@@ -1,0 +1,64 @@
+id,grupo,objeto,escenario,metrica,unidad,sentido,valor_e2,objetivo_e3,n_corridas,e3_mediana,e3_min,e3_max,rango_entre_corridas_pct,cambio_vs_e2_pct,cumple_objetivo
+consulta:q1:caliente:p50,consulta,q1,caliente,p50,ms,menor_o_igual,0.52,0.468,3,0.8182,0.8144,0.8376,2.8,57.3,NO
+consulta:q1:caliente:p95,consulta,q1,caliente,p95,ms,menor_o_igual,0.7,0.63,3,1.4912,1.4132,1.7798,24.6,113.0,NO
+consulta:q1:caliente:p99,consulta,q1,caliente,p99,ms,menor_o_igual,1.05,0.945,3,1.9048,1.8865,1.9866,5.3,81.4,NO
+consulta:q1:frio:p50,consulta,q1,frio,p50,ms,menor_o_igual,0.53,0.477,3,0.7906,0.7804,0.9608,22.8,49.2,NO
+consulta:q1:frio:p95,consulta,q1,frio,p95,ms,menor_o_igual,0.6,0.54,3,1.4184,1.2856,1.9166,44.5,136.4,NO
+consulta:q1:frio:p99,consulta,q1,frio,p99,ms,menor_o_igual,0.69,0.621,3,1.6869,1.6841,2.276,35.1,144.5,NO
+consulta:q2:caliente:p50,consulta,q2,caliente,p50,ms,menor_o_igual,0.54,0.486,3,0.9385,0.9106,1.0151,11.1,73.8,NO
+consulta:q2:caliente:p95,consulta,q2,caliente,p95,ms,menor_o_igual,0.64,0.576,3,1.8467,1.4186,2.715,70.2,188.5,NO
+consulta:q2:caliente:p99,consulta,q2,caliente,p99,ms,menor_o_igual,0.74,0.666,3,2.3447,1.6554,3.2481,67.9,216.9,NO
+consulta:q2:frio:p50,consulta,q2,frio,p50,ms,menor_o_igual,0.54,0.486,3,0.8974,0.8395,1.2052,40.8,66.2,NO
+consulta:q2:frio:p95,consulta,q2,frio,p95,ms,menor_o_igual,0.66,0.594,3,1.8014,1.284,2.3787,60.8,172.9,NO
+consulta:q2:frio:p99,consulta,q2,frio,p99,ms,menor_o_igual,0.78,0.702,3,2.0998,1.8548,2.9405,51.7,169.2,NO
+consulta:q3:caliente:p50,consulta,q3,caliente,p50,ms,menor_o_igual,0.53,0.477,3,0.9162,0.8246,1.3582,58.2,72.9,NO
+consulta:q3:caliente:p95,consulta,q3,caliente,p95,ms,menor_o_igual,0.81,0.729,3,1.6979,1.5008,2.3791,51.7,109.6,NO
+consulta:q3:caliente:p99,consulta,q3,caliente,p99,ms,menor_o_igual,0.98,0.882,3,1.9832,1.7575,2.5001,37.4,102.4,NO
+consulta:q3:frio:p50,consulta,q3,frio,p50,ms,menor_o_igual,0.54,0.486,3,0.938,0.7305,0.9664,25.1,73.7,NO
+consulta:q3:frio:p95,consulta,q3,frio,p95,ms,menor_o_igual,0.97,0.873,3,2.2337,1.1734,2.8229,73.8,130.3,NO
+consulta:q3:frio:p99,consulta,q3,frio,p99,ms,menor_o_igual,1.89,1.701,3,2.5913,1.4197,4.4835,118.2,37.1,NO
+consulta:q4:caliente:p50,consulta,q4,caliente,p50,ms,menor_o_igual,1.15,1.035,3,2.207,2.037,2.5143,21.6,91.9,NO
+consulta:q4:caliente:p95,consulta,q4,caliente,p95,ms,menor_o_igual,11.17,10.053,3,18.8445,18.4114,21.2607,15.1,68.7,NO
+consulta:q4:caliente:p99,consulta,q4,caliente,p99,ms,menor_o_igual,11.48,10.332,3,27.3289,20.658,27.6538,25.6,138.1,NO
+consulta:q4:frio:p50,consulta,q4,frio,p50,ms,menor_o_igual,1.14,1.026,3,1.5912,1.3826,1.851,29.4,39.6,NO
+consulta:q4:frio:p95,consulta,q4,frio,p95,ms,menor_o_igual,1.75,1.575,3,2.7966,2.44,2.9078,16.7,59.8,NO
+consulta:q4:frio:p99,consulta,q4,frio,p99,ms,menor_o_igual,2.13,1.917,3,3.3536,3.0793,3.9449,25.8,57.4,NO
+consulta:q5:pagina1:p50,consulta,q5,pagina1,p50,ms,menor_o_igual,0.69,0.621,3,0.9748,0.9254,1.5056,59.5,41.3,NO
+consulta:q5:pagina1:p95,consulta,q5,pagina1,p95,ms,menor_o_igual,0.77,0.693,3,2.0769,1.4791,3.1821,82.0,169.7,NO
+consulta:q5:pagina1:p99,consulta,q5,pagina1,p99,ms,menor_o_igual,0.98,0.882,3,2.5831,1.6904,4.1067,93.5,163.6,NO
+consulta:q5:offset5000:p50,consulta,q5,offset5000,p50,ms,menor_o_igual,2.23,2.007,3,3.7062,3.4657,3.9672,13.5,66.2,NO
+consulta:q5:offset5000:p95,consulta,q5,offset5000,p95,ms,menor_o_igual,2.67,2.403,3,4.8466,4.2289,7.4714,66.9,81.5,NO
+consulta:q5:offset5000:p99,consulta,q5,offset5000,p99,ms,menor_o_igual,3.04,2.736,3,7.6913,4.6175,9.3461,61.5,153.0,NO
+consulta:q5:keyset:p50,consulta,q5,keyset,p50,ms,menor_o_igual,0.63,0.567,3,1.1391,0.981,1.2812,26.4,80.8,NO
+consulta:q5:keyset:p95,consulta,q5,keyset,p95,ms,menor_o_igual,0.85,0.765,3,2.3509,1.7804,2.445,28.3,176.6,NO
+consulta:q5:keyset:p99,consulta,q5,keyset,p99,ms,menor_o_igual,1.11,0.999,3,2.6586,2.3068,3.7163,53.0,139.5,NO
+q3_concurrente:q3:caliente_16h:p50,q3_concurrente,q3,caliente_16h,p50,ms,menor_o_igual,2.78,2.502,1,5.0707,5.0707,5.0707,0.0,82.4,NO
+q3_concurrente:q3:caliente_16h:p95,q3_concurrente,q3,caliente_16h,p95,ms,menor_o_igual,5.03,4.527,1,11.1318,11.1318,11.1318,0.0,121.3,NO
+q3_concurrente:q3:caliente_16h:p99,q3_concurrente,q3,caliente_16h,p99,ms,menor_o_igual,6.41,5.769,1,15.4617,15.4617,15.4617,0.0,141.2,NO
+q3_concurrente:q3:fria_16h:p50,q3_concurrente,q3,fria_16h,p50,ms,menor_o_igual,2.81,2.529,1,5.6402,5.6402,5.6402,0.0,100.7,NO
+q3_concurrente:q3:fria_16h:p95,q3_concurrente,q3,fria_16h,p95,ms,menor_o_igual,5.05,4.545,1,12.7425,12.7425,12.7425,0.0,152.3,NO
+q3_concurrente:q3:fria_16h:p99,q3_concurrente,q3,fria_16h,p99,ms,menor_o_igual,6.45,5.805,1,17.3054,17.3054,17.3054,0.0,168.3,NO
+q3_concurrente:q3:caliente_32h:p50,q3_concurrente,q3,caliente_32h,p50,ms,menor_o_igual,5.82,5.238,1,10.4995,10.4995,10.4995,0.0,80.4,NO
+q3_concurrente:q3:caliente_32h:p95,q3_concurrente,q3,caliente_32h,p95,ms,menor_o_igual,12.36,11.124,1,23.9552,23.9552,23.9552,0.0,93.8,NO
+q3_concurrente:q3:caliente_32h:p99,q3_concurrente,q3,caliente_32h,p99,ms,menor_o_igual,40.17,36.153,1,31.6383,31.6383,31.6383,0.0,-21.2,SI
+q3_concurrente:q3:fria_32h:p50,q3_concurrente,q3,fria_32h,p50,ms,menor_o_igual,5.66,5.094,1,11.5971,11.5971,11.5971,0.0,104.9,NO
+q3_concurrente:q3:fria_32h:p95,q3_concurrente,q3,fria_32h,p95,ms,menor_o_igual,10.94,9.846,1,26.752,26.752,26.752,0.0,144.5,NO
+q3_concurrente:q3:fria_32h:p99,q3_concurrente,q3,fria_32h,p99,ms,menor_o_igual,14.24,12.816,1,36.4827,36.4827,36.4827,0.0,156.2,NO
+q3_concurrente:q3:caliente_64h:p50,q3_concurrente,q3,caliente_64h,p50,ms,menor_o_igual,10.79,9.711,1,20.5607,20.5607,20.5607,0.0,90.6,NO
+q3_concurrente:q3:caliente_64h:p95,q3_concurrente,q3,caliente_64h,p95,ms,menor_o_igual,21.55,19.395,1,47.4133,47.4133,47.4133,0.0,120.0,NO
+q3_concurrente:q3:caliente_64h:p99,q3_concurrente,q3,caliente_64h,p99,ms,menor_o_igual,27.59,24.831,1,63.8552,63.8552,63.8552,0.0,131.4,NO
+q3_concurrente:q3:fria_64h:p50,q3_concurrente,q3,fria_64h,p50,ms,menor_o_igual,11.56,10.404,1,22.7768,22.7768,22.7768,0.0,97.0,NO
+q3_concurrente:q3:fria_64h:p95,q3_concurrente,q3,fria_64h,p95,ms,menor_o_igual,23.22,20.898,1,51.005,51.005,51.005,0.0,119.7,NO
+q3_concurrente:q3:fria_64h:p99,q3_concurrente,q3,fria_64h,p99,ms,menor_o_igual,29.5,26.55,1,67.3873,67.3873,67.3873,0.0,128.4,NO
+carga_masiva:copy_total:make datos:tiempo,carga_masiva,copy_total,make datos,tiempo,s,menor_o_igual,15.628,14.0652,1,31.027,31.027,31.027,0.0,98.5,NO
+carga_masiva:total:make datos:tiempo,carga_masiva,total,make datos,tiempo,s,menor_o_igual,24.905,22.4145,1,43.261,43.261,43.261,0.0,73.7,NO
+estrategia:E1b:COPY sin índices:tiempo,estrategia,E1b,COPY sin índices,tiempo,s,menor_o_igual,0.709,0.6381,1,1.706,1.706,1.706,0.0,140.6,NO
+estrategia:E1b:COPY sin índices:throughput,estrategia,E1b,COPY sin índices,throughput,filas/s,mayor_o_igual,528996,587773.33,1,219973.0,219973.0,219973.0,0.0,-58.4,NO
+estrategia:E1a:COPY con índices:tiempo,estrategia,E1a,COPY con índices,tiempo,s,menor_o_igual,1.294,1.1646,1,2.672,2.672,2.672,0.0,106.5,NO
+estrategia:E1a:COPY con índices:throughput,estrategia,E1a,COPY con índices,throughput,filas/s,mayor_o_igual,289967,322185.56,1,140396.0,140396.0,140396.0,0.0,-51.6,NO
+estrategia:E2:Lotes de 1000:tiempo,estrategia,E2,Lotes de 1000,tiempo,s,menor_o_igual,11.146,10.0314,1,30.044,30.044,30.044,0.0,169.5,NO
+estrategia:E2:Lotes de 1000:throughput,estrategia,E2,Lotes de 1000,throughput,filas/s,mayor_o_igual,33664,37404.44,1,12488.0,12488.0,12488.0,0.0,-62.9,NO
+estrategia:E3:Fila a fila (muestra):tiempo,estrategia,E3,Fila a fila (muestra),tiempo,s,menor_o_igual,56.629,50.9661,1,172.273,172.273,172.273,0.0,204.2,NO
+estrategia:E3:Fila a fila (muestra):throughput,estrategia,E3,Fila a fila (muestra),throughput,filas/s,mayor_o_igual,662,735.56,1,218.0,218.0,218.0,0.0,-67.1,NO
+estrategia:E4:Ruta transaccional:tiempo,estrategia,E4,Ruta transaccional,tiempo,s,menor_o_igual,486.42,437.778,1,883.083,883.083,883.083,0.0,81.5,NO
+estrategia:E4:Ruta transaccional:throughput,estrategia,E4,Ruta transaccional,throughput,filas/s,mayor_o_igual,452,502.22,1,249.0,249.0,249.0,0.0,-44.9,NO

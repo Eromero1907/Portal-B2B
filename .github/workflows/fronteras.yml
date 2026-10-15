@@ -1,0 +1,22 @@
+# Verificación de fronteras del monolito modular en cada push y pull request.
+# Falla el build si un módulo importa los internos de otro (import-linter) o si escribe SQL contra un esquema
+# que no es el suyo (tests/test_fronteras.py).
+name: fronteras
+on:
+  push:
+  pull_request:
+jobs:
+  fronteras:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements-dev.txt
+      - name: import-linter (fronteras de código)
+        run: lint-imports
+        env:
+          PYTHONPATH: app
+      - name: un esquema por módulo (fronteras de datos)
+        run: python -m pytest -q tests

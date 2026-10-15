@@ -1,0 +1,81 @@
+# Verificación de fronteras del monolito modular (restricción 2 del curso: "un import ilegal rompe el build").
+# Regla: cada módulo de negocio expone su interfaz pública en su __init__.py; sus paquetes `interno`
+# (repositorios con el SQL de su esquema y lógica propia) no se importan desde ningún otro módulo.
+# Se ejecuta con `make fronteras` y en GitHub Actions (.github/workflows/fronteras.yml).
+[importlinter]
+root_package = portal
+include_external_packages = False
+
+[importlinter:contract:proveedores-interno]
+name = Nadie fuera de proveedores importa proveedores.interno
+type = forbidden
+source_modules =
+    portal.modulos.catalogo
+    portal.modulos.logistica
+    portal.modulos.ordenes
+    portal.principal
+    portal.integraciones
+forbidden_modules =
+    portal.modulos.proveedores.interno
+# Se prohíbe el import DIRECTO del paquete interno; usarlo a través de la interfaz pública es lo esperado.
+allow_indirect_imports = True
+
+[importlinter:contract:catalogo-interno]
+name = Nadie fuera de catalogo importa catalogo.interno
+type = forbidden
+source_modules =
+    portal.modulos.proveedores
+    portal.modulos.logistica
+    portal.modulos.ordenes
+    portal.principal
+    portal.integraciones
+forbidden_modules =
+    portal.modulos.catalogo.interno
+# Se prohíbe el import DIRECTO del paquete interno; usarlo a través de la interfaz pública es lo esperado.
+allow_indirect_imports = True
+
+[importlinter:contract:logistica-interno]
+name = Nadie fuera de logistica importa logistica.interno
+type = forbidden
+source_modules =
+    portal.modulos.proveedores
+    portal.modulos.catalogo
+    portal.modulos.ordenes
+    portal.principal
+    portal.integraciones
+forbidden_modules =
+    portal.modulos.logistica.interno
+# Se prohíbe el import DIRECTO del paquete interno; usarlo a través de la interfaz pública es lo esperado.
+allow_indirect_imports = True
+
+[importlinter:contract:ordenes-interno]
+name = Nadie fuera de ordenes importa ordenes.interno
+type = forbidden
+source_modules =
+    portal.modulos.proveedores
+    portal.modulos.catalogo
+    portal.modulos.logistica
+    portal.principal
+    portal.integraciones
+forbidden_modules =
+    portal.modulos.ordenes.interno
+# Se prohíbe el import DIRECTO del paquete interno; usarlo a través de la interfaz pública es lo esperado.
+allow_indirect_imports = True
+
+[importlinter:contract:modulos-sin-orquestador]
+name = Proveedores, catalogo y logistica no dependen de ordenes (Ordenes orquesta, ADR-002)
+type = forbidden
+source_modules =
+    portal.modulos.proveedores
+    portal.modulos.catalogo
+    portal.modulos.logistica
+forbidden_modules =
+    portal.modulos.ordenes
+
+[importlinter:contract:proveedores-independiente]
+name = Proveedores, catalogo y logistica son independientes entre si
+type = independence
+modules =
+    portal.modulos.proveedores
+    portal.modulos.catalogo
+    portal.modulos.logistica

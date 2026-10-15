@@ -1,0 +1,12 @@
+parametro,valor
+effective_cache_size,"1GB"
+fsync,"on"
+max_parallel_workers_per_gather,"2"
+max_wal_size,"2GB"
+random_page_cost,"4"
+server_version,"PostgreSQL 16.15 (Debian 16.15-1.pgdg13+2) on x86_64-pc-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit"
+shared_buffers,"512MB"
+synchronous_commit,"on"
+TimeZone,"UTC"
+track_io_timing,"on"
+work_mem,"32MB"
