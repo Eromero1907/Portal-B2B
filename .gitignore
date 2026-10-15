@@ -37,6 +37,8 @@ view_41.py
 # ---------------------------------------------------------------------
 !README.md
 !baseline/*.md
+!Entrega 3/**/*.md
+!faults/**/*.md
 !**/requirements.txt
 !requirements-dev.txt
 !resultados/**/*.txt
