@@ -85,6 +85,27 @@ INSERT INTO ordenes.outbox (evento_id, tipo, agregado_id, payload)
 VALUES (%(evento_id)s, %(tipo)s, %(agregado_id)s, %(payload)s)
 """
 
+_SQL_OUTBOX_PENDIENTES = """
+SELECT id, evento_id, tipo, agregado_id, payload
+  FROM ordenes.outbox
+ WHERE publicado_en IS NULL
+ ORDER BY id
+ LIMIT %(limite)s
+   FOR UPDATE SKIP LOCKED
+"""
+
+_SQL_OUTBOX_MARCAR_PUBLICADOS = """
+UPDATE ordenes.outbox
+   SET publicado_en = CURRENT_TIMESTAMP
+ WHERE id = ANY(%(ids)s::bigint[])
+"""
+
+_SQL_OUTBOX_CONTAR_PENDIENTES = """
+SELECT count(*)
+  FROM ordenes.outbox
+ WHERE publicado_en IS NULL
+"""
+
 
 async def _una(conn: AsyncConnection, sql: str, params: dict):
     async with conn.cursor() as cur:
@@ -159,3 +180,24 @@ async def idem_borrar(conn: AsyncConnection, clave: str) -> None:
 async def registrar_evento(conn: AsyncConnection, *, evento_id, tipo: str, agregado_id: int, payload: dict) -> None:
     await _ejecutar(conn, _SQL_OUTBOX, {"evento_id": evento_id, "tipo": tipo, "agregado_id": agregado_id,
                                         "payload": Jsonb(payload)})
+
+
+async def outbox_obtener_pendientes(conn: AsyncConnection, limite: int = 100) -> list[dict]:
+    async with conn.cursor() as cur:
+        await cur.execute(_SQL_OUTBOX_PENDIENTES, {"limite": limite})
+        filas = await cur.fetchall()
+        return [
+            {"id": f[0], "evento_id": str(f[1]), "tipo": f[2], "agregado_id": f[3], "payload": f[4]}
+            for f in filas
+        ]
+
+
+async def outbox_marcar_publicados(conn: AsyncConnection, ids: list[int]) -> None:
+    if not ids:
+        return
+    await _ejecutar(conn, _SQL_OUTBOX_MARCAR_PUBLICADOS, {"ids": ids})
+
+
+async def outbox_contar_pendientes(conn: AsyncConnection) -> int:
+    fila = await _una(conn, _SQL_OUTBOX_CONTAR_PENDIENTES, {})
+    return fila[0] if fila else 0

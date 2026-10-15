@@ -88,7 +88,23 @@ SELECT 91250 + row_number() OVER (ORDER BY d, c, s),
        generate_series(0, 24) AS s
  WHERE NOT EXISTS (SELECT 1 FROM logistica.franjas_cedi WHERE fecha >= DATE '2026-09-17');
 
+-- ---------------------------------------------------------------------
+-- notificaciones.eventos_procesados (Consumidor idempotente de eventos)
+-- ---------------------------------------------------------------------
+CREATE SCHEMA IF NOT EXISTS notificaciones;
+
+CREATE TABLE IF NOT EXISTS notificaciones.eventos_procesados (
+    evento_id       UUID          PRIMARY KEY,
+    tipo            VARCHAR(50)   NOT NULL,
+    agregado_id     INT,
+    procesado_en    TIMESTAMPTZ   NOT NULL DEFAULT now()
+);
+COMMENT ON TABLE notificaciones.eventos_procesados IS
+  'Deduplicación idempotente del consumidor de eventos (ON CONFLICT (evento_id) DO NOTHING).';
+
 ANALYZE ordenes.idempotencia;
 ANALYZE ordenes.outbox;
 ANALYZE logistica.reservas;
 ANALYZE logistica.franjas_cedi;
+ANALYZE notificaciones.eventos_procesados;
+

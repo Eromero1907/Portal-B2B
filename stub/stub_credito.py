@@ -37,13 +37,17 @@ class Validacion(BaseModel):
     total: str
 
 
+import fallas
+
+
 def _sin_cupo(proveedor_id: int) -> bool:
     """Decisión determinista (hash multiplicativo de Knuth): el mismo proveedor siempre recibe la misma respuesta."""
     return (proveedor_id * 2654435761) % 100 < PORCENTAJE_SIN_CUPO
 
 
-async def _aplicar_fallas(_solicitud: Validacion) -> None:
+async def _aplicar_fallas(solicitud: Validacion, intento: int) -> None:
     """Enganche del motor de fallas (relevo 2). En la línea base no inyecta nada."""
+    await fallas.aplicar_fallas_proceso(orden_id=solicitud.orden_id, proveedor_id=solicitud.proveedor_id, intento=intento)
 
 
 def _log(**campos) -> None:
@@ -56,8 +60,22 @@ def _log(**campos) -> None:
 async def validar(solicitud: Validacion, request: Request):
     inicio = time.perf_counter()
     trace_id = request.headers.get("x-trace-id")
+    try:
+        intento = int(request.headers.get("x-intento", "1"))
+    except ValueError:
+        intento = 1
     await asyncio.sleep(LATENCIA_BASE_MS / 1000)
-    await _aplicar_fallas(solicitud)
+    try:
+        await _aplicar_fallas(solicitud, intento)
+    except Exception as e:
+        duracion = time.perf_counter() - inicio
+        codigo_status = getattr(e, "status_code", 500)
+        SOLICITUDES.labels("error", str(codigo_status)).inc()
+        DURACION.observe(duracion)
+        _log(evento="validacion_error", orden_id=solicitud.orden_id, proveedor_id=solicitud.proveedor_id,
+             resultado="error", codigo=codigo_status, duracion_ms=round(duracion * 1000, 2), trace_id=trace_id)
+        raise
+
     sin_cupo = _sin_cupo(solicitud.proveedor_id)
     cuerpo = {"aprobado": not sin_cupo, "motivo": "cupo_credito_insuficiente" if sin_cupo else None,
               "referencia": str(uuid.uuid4())}
@@ -68,6 +86,7 @@ async def validar(solicitud: Validacion, request: Request):
     _log(evento="validacion", orden_id=solicitud.orden_id, proveedor_id=solicitud.proveedor_id,
          resultado=resultado, duracion_ms=round(duracion * 1000, 2), trace_id=trace_id)
     return cuerpo
+
 
 
 @app.get("/salud")

@@ -3,3 +3,5 @@ uvicorn[standard]==0.34.0
 psycopg[binary,pool]==3.2.3
 aiohttp==3.11.10
 prometheus-client==0.21.1
+aio-pika==9.5.4
+

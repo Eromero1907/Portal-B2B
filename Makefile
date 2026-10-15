@@ -32,7 +32,8 @@ else
 endif
 
 # Servicios de la plataforma del Entregable 3
-PLATAFORMA := stub-credito app1 app2 app3 nginx
+PLATAFORMA := rabbitmq stub-credito app1 app2 app3 publicador-outbox consumidor-eventos nginx
+
 
 # Parametros de la carga (make carga FLUJOS=100 DURACION=300 CALENTAMIENTO=30 SALIDA=resultados/carga/x)
 FLUJOS ?= 100
@@ -170,3 +171,12 @@ fronteras: export PYTHONPATH := app
 fronteras:
 	$(VENV_BIN)/lint-imports
 	$(VENV_BIN)/python -m pytest -q tests
+
+humo:
+	$(VENV_BIN)/python faults/probar_humo.py
+
+fallas-estado:
+	$(VENV_BIN)/python faults/controlador_fallas.py estado
+
+kill-switch:
+	$(VENV_BIN)/python faults/controlador_fallas.py kill-switch on

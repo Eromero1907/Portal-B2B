@@ -51,28 +51,77 @@ async def cerrar() -> None:
         await _sesion.close()
 
 
-async def validar(*, proveedor_id: int, orden_id: int, total: Decimal, trace_id: str) -> ResultadoCredito:
-    """Consulta validación tributaria y cupo de crédito (RN-10). Lanza CreditoNoDisponible ante fallas técnicas."""
+async def _llamar_stub(
+    *,
+    intento: int,
+    proveedor_id: int,
+    orden_id: int,
+    total: Decimal,
+    trace_id: str,
+    idempotency_key: str | None,
+) -> ResultadoCredito:
+    cabeceras = {
+        "traceparent": traceparent(trace_id),
+        "x-trace-id": trace_id,
+        "x-intento": str(intento),
+    }
+    if idempotency_key:
+        cabeceras["x-idempotency-key"] = idempotency_key
+
+    async with _sesion.post(
+        "/v1/validaciones",
+        json={"proveedor_id": proveedor_id, "orden_id": orden_id, "total": str(total)},
+        headers=cabeceras,
+    ) as r:
+        if r.status >= 500:
+            raise CreditoNoDisponible(f"HTTP {r.status}")
+        if r.status >= 400:
+            raise CreditoNoDisponible(f"HTTP {r.status} inesperado")
+        cuerpo = await r.json()
+    return ResultadoCredito(bool(cuerpo["aprobado"]), cuerpo.get("motivo"), cuerpo.get("referencia"))
+
+
+async def validar(
+    *,
+    proveedor_id: int,
+    orden_id: int,
+    total: Decimal,
+    trace_id: str,
+    idempotency_key: str | None = None,
+) -> ResultadoCredito:
+    """Consulta validación tributaria y cupo de crédito (RN-10).
+
+    Aplica timeout por intento, reintentos con full jitter y presupuesto, Circuit Breaker
+    y Bulkhead según configuración. Lanza CreditoNoDisponible ante fallas técnicas.
+    """
     inicio = time.perf_counter()
     resultado = "error"
     try:
-        async with _sesion.post(
-            "/v1/validaciones",
-            json={"proveedor_id": proveedor_id, "orden_id": orden_id, "total": str(total)},
-            headers={"traceparent": traceparent(trace_id), "x-trace-id": trace_id},
-        ) as r:
-            if r.status >= 500:
-                raise CreditoNoDisponible(f"HTTP {r.status}")
-            if r.status >= 400:
-                raise CreditoNoDisponible(f"HTTP {r.status} inesperado")
-            cuerpo = await r.json()
-        resultado = "aprobado" if cuerpo["aprobado"] else "denegado"
-        return ResultadoCredito(bool(cuerpo["aprobado"]), cuerpo.get("motivo"), cuerpo.get("referencia"))
+        from portal.integraciones.resiliencia import ejecutar_con_reintentos
+
+        async def _intento(n: int):
+            return await _llamar_stub(
+                intento=n,
+                proveedor_id=proveedor_id,
+                orden_id=orden_id,
+                total=total,
+                trace_id=trace_id,
+                idempotency_key=idempotency_key,
+            )
+
+        res = await ejecutar_con_reintentos(_intento, idempotency_key=idempotency_key)
+        resultado = "aprobado" if res.aprobado else "denegado"
+        return res
     except asyncio.TimeoutError as e:
         resultado = "timeout"
         raise CreditoNoDisponible("timeout") from e
     except aiohttp.ClientError as e:
+        resultado = "error_conexion"
         raise CreditoNoDisponible(type(e).__name__) from e
+    except CreditoNoDisponible as e:
+        resultado = "error"
+        raise
     finally:
         CREDITO_LLAMADAS.labels(resultado).inc()
         CREDITO_DURACION.observe(time.perf_counter() - inicio)
+

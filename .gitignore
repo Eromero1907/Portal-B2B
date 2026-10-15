@@ -48,3 +48,7 @@ view_41.py
 .venv/
 datos/csv/subset_*.csv
 .pytest_cache/
+resultados/carga/
+generar_google_slide.gs
+imagenes_extraidas/
+*GUIA_relevo_Santiago.md

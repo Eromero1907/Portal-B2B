@@ -84,7 +84,9 @@ class OrdenEntrada(BaseModel):
 
 
 def _json(r: ordenes.Respuesta) -> JSONResponse:
-    return JSONResponse(status_code=r.codigo_http, content=r.cuerpo)
+    headers = getattr(r, "cabeceras", None) or None
+    return JSONResponse(status_code=r.codigo_http, content=r.cuerpo, headers=headers)
+
 
 
 # ---------------------------------------------------------------------------

@@ -45,6 +45,29 @@ RESERVAS_EXPIRADAS = Counter("portal_reservas_expiradas_total", "Reservas PENDIE
 INFO = Gauge("portal_info", "Instancia y versión", ["instancia", "version"])
 INFO.labels(config.INSTANCIA, config.VERSION).set(1)
 
+# Resiliencia: Circuit Breaker
+BREAKER_ESTADO = Gauge("portal_breaker_estado", "Estado del Circuit Breaker (0=cerrado, 1=abierto, 2=semiabierto)",
+                       ["instancia"])
+BREAKER_TRANSICIONES = Counter("portal_breaker_transiciones_total", "Transiciones de estado del Circuit Breaker",
+                               ["instancia", "de", "a"])
+BREAKER_LLAMADAS = Counter("portal_breaker_llamadas_total", "Llamadas evaluadas por el Circuit Breaker",
+                           ["instancia", "estado", "resultado"])
+
+# Resiliencia: Reintentos y Bulkhead
+CREDITO_REINTENTOS = Counter("portal_credito_reintentos_total", "Reintentos de llamadas al stub de crédito",
+                             ["instancia", "intento", "resultado"])
+BULKHEAD_EN_USO = Gauge("portal_bulkhead_en_uso", "Conexiones concurrentes en uso en el bulkhead de crédito",
+                        ["instancia"])
+BULKHEAD_RECHAZOS = Counter("portal_bulkhead_rechazos_total", "Llamadas rechazadas por saturación del bulkhead",
+                            ["instancia"])
+
+# Resiliencia: Outbox y Lag
+OUTBOX_PENDIENTES = Gauge("portal_outbox_pendientes", "Eventos pendientes en ordenes.outbox")
+OUTBOX_PUBLICADOS = Counter("portal_outbox_publicados_total", "Eventos del outbox publicados a RabbitMQ", ["instancia"])
+CONSUMIDOR_PROCESADOS = Counter("portal_consumidor_procesados_total", "Eventos procesados por el consumidor idempotente",
+                                ["resultado"])
+
+
 
 class _ColectorPool:
     """Lee el estado del pool en cada scrape (no hay que actualizarlo a mano)."""

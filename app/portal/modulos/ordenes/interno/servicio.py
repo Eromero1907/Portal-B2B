@@ -35,6 +35,8 @@ EN_PROCESO = "EN_PROCESO"
 class Respuesta:
     codigo_http: int
     cuerpo: dict = field(default_factory=dict)
+    cabeceras: dict = field(default_factory=dict)
+
 
 
 # ---------------------------------------------------------------------------
@@ -119,6 +121,8 @@ async def _confirmar(orden_id: int, clave: str, trace_id: str) -> Respuesta:
     # ---- T1 · validaciones y reserva (transacción corta) -------------------
     async with pool.connection() as conn:
         async with conn.transaction():
+            if config.DB_LOCK_TIMEOUT_MS > 0:
+                await conn.execute(f"SET LOCAL lock_timeout = '{config.DB_LOCK_TIMEOUT_MS}ms'")
             orden = await repositorio.orden_para_confirmar(conn, orden_id)
             if orden is None:
                 await repositorio.idem_borrar(conn, clave)
@@ -148,31 +152,39 @@ async def _confirmar(orden_id: int, clave: str, trace_id: str) -> Respuesta:
     # ---- Llamada al externo, sin transacción abierta -----------------------
     try:
         veredicto = await credito.validar(proveedor_id=proveedor_id, orden_id=orden_id, total=total,
-                                          trace_id=trace_id)
+                                          trace_id=trace_id, idempotency_key=clave)
     except credito.CreditoNoDisponible as e:
         async with pool.connection() as conn:
             async with conn.transaction():
                 await logistica.liberar_reserva(conn, orden_id)
                 await repositorio.idem_borrar(conn, clave)
-        CONFIRMACIONES.labels("no_disponible", "credito_no_disponible").inc()
-        registrar("credito_no_disponible", orden_id=orden_id, detalle=str(e), idempotency_key=clave, trace_id=trace_id)
-        return Respuesta(503, {"error": "credito_no_disponible", "orden_id": orden_id, "estado": EN_PROCESO,
-                               "trace_id": trace_id})
+        causa_err = str(e)
+        CONFIRMACIONES.labels("no_disponible", causa_err).inc()
+        registrar("credito_no_disponible", orden_id=orden_id, detalle=causa_err, idempotency_key=clave, trace_id=trace_id)
+        cabeceras = {}
+        if config.DEGRADACION_ACTIVA:
+            cabeceras["Retry-After"] = str(config.DEGRADACION_RETRY_AFTER_S)
+        return Respuesta(503, {"error": "credito_no_disponible", "causa": causa_err, "orden_id": orden_id,
+                               "estado": EN_PROCESO, "trace_id": trace_id}, cabeceras=cabeceras)
+
 
     # ---- T2 · cierre atómico ------------------------------------------------
     async with pool.connection() as conn:
         async with conn.transaction():
             if not veredicto.aprobado:
-                await logistica.liberar_reserva(conn, orden_id)
                 await repositorio.cambiar_estado(conn, orden_id, RECHAZADA)
+                await logistica.liberar_reserva(conn, orden_id)
                 return await _completar(conn, clave, orden_id, RECHAZADA, "credito_denegado", trace_id)
+
+            if not await repositorio.cambiar_estado(conn, orden_id, CONFIRMADA):
+                # La orden ya fue modificada/resuelta concurrentemente
+                await logistica.liberar_reserva(conn, orden_id)
+                return await _completar(conn, clave, orden_id, RECHAZADA, "ya_resuelta", trace_id)
 
             if not await logistica.confirmar_reserva(conn, orden_id):
                 # La reserva expiró mientras se esperaba al externo: el cupo ya se devolvió.
                 await repositorio.cambiar_estado(conn, orden_id, RECHAZADA)
                 return await _completar(conn, clave, orden_id, RECHAZADA, "reserva_expirada", trace_id)
-
-            await repositorio.cambiar_estado(conn, orden_id, CONFIRMADA)
             evento_id = uuid.uuid4()
             await repositorio.registrar_evento(conn, evento_id=evento_id, tipo="OrdenConfirmada", agregado_id=orden_id,
                                                payload={"evento_id": str(evento_id), "tipo": "OrdenConfirmada",

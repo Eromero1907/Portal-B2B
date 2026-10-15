@@ -58,19 +58,19 @@
       "prueba": "P10",
       "descripcion": "50 reintentos con la misma clave → una orden, una franja, un evento",
       "resultado": "PASA",
-      "detalle": "concurrentes={200: 50} reservas={'CONFIRMADA': 1} eventos=1 cupo 0->1 respuestas_distintas_tras_completar=1"
+      "detalle": "concurrentes={200: 48, 409: 2} reservas={'CONFIRMADA': 1} eventos=1 cupo 0->1 respuestas_distintas_tras_completar=1"
     },
     {
       "prueba": "P11",
       "descripcion": "10 claves distintas sobre la misma orden → un solo efecto",
       "resultado": "PASA",
-      "detalle": "codigos={200: 9, 409: 1} reservas={'CONFIRMADA': 1} eventos=1"
+      "detalle": "codigos={200: 7, 409: 3} reservas={'CONFIRMADA': 1} eventos=1"
     },
     {
       "prueba": "P12",
       "descripcion": "20 órdenes por el último cupo: gana exactamente 1 y no hay sobreventa",
       "resultado": "PASA",
-      "detalle": "cupos_libres_antes=1 ganadoras=1 sin_cupo=19 final=10/10 instancias={'app2': 7, 'app3': 7, 'app1': 6}"
+      "detalle": "cupos_libres_antes=1 ganadoras=1 sin_cupo=19 final=10/10 instancias={'app1': 7, 'app3': 5, 'app2': 8}"
     },
     {
       "prueba": "P13",
@@ -89,6 +89,6 @@
     "orden_id": 300001,
     "estado": "CONFIRMADA",
     "causa": null,
-    "trace_id": "17a86223244d67b963a325fc69c20296"
+    "trace_id": "74c4cba9f5b71267eee7853d21c2a073"
   }
 }
