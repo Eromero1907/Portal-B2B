@@ -1,0 +1,8 @@
+2026-10-16T19:22:46Z host=1792178566 vm=1792178566 experimento D2 config=con-umbral70 rep=4 (falla en t=60s durante 300s; carga 420s + 30s de calentamiento)
+2026-10-16T19:22:47Z host=1792178567 vm=1792178567 recreando app1 app2 app3 nginx con: -f docker-compose.yml -f docker-compose.resiliencia.yml -f docker-compose.var-umbral70.yml
+2026-10-16T19:23:05Z host=1792178585 vm=1792178586 carga iniciada: t0 aprox. (calentamiento de 30s; t=0 de la ficha es el fin del calentamiento)
+2026-10-16T19:24:36Z host=1792178676 vm=1792178676 ACTIVAR D2 (t=60s)
+[OK] Falla D2 marcada como ACTIVA en faults.yaml (Kill switch: enabled=true)
+2026-10-16T19:29:35Z host=1792178975 vm=1792178975 DESACTIVAR D2 (t=360s)
+[OK] Falla D2 marcada como INACTIVA en faults.yaml
+2026-10-16T19:30:37Z host=1792179037 vm=1792179038 carga terminada

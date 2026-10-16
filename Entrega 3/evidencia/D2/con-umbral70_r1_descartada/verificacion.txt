@@ -1,0 +1,13 @@
+== verificación de negocio previa al reset (2026-10-16T18:15:19Z) ==
+eventos_procesados_total_antes=809017
+eventos_procesados_total_despues=821284
+ordenes_CONFIRMADA|12267
+ordenes_EN_PROCESO|11286
+ordenes_RECHAZADA|21341
+outbox_total|12267
+outbox_pendientes|0
+reservas_CONFIRMADA|12267
+reservas_LIBERADA|11690
+idempotencia_EN_CURSO|0
+violaciones_invariante_reservada_mayor_total|0
+franja_91150_reservada_de_total|10/10

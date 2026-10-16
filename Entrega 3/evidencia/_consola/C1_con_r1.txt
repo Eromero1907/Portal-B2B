@@ -1,0 +1,26 @@
+2026-10-16T14:23:35Z host=1792160615 vm=1792160615 experimento C1 config=con rep=1 (falla en t=60s durante 300s; carga 420s + 30s de calentamiento)
+2026-10-16T14:23:36Z host=1792160616 vm=1792160616 recreando app1 app2 app3 nginx con: -f docker-compose.yml -f docker-compose.resiliencia.yml -f docker-compose.ratelimit.yml
+2026-10-16T14:23:51Z host=1792160631 vm=1792160631 carga iniciada: t0 aprox. (calentamiento de 30s; t=0 de la ficha es el fin del calentamiento)
+2026-10-16T14:25:20Z host=1792160720 vm=1792160721 ACTIVAR C1 (t=60s)
+[OK] Falla C1 marcada como ACTIVA en faults.yaml (Kill switch: enabled=true)
+  -> Aplicando falla C1 (Infra): estrangulando CPU de portal-app1 a 0.25 CPUs...
+2026-10-16T14:30:20Z host=1792161020 vm=1792161020 DESACTIVAR C1 (t=360s)
+[OK] Falla C1 marcada como INACTIVA en faults.yaml
+  -> Revirtiendo C1: restaurando CPU sin límite en portal-app1...
+2026-10-16T14:31:19Z host=1792161079 vm=1792161079 carga terminada
+== verificaciÃ³n de negocio previa al reset (2026-10-16T14:31:20Z) ==
+eventos_procesados_total_antes=477555
+eventos_procesados_total_despues=500824
+ordenes_CONFIRMADA|23269
+ordenes_RECHAZADA|21628
+outbox_total|23269
+outbox_pendientes|0
+reservas_CONFIRMADA|23269
+reservas_LIBERADA|690
+idempotencia_EN_CURSO|0
+violaciones_invariante_reservada_mayor_total|0
+franja_91150_reservada_de_total|10/10
+
+== Resultado global (C1 con r1) ==
+{"global": {"p50_ms": 6.298, "p95_ms": 51.955, "p99_ms": 148.899, "tasa_error_pct": 0.0}, "confirmar": 64.161, "throughput_s": 199.48, "slo": "PASA", "generador_retraso_p99_s": 0.002}
+Evidencia en: Entrega 3/evidencia/C1/con_r1

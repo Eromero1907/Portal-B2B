@@ -1,0 +1,28 @@
+2026-10-16T19:08:48Z host=1792177728 vm=1792177728 experimento B2 config=con-lock0 rep=4 (falla en t=-30s durante 60s; carga 300s + 30s de calentamiento)
+2026-10-16T19:08:49Z host=1792177729 vm=1792177729 recreando app1 app2 app3 nginx con: -f docker-compose.yml -f docker-compose.resiliencia.yml
+2026-10-16T19:09:05Z host=1792177746 vm=1792177746 carga iniciada: t0 aprox. (calentamiento de 30s; t=0 de la ficha es el fin del calentamiento)
+2026-10-16T19:09:06Z host=1792177746 vm=1792177746 ACTIVAR B2 (t=-30s)
+[OK] Falla B2 marcada como ACTIVA en faults.yaml (Kill switch: enabled=true)
+  -> Aplicando falla B2: sesión con SELECT ... FOR UPDATE sobre franjas_cedi id=91150 (hasta 70 s)...
+  -> Verificación: sesión falla-B2 reteniendo bloqueo = 1 (esperado 1)
+2026-10-16T19:10:06Z host=1792177806 vm=1792177806 DESACTIVAR B2 (t=30s)
+[OK] Falla B2 marcada como INACTIVA en faults.yaml
+  -> Revirtiendo B2: terminando la sesión que retiene el bloqueo (ROLLBACK)...
+2026-10-16T19:14:36Z host=1792178076 vm=1792178076 carga terminada
+== verificaciÃ³n de negocio previa al reset (2026-10-16T19:14:38Z) ==
+eventos_procesados_total_antes=944051
+eventos_procesados_total_despues=961155
+ordenes_CONFIRMADA|17104
+ordenes_EN_PROCESO|11
+ordenes_RECHAZADA|15822
+outbox_total|17104
+outbox_pendientes|0
+reservas_CONFIRMADA|17104
+reservas_LIBERADA|501
+idempotencia_EN_CURSO|0
+violaciones_invariante_reservada_mayor_total|0
+franja_91150_reservada_de_total|10/10
+
+== Resultado global (B2 con-lock0 r4) ==
+{"global": {"p50_ms": 6.922, "p95_ms": 46.357, "p99_ms": 57.793, "tasa_error_pct": 0.012}, "confirmar": 51.07, "throughput_s": 199.55, "slo": "PASA", "generador_retraso_p99_s": 0.002}
+Evidencia en: Entrega 3/evidencia/B2/con-lock0_r4

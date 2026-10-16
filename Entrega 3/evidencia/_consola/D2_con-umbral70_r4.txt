@@ -1,0 +1,25 @@
+2026-10-16T19:22:46Z host=1792178566 vm=1792178566 experimento D2 config=con-umbral70 rep=4 (falla en t=60s durante 300s; carga 420s + 30s de calentamiento)
+2026-10-16T19:22:47Z host=1792178567 vm=1792178567 recreando app1 app2 app3 nginx con: -f docker-compose.yml -f docker-compose.resiliencia.yml -f docker-compose.var-umbral70.yml
+2026-10-16T19:23:05Z host=1792178585 vm=1792178586 carga iniciada: t0 aprox. (calentamiento de 30s; t=0 de la ficha es el fin del calentamiento)
+2026-10-16T19:24:36Z host=1792178676 vm=1792178676 ACTIVAR D2 (t=60s)
+[OK] Falla D2 marcada como ACTIVA en faults.yaml (Kill switch: enabled=true)
+2026-10-16T19:29:35Z host=1792178975 vm=1792178975 DESACTIVAR D2 (t=360s)
+[OK] Falla D2 marcada como INACTIVA en faults.yaml
+2026-10-16T19:30:37Z host=1792179037 vm=1792179038 carga terminada
+== verificación de negocio previa al reset (2026-10-16T19:30:39Z) ==
+eventos_procesados_total_antes=982842
+eventos_procesados_total_despues=1005116
+ordenes_CONFIRMADA|22274
+ordenes_EN_PROCESO|1020
+ordenes_RECHAZADA|21603
+outbox_total|22274
+outbox_pendientes|0
+reservas_CONFIRMADA|22274
+reservas_LIBERADA|1685
+idempotencia_EN_CURSO|0
+violaciones_invariante_reservada_mayor_total|0
+franja_91150_reservada_de_total|10/10
+
+== Resultado global (D2 con-umbral70 r4) ==
+{"global": {"p50_ms": 11.762, "p95_ms": 202.302, "p99_ms": 439.635, "tasa_error_pct": 1.217}, "confirmar": 293.532, "throughput_s": 199.48, "slo": "FALLA", "generador_retraso_p99_s": 0.002}
+Evidencia en: Entrega 3/evidencia/D2/con-umbral70_r4

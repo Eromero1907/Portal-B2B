@@ -1,0 +1,15 @@
+experimento=B2 config=sin-lock0 repeticion=1
+commit=9260b9a3815a6b7a019866e95f6fd65600bce719
+cambios_sin_commit_en_codigo=false
+falla_inicio_s=-30 falla_duracion_s=60 carga_s=300 calentamiento_s=30 semilla=42 flujos_por_s=100
+compose=-f docker-compose.yml
+generador_extra=
+nginx_directivas_limit_req=0
+consumidor_CONSUMIDOR_DEDUPLICAR=true
+--- entorno de app1 ---
+BD_POOL_MAX=10
+BD_POOL_MIN=4
+BD_POOL_TIMEOUT_S=10
+CREDITO_TIMEOUT_S=30
+CREDITO_URL=http://stub-credito:9000
+OTEL_ACTIVO=false

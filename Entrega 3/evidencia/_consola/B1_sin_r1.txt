@@ -1,0 +1,29 @@
+2026-10-16T13:43:54Z host=1792158234 vm=1792158234 experimento B1 config=sin rep=1 (falla en t=120s durante 45s; carga 300s + 30s de calentamiento)
+2026-10-16T13:43:55Z host=1792158235 vm=1792158235 recreando app1 app2 app3 nginx con: -f docker-compose.yml
+2026-10-16T13:44:10Z host=1792158250 vm=1792158250 carga iniciada: t0 aprox. (calentamiento de 30s; t=0 de la ficha es el fin del calentamiento)
+2026-10-16T13:46:39Z host=1792158399 vm=1792158399 ACTIVAR B1 (t=120s)
+[OK] Falla B1 marcada como ACTIVA en faults.yaml (Kill switch: enabled=true)
+  -> Aplicando falla B1 (Infra): deteniendo contenedor pg-portal-b2b...
+2026-10-16T13:47:24Z host=1792158444 vm=1792158444 DESACTIVAR B1 (t=165s)
+[OK] Falla B1 marcada como INACTIVA en faults.yaml
+  -> Revirtiendo B1: iniciando pg-portal-b2b...
+2026-10-16T13:47:25Z host=1792158445 vm=1792158445 B1: PostgreSQL acepta conexiones (+1 s tras docker start)
+2026-10-16T13:49:38Z host=1792158578 vm=1792158578 carga terminada
+== verificación de negocio previa al reset (2026-10-16T13:49:39Z) ==
+eventos_procesados_total_antes=367099
+eventos_procesados_total_despues=382135
+ordenes_CONFIRMADA|15036
+ordenes_EN_PROCESO|3
+ordenes_RECHAZADA|13969
+outbox_total|15036
+outbox_pendientes|0
+reservas_CONFIRMADA|15036
+reservas_EXPIRADA|1
+reservas_LIBERADA|447
+idempotencia_EN_CURSO|3
+violaciones_invariante_reservada_mayor_total|0
+franja_91150_reservada_de_total|10/10
+
+== Resultado global (B1 sin r1) ==
+{"global": {"p50_ms": 8.165, "p95_ms": 10001.681, "p99_ms": 10003.137, "tasa_error_pct": 7.033}, "confirmar": 821.871, "throughput_s": 186.45, "slo": "FALLA", "generador_retraso_p99_s": 0.002}
+Evidencia en: Entrega 3/evidencia/B1/sin_r1

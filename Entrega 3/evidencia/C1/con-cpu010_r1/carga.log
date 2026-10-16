@@ -1,0 +1,12 @@
+[carga] estado limpio...
+[carga] muestreo de recursos cada 5 s -> Entrega 3/evidencia/C1/con-cpu010_r1/recursos.csv
+time="2026-10-16T13:33:40-05:00" level=warning msg="Found orphan containers ([portal-prometheus portal-grafana portal-jaeger portal-nginx-exporter portal-cadvisor portal-postgres-exporter]) for this project. If you removed or renamed this service in your compose file, you can run this command with the --remove-orphans flag to clean it up."
+ Container pg-portal-b2b Running 
+ Container pg-portal-b2b Waiting 
+ Container pg-portal-b2b Healthy 
+ Container portal-b2b-carga-run-a7cdd9cb7011 Creating 
+ Container portal-b2b-carga-run-a7cdd9cb7011 Created 
+Carga planificada: 44897 flujos (89794 solicitudes) a 100.0 flujos/s, 30 s de calentamiento + 420 s medidos, semilla 42
+{"global": {"p50_ms": 8.643, "p95_ms": 101.743, "p99_ms": 404.845, "tasa_error_pct": 0.0}, "confirmar": 168.261, "throughput_s": 199.48, "slo": "PASA", "generador_retraso_p99_s": 0.002}
+Guardado en Entrega 3/evidencia/C1/con-cpu010_r1
+[carga] listo: Entrega 3/evidencia/C1/con-cpu010_r1 (solicitudes.csv, resumen.json, resumen.csv, recursos.csv)

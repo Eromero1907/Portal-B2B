@@ -1,0 +1,10 @@
+2026-10-16T15:06:14Z host=1792163174 vm=1792163174 experimento C1 config=sin rep=2 (falla en t=60s durante 300s; carga 420s + 30s de calentamiento)
+2026-10-16T15:06:15Z host=1792163175 vm=1792163175 recreando app1 app2 app3 nginx con: -f docker-compose.yml
+2026-10-16T15:06:30Z host=1792163190 vm=1792163190 carga iniciada: t0 aprox. (calentamiento de 30s; t=0 de la ficha es el fin del calentamiento)
+2026-10-16T15:08:00Z host=1792163280 vm=1792163281 ACTIVAR C1 (t=60s)
+[OK] Falla C1 marcada como ACTIVA en faults.yaml (Kill switch: enabled=true)
+  -> Aplicando falla C1 (Infra): estrangulando CPU de portal-app1 a 0.25 CPUs...
+2026-10-16T15:12:59Z host=1792163579 vm=1792163580 DESACTIVAR C1 (t=360s)
+[OK] Falla C1 marcada como INACTIVA en faults.yaml
+  -> Revirtiendo C1: restaurando CPU sin límite en portal-app1...
+2026-10-16T15:13:59Z host=1792163639 vm=1792163639 carga terminada

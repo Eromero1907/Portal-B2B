@@ -1,0 +1,11 @@
+2026-10-16T19:02:51Z host=1792177371 vm=1792177371 experimento B2 config=sin-lock0 rep=4 (falla en t=-30s durante 60s; carga 300s + 30s de calentamiento)
+2026-10-16T19:02:52Z host=1792177372 vm=1792177372 recreando app1 app2 app3 nginx con: -f docker-compose.yml
+2026-10-16T19:03:07Z host=1792177387 vm=1792177387 carga iniciada: t0 aprox. (calentamiento de 30s; t=0 de la ficha es el fin del calentamiento)
+2026-10-16T19:03:08Z host=1792177388 vm=1792177388 ACTIVAR B2 (t=-30s)
+[OK] Falla B2 marcada como ACTIVA en faults.yaml (Kill switch: enabled=true)
+  -> Aplicando falla B2: sesión con SELECT ... FOR UPDATE sobre franjas_cedi id=91150 (hasta 70 s)...
+  -> Verificación: sesión falla-B2 reteniendo bloqueo = 1 (esperado 1)
+2026-10-16T19:04:07Z host=1792177447 vm=1792177447 DESACTIVAR B2 (t=30s)
+[OK] Falla B2 marcada como INACTIVA en faults.yaml
+  -> Revirtiendo B2: terminando la sesión que retiene el bloqueo (ROLLBACK)...
+2026-10-16T19:08:38Z host=1792177718 vm=1792177718 carga terminada

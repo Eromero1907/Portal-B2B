@@ -1,0 +1,100 @@
+{
+  "perfil": {
+    "flujos_por_s": 100.0,
+    "solicitudes_por_s_objetivo": 200.0,
+    "duracion_s": 420.0,
+    "calentamiento_s": 30.0,
+    "semilla": 42,
+    "p_contrato_vencido": 0.005,
+    "p_sku_ajeno": 0.005,
+    "p_ultima_franja": 0.005,
+    "objetivo": "http://nginx:80",
+    "timeout_cliente_s": 60.0
+  },
+  "flujos_planificados": 44897,
+  "duracion_real_s": 476.91,
+  "reintentos_cliente_max": 0,
+  "solicitudes_con_reintento": 0,
+  "solicitudes_medidas": 73480,
+  "throughput_solicitudes_s": 174.95,
+  "por_fase": {
+    "crear": {
+      "n": 41892,
+      "throughput_s": 99.74,
+      "p50_ms": 58.669,
+      "p95_ms": 15554.238,
+      "p99_ms": 23305.055,
+      "max_ms": 26715.056,
+      "errores": 10306,
+      "tasa_error_pct": 24.601,
+      "codigos": {
+        "201": 31586,
+        "502": 7128,
+        "500": 3178
+      },
+      "resultados": {
+        "EN_PROCESO:-": 31586,
+        "-:-": 7128,
+        "-:error_interno": 3178
+      },
+      "por_instancia": {
+        "app3": 10288,
+        "app1": 10402,
+        "app2": 10896,
+        "-": 10306
+      }
+    },
+    "confirmar": {
+      "n": 31588,
+      "throughput_s": 75.21,
+      "p50_ms": 86.031,
+      "p95_ms": 9640.299,
+      "p99_ms": 21986.067,
+      "max_ms": 33557.797,
+      "errores": 12676,
+      "tasa_error_pct": 40.129,
+      "codigos": {
+        "200": 18912,
+        "503": 7590,
+        "500": 2604,
+        "502": 2482
+      },
+      "resultados": {
+        "RECHAZADA:sin_contrato_vigente": 10525,
+        "CONFIRMADA:-": 6299,
+        "RECHAZADA:proveedor_no_activo": 1783,
+        "RECHAZADA:credito_denegado": 176,
+        "RECHAZADA:sin_cupo_franja": 62,
+        "RECHAZADA:sku_fuera_de_catalogo_o_precio": 67,
+        "EN_PROCESO:TimeoutError: ": 878,
+        "EN_PROCESO:breaker_abierto": 6457,
+        "EN_PROCESO:HTTP 503": 214,
+        "-:error_interno": 2604,
+        "-:-": 2482,
+        "EN_PROCESO:presupuesto_reintentos_agotado": 41
+      },
+      "por_instancia": {
+        "app1": 8641,
+        "app2": 9051,
+        "app3": 8810,
+        "-": 5086
+      }
+    }
+  },
+  "global": {
+    "p50_ms": 65.298,
+    "p95_ms": 13748.709,
+    "p99_ms": 22991.966,
+    "tasa_error_pct": 31.277
+  },
+  "generador": {
+    "retraso_inicio_p99_s": 1.225,
+    "retraso_inicio_max_s": 2.2146,
+    "nota": "retraso entre la hora programada y la real; si el p99 supera ~0,05 s el generador no sostuvo el ritmo y la corrida no es válida"
+  },
+  "slo_rnf10": {
+    "p95_menor_400ms": false,
+    "errores_menor_0_5pct": false,
+    "veredicto": "FALLA"
+  }
+}

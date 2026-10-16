@@ -20,3 +20,91 @@
 [cola] 02:20:48 inicio A2 con 2
 [cola] 02:28:21 OK    A2 con 2 :: {"global": {"p50_ms": 6.815, "p95_ms": 171.498, "p99_ms": 403.255, "tasa_error_pct": 0.037}, "confirmar": 299.493, "throughput_s": 199.48, "slo": "PASA", "generador_retraso_p99_s": 0.002}
 [cola] 2026-10-16 02:28:21 TERMINADA
+[cola] 2026-10-16 08:15:06 comienzo: 20 corridas
+[cola] 08:15:06 inicio D1 sin 1
+[cola] 08:20:59 OK    D1 sin 1 :: {"global": {"p50_ms": 7.129, "p95_ms": 46.522, "p99_ms": 57.986, "tasa_error_pct": 0.003}, "confirmar": 51.112, "throughput_s": 199.55, "slo": "PASA", "generador_retraso_p99_s": 0.002}
+[cola] 08:20:59 inicio B2 sin 1
+[cola] 08:26:54 OK    B2 sin 1 :: {"global": {"p50_ms": 6.084, "p95_ms": 42.902, "p99_ms": 53.716, "tasa_error_pct": 0.0}, "confirmar": 47.501, "throughput_s": 199.56, "slo": "PASA", "generador_retraso_p99_s": 0.002}
+[cola] 08:26:54 inicio C2 sin 1
+[cola] 08:43:53 OK    C2 sin 1 :: {"global": {"p50_ms": 7.745, "p95_ms": 48.956, "p99_ms": 70.643, "tasa_error_pct": 0.0}, "confirmar": 54.954, "throughput_s": 199.48, "slo": "PASA", "generador_retraso_p99_s": 0.002}
+[cola] 08:43:54 inicio B1 sin 1
+[cola] 08:49:48 OK    B1 sin 1 :: {"global": {"p50_ms": 8.165, "p95_ms": 10001.681, "p99_ms": 10003.137, "tasa_error_pct": 7.033}, "confirmar": 821.871, "throughput_s": 186.45, "slo": "FALLA", "generador_retraso_p99_s": 0.002}
+[cola] 08:49:48 inicio C1 sin 1
+[cola] 08:57:42 OK    C1 sin 1 :: {"global": {"p50_ms": 6.092, "p95_ms": 48.795, "p99_ms": 103.713, "tasa_error_pct": 0.0}, "confirmar": 58.615, "throughput_s": 199.48, "slo": "PASA", "generador_retraso_p99_s": 0.002}
+[cola] 08:57:42 inicio D1 con 1
+[cola] 09:03:36 OK    D1 con 1 :: {"global": {"p50_ms": 7.007, "p95_ms": 46.121, "p99_ms": 58.121, "tasa_error_pct": 0.0}, "confirmar": 51.031, "throughput_s": 199.56, "slo": "PASA", "generador_retraso_p99_s": 0.002}
+[cola] 09:03:36 inicio B2 con 1
+[cola] 09:09:29 OK    B2 con 1 :: {"global": {"p50_ms": 6.099, "p95_ms": 43.058, "p99_ms": 52.812, "tasa_error_pct": 0.0}, "confirmar": 47.284, "throughput_s": 199.56, "slo": "PASA", "generador_retraso_p99_s": 0.002}
+[cola] 09:09:29 inicio C2 con 1
+[cola] 09:17:41 OK    C2 con 1 :: {"global": {"p50_ms": 8.198, "p95_ms": 51.875, "p99_ms": 77.321, "tasa_error_pct": 0.001}, "confirmar": 59.645, "throughput_s": 199.48, "slo": "PASA", "generador_retraso_p99_s": 0.003}
+[cola] 09:17:41 inicio B1 con 1
+[cola] 09:23:35 OK    B1 con 1 :: {"global": {"p50_ms": 8.074, "p95_ms": 2001.956, "p99_ms": 2003.165, "tasa_error_pct": 8.455}, "confirmar": 54.219, "throughput_s": 184.0, "slo": "FALLA", "generador_retraso_p99_s": 0.002}
+[cola] 09:23:35 inicio C1 con 1
+[cola] 09:31:28 OK    C1 con 1 :: {"global": {"p50_ms": 6.298, "p95_ms": 51.955, "p99_ms": 148.899, "tasa_error_pct": 0.0}, "confirmar": 64.161, "throughput_s": 199.48, "slo": "PASA", "generador_retraso_p99_s": 0.002}
+[cola] 09:31:28 inicio D1 sin 2
+[cola] 09:37:23 OK    D1 sin 2 :: {"global": {"p50_ms": 6.818, "p95_ms": 45.239, "p99_ms": 56.425, "tasa_error_pct": 0.003}, "confirmar": 49.717, "throughput_s": 199.56, "slo": "PASA", "generador_retraso_p99_s": 0.002}
+[cola] 09:37:23 inicio B2 sin 2
+[cola] 09:43:17 OK    B2 sin 2 :: {"global": {"p50_ms": 5.984, "p95_ms": 42.613, "p99_ms": 52.592, "tasa_error_pct": 0.0}, "confirmar": 47.046, "throughput_s": 199.56, "slo": "PASA", "generador_retraso_p99_s": 0.002}
+[cola] 09:43:17 inicio C2 sin 2
+[cola] 10:00:19 OK    C2 sin 2 :: {"global": {"p50_ms": 7.544, "p95_ms": 47.613, "p99_ms": 63.964, "tasa_error_pct": 0.001}, "confirmar": 53.455, "throughput_s": 199.48, "slo": "PASA", "generador_retraso_p99_s": 0.002}
+[cola] 10:00:19 inicio B1 sin 2
+[cola] 10:06:14 OK    B1 sin 2 :: {"global": {"p50_ms": 8.53, "p95_ms": 10001.688, "p99_ms": 10003.208, "tasa_error_pct": 6.625}, "confirmar": 1511.997, "throughput_s": 187.17, "slo": "FALLA", "generador_retraso_p99_s": 0.002}
+[cola] 10:06:14 inicio C1 sin 2
+[cola] 10:14:08 OK    C1 sin 2 :: {"global": {"p50_ms": 6.423, "p95_ms": 54.226, "p99_ms": 153.037, "tasa_error_pct": 0.0}, "confirmar": 70.775, "throughput_s": 199.48, "slo": "PASA", "generador_retraso_p99_s": 0.002}
+[cola] 10:14:08 inicio D1 con 2
+[cola] 10:20:06 OK    D1 con 2 :: {"global": {"p50_ms": 17.51, "p95_ms": 71.98, "p99_ms": 97.345, "tasa_error_pct": 0.0}, "confirmar": 79.861, "throughput_s": 199.56, "slo": "PASA", "generador_retraso_p99_s": 0.002}
+[cola] 10:20:06 inicio B2 con 2
+[cola] 10:26:03 OK    B2 con 2 :: {"global": {"p50_ms": 16.897, "p95_ms": 141.209, "p99_ms": 439.331, "tasa_error_pct": 0.0}, "confirmar": 129.949, "throughput_s": 199.56, "slo": "PASA", "generador_retraso_p99_s": 0.002}
+[cola] 10:26:03 inicio C2 con 2
+[cola] 10:35:21 OK    C2 con 2 :: {"global": {"p50_ms": 19.416, "p95_ms": 257.432, "p99_ms": 706.843, "tasa_error_pct": 0.0}, "confirmar": 358.09, "throughput_s": 199.48, "slo": "PASA", "generador_retraso_p99_s": 0.003}
+[cola] 10:35:21 inicio B1 con 2
+[cola] 10:41:18 OK    B1 con 2 :: {"global": {"p50_ms": 23.663, "p95_ms": 2002.156, "p99_ms": 2003.398, "tasa_error_pct": 9.356}, "confirmar": 553.225, "throughput_s": 182.84, "slo": "FALLA", "generador_retraso_p99_s": 0.002}
+[cola] 10:41:18 inicio C1 con 2
+[cola] 10:49:17 OK    C1 con 2 :: {"global": {"p50_ms": 15.257, "p95_ms": 307.76, "p99_ms": 737.799, "tasa_error_pct": 0.0}, "confirmar": 392.741, "throughput_s": 199.48, "slo": "PASA", "generador_retraso_p99_s": 0.002}
+[cola] 2026-10-16 10:49:17 TERMINADA
+[cola] 2026-10-16 12:06:02 comienzo: 12 corridas
+[cola] 12:06:03 inicio D1 con 3
+[cola] 12:12:00 OK    D1 con 3 :: {"global": {"p50_ms": 9.525, "p95_ms": 82.868, "p99_ms": 469.349, "tasa_error_pct": 0.0}, "confirmar": 149.601, "throughput_s": 199.56, "slo": "PASA", "generador_retraso_p99_s": 0.006}
+[cola] 12:12:00 inicio C2 con 3
+[cola] 12:29:01 OK    C2 con 3 :: {"global": {"p50_ms": 8.82, "p95_ms": 54.513, "p99_ms": 87.271, "tasa_error_pct": 0.0}, "confirmar": 64.703, "throughput_s": 199.48, "slo": "PASA", "generador_retraso_p99_s": 0.003}
+[cola] 12:29:01 inicio B1 con 3
+[cola] 12:34:58 OK    B1 con 3 :: {"global": {"p50_ms": 9.369, "p95_ms": 2001.9, "p99_ms": 2003.18, "tasa_error_pct": 8.092}, "confirmar": 62.481, "throughput_s": 184.96, "slo": "FALLA", "generador_retraso_p99_s": 0.002}
+[cola] 12:34:58 inicio C1 con 3
+[cola] 12:42:55 OK    C1 con 3 :: {"global": {"p50_ms": 6.75, "p95_ms": 53.673, "p99_ms": 131.705, "tasa_error_pct": 0.0}, "confirmar": 66.954, "throughput_s": 199.48, "slo": "PASA", "generador_retraso_p99_s": 0.002}
+[cola] 12:42:55 inicio B2 sin-lock0 1
+[cola] 12:49:01 OK    B2 sin-lock0 1 :: {"global": {"p50_ms": 15.447, "p95_ms": 1523.239, "p99_ms": 3943.437, "tasa_error_pct": 0.0}, "confirmar": 2601.842, "throughput_s": 199.56, "slo": "FALLA", "generador_retraso_p99_s": 0.062}
+[cola] 12:49:02 inicio B2 con-lock0 1
+[cola] 12:55:07 OK    B2 con-lock0 1 :: {"global": {"p50_ms": 45.07, "p95_ms": 299.705, "p99_ms": 956.987, "tasa_error_pct": 3.359}, "confirmar": 465.058, "throughput_s": 199.55, "slo": "FALLA", "generador_retraso_p99_s": 0.042}
+[cola] 12:55:08 inicio B2 sin-lock0 2
+[cola] 13:01:14 OK    B2 sin-lock0 2 :: {"global": {"p50_ms": 48.928, "p95_ms": 309.391, "p99_ms": 564.35, "tasa_error_pct": 0.002}, "confirmar": 395.691, "throughput_s": 199.66, "slo": "PASA", "generador_retraso_p99_s": 0.048}
+[cola] 13:01:14 inicio B2 con-lock0 2
+[cola] 13:07:20 OK    B2 con-lock0 2 :: {"global": {"p50_ms": 42.772, "p95_ms": 318.075, "p99_ms": 1078.183, "tasa_error_pct": 5.873}, "confirmar": 558.099, "throughput_s": 199.55, "slo": "FALLA", "generador_retraso_p99_s": 0.043}
+[cola] 13:07:20 inicio D2 con-umbral70 1
+[cola] 13:15:29 OK    D2 con-umbral70 1 :: {"global": {"p50_ms": 42.452, "p95_ms": 414.756, "p99_ms": 1147.076, "tasa_error_pct": 13.448}, "confirmar": 769.961, "throughput_s": 199.48, "slo": "FALLA", "generador_retraso_p99_s": 0.045}
+[cola] 13:15:29 inicio D2 con-umbral70 2
+[cola] 13:25:29 OK    D2 con-umbral70 2 :: {"global": {"p50_ms": 65.298, "p95_ms": 13748.709, "p99_ms": 22991.966, "tasa_error_pct": 31.277}, "confirmar": 9640.299, "throughput_s": 174.95, "slo": "FALLA", "generador_retraso_p99_s": 1.225}
+[cola] 13:25:30 inicio C1 sin-cpu010 1
+[cola] 13:33:26 OK    C1 sin-cpu010 1 :: {"global": {"p50_ms": 7.366, "p95_ms": 96.7, "p99_ms": 340.657, "tasa_error_pct": 0.001}, "confirmar": 158.062, "throughput_s": 199.48, "slo": "PASA", "generador_retraso_p99_s": 0.002}
+[cola] 13:33:26 inicio C1 con-cpu010 1
+[cola] 13:41:25 OK    C1 con-cpu010 1 :: {"global": {"p50_ms": 8.643, "p95_ms": 101.743, "p99_ms": 404.845, "tasa_error_pct": 0.0}, "confirmar": 168.261, "throughput_s": 199.48, "slo": "PASA", "generador_retraso_p99_s": 0.002}
+[cola] 2026-10-16 13:41:25 TERMINADA
+[cola] 2026-10-16 13:44:56 comienzo: 9 corridas
+[cola] 13:44:56 inicio D1 con 4
+[cola] 13:50:53 OK    D1 con 4 :: {"global": {"p50_ms": 9.536, "p95_ms": 60.558, "p99_ms": 146.048, "tasa_error_pct": 0.0}, "confirmar": 74.919, "throughput_s": 199.56, "slo": "PASA", "generador_retraso_p99_s": 0.004}
+[cola] 13:50:54 inicio B2 sin-lock0 3
+[cola] 13:56:50 OK    B2 sin-lock0 3 :: {"global": {"p50_ms": 7.239, "p95_ms": 47.246, "p99_ms": 61.833, "tasa_error_pct": 0.0}, "confirmar": 52.745, "throughput_s": 199.56, "slo": "PASA", "generador_retraso_p99_s": 0.002}
+[cola] 13:56:50 inicio B2 con-lock0 3
+[cola] 14:02:50 OK    B2 con-lock0 3 :: {"global": {"p50_ms": 8.621, "p95_ms": 62.481, "p99_ms": 182.198, "tasa_error_pct": 0.01}, "confirmar": 79.754, "throughput_s": 199.56, "slo": "PASA", "generador_retraso_p99_s": 0.005}
+[cola] 14:02:50 inicio B2 sin-lock0 4
+[cola] 14:08:48 OK    B2 sin-lock0 4 :: {"global": {"p50_ms": 7.384, "p95_ms": 48.85, "p99_ms": 75.245, "tasa_error_pct": 0.0}, "confirmar": 55.454, "throughput_s": 199.56, "slo": "PASA", "generador_retraso_p99_s": 0.002}
+[cola] 14:08:48 inicio B2 con-lock0 4
+[cola] 14:14:46 OK    B2 con-lock0 4 :: {"global": {"p50_ms": 6.922, "p95_ms": 46.357, "p99_ms": 57.793, "tasa_error_pct": 0.012}, "confirmar": 51.07, "throughput_s": 199.55, "slo": "PASA", "generador_retraso_p99_s": 0.002}
+[cola] 14:14:46 inicio D2 con-umbral70 3
+[cola] 14:22:46 OK    D2 con-umbral70 3 :: {"global": {"p50_ms": 12.228, "p95_ms": 161.529, "p99_ms": 371.812, "tasa_error_pct": 1.942}, "confirmar": 245.322, "throughput_s": 199.48, "slo": "FALLA", "generador_retraso_p99_s": 0.002}
+[cola] 14:22:46 inicio D2 con-umbral70 4
+[cola] 14:30:49 OK    D2 con-umbral70 4 :: {"global": {"p50_ms": 11.762, "p95_ms": 202.302, "p99_ms": 439.635, "tasa_error_pct": 1.217}, "confirmar": 293.532, "throughput_s": 199.48, "slo": "FALLA", "generador_retraso_p99_s": 0.002}
+[cola] 14:30:49 inicio C1 sin-cpu010 2
+[cola] 14:38:50 OK    C1 sin-cpu010 2 :: {"global": {"p50_ms": 10.856, "p95_ms": 455.308, "p99_ms": 1400.078, "tasa_error_pct": 0.0}, "confirmar": 602.852, "throughput_s": 199.48, "slo": "FALLA", "generador_retraso_p99_s": 0.002}
+[cola] 14:38:51 inicio C1 con-cpu010 2
+[cola] 14:46:51 OK    C1 con-cpu010 2 :: {"global": {"p50_ms": 7.168, "p95_ms": 101.212, "p99_ms": 411.48, "tasa_error_pct": 0.0}, "confirmar": 175.449, "throughput_s": 199.48, "slo": "PASA", "generador_retraso_p99_s": 0.002}
+[cola] 2026-10-16 14:46:52 TERMINADA

@@ -1,0 +1,85 @@
+{
+  "perfil": {
+    "flujos_por_s": 100.0,
+    "solicitudes_por_s_objetivo": 200.0,
+    "duracion_s": 300.0,
+    "calentamiento_s": 30.0,
+    "semilla": 42,
+    "p_contrato_vencido": 0.005,
+    "p_sku_ajeno": 0.005,
+    "p_ultima_franja": 0.005,
+    "objetivo": "http://nginx:80",
+    "timeout_cliente_s": 60.0
+  },
+  "flujos_planificados": 32939,
+  "duracion_real_s": 333.04,
+  "reintentos_cliente_max": 0,
+  "solicitudes_con_reintento": 0,
+  "solicitudes_medidas": 59867,
+  "throughput_solicitudes_s": 199.56,
+  "por_fase": {
+    "crear": {
+      "n": 29933,
+      "throughput_s": 99.78,
+      "p50_ms": 9.731,
+      "p95_ms": 1157.654,
+      "p99_ms": 2066.005,
+      "max_ms": 2847.894,
+      "errores": 0,
+      "tasa_error_pct": 0.0,
+      "codigos": {
+        "201": 29933
+      },
+      "resultados": {
+        "EN_PROCESO:-": 29933
+      },
+      "por_instancia": {
+        "app2": 10140,
+        "app3": 9807,
+        "app1": 9986
+      }
+    },
+    "confirmar": {
+      "n": 29934,
+      "throughput_s": 99.78,
+      "p50_ms": 43.035,
+      "p95_ms": 2601.842,
+      "p99_ms": 5270.475,
+      "max_ms": 29578.245,
+      "errores": 0,
+      "tasa_error_pct": 0.0,
+      "codigos": {
+        "200": 29934
+      },
+      "resultados": {
+        "CONFIRMADA:-": 15597,
+        "RECHAZADA:sin_contrato_vigente": 11764,
+        "RECHAZADA:proveedor_no_activo": 1978,
+        "RECHAZADA:credito_denegado": 442,
+        "RECHAZADA:sku_fuera_de_catalogo_o_precio": 77,
+        "RECHAZADA:sin_cupo_franja": 76
+      },
+      "por_instancia": {
+        "app1": 10019,
+        "app3": 9724,
+        "app2": 10191
+      }
+    }
+  },
+  "global": {
+    "p50_ms": 15.447,
+    "p95_ms": 1523.239,
+    "p99_ms": 3943.437,
+    "tasa_error_pct": 0.0
+  },
+  "generador": {
+    "retraso_inicio_p99_s": 0.062,
+    "retraso_inicio_max_s": 0.5986,
+    "nota": "retraso entre la hora programada y la real; si el p99 supera ~0,05 s el generador no sostuvo el ritmo y la corrida no es válida"
+  },
+  "slo_rnf10": {
+    "p95_menor_400ms": false,
+    "errores_menor_0_5pct": true,
+    "veredicto": "FALLA"
+  }
+}

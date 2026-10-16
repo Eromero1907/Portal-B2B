@@ -1,5 +1,5 @@
 # B2 · Corrección de código: `LockNotAvailable` debe degradarse a 503 controlado (predicción previa a la re-ejecución)
-**Fecha de la predicción:** 2026-10-16 16:05 (-05:00), **antes** de ejecutar la corrección. Las fichas `B2.md` y `B2_correccion_bloqueo_desde_t0.md` no se modifican.
+**Fecha de la predicción:** 2026-10-16 15:40 (-05:00), **antes** de ejecutar la corrección. Las fichas `B2.md` y `B2_correccion_bloqueo_desde_t0.md` no se modifican.
 **Config de la corrida:** `bash faults/experimento.sh B2 con-lock0 <rep>` (perfil M, bloqueo de la franja 91150 desde el arranque durante 60 s) con la imagen reconstruida con el cambio.
 
 ## Qué falló (evidencia: `Entrega 3/evidencia/B2/con-lock0_r3`, `con-lock0_r4`)

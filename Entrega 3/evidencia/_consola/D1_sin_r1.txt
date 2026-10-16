@@ -1,0 +1,29 @@
+2026-10-16T13:15:06Z host=1792156506 vm=1792156506 experimento D1 config=sin rep=1 (falla en t=120s durante 60s; carga 300s + 30s de calentamiento)
+2026-10-16T13:15:07Z host=1792156507 vm=1792156507 recreando app1 app2 app3 nginx con: -f docker-compose.yml
+2026-10-16T13:15:22Z host=1792156522 vm=1792156522 carga iniciada: t0 aprox. (calentamiento de 30s; t=0 de la ficha es el fin del calentamiento)
+2026-10-16T13:17:51Z host=1792156672 vm=1792156672 ACTIVAR D1 (t=120s)
+[OK] Falla D1 marcada como ACTIVA en faults.yaml (Kill switch: enabled=true)
+  -> Aplicando falla D1 (Infra): SIGKILL a portal-app2 (docker kill)...
+2026-10-16T13:17:53Z host=1792156673 vm=1792156673 D1 +0s: portal-app2 estado=exited
+2026-10-16T13:18:19Z host=1792156699 vm=1792156699 D1 +25s: portal-app2 estado=exited (debe seguir exited: sin reinicio automático)
+2026-10-16T13:18:52Z host=1792156732 vm=1792156732 DESACTIVAR D1 (t=180s)
+[OK] Falla D1 marcada como INACTIVA en faults.yaml
+  -> Revirtiendo D1: reiniciando portal-app2...
+2026-10-16T13:20:50Z host=1792156850 vm=1792156851 carga terminada
+== verificación de negocio previa al reset (2026-10-16T13:20:52Z) ==
+eventos_procesados_total_antes=332838
+eventos_procesados_total_despues=349943
+ordenes_CONFIRMADA|17105
+ordenes_EN_PROCESO|1
+ordenes_RECHAZADA|15832
+outbox_total|17105
+outbox_pendientes|0
+reservas_CONFIRMADA|17105
+reservas_LIBERADA|501
+idempotencia_EN_CURSO|1
+violaciones_invariante_reservada_mayor_total|0
+franja_91150_reservada_de_total|10/10
+
+== Resultado global (D1 sin r1) ==
+{"global": {"p50_ms": 7.129, "p95_ms": 46.522, "p99_ms": 57.986, "tasa_error_pct": 0.003}, "confirmar": 51.112, "throughput_s": 199.55, "slo": "PASA", "generador_retraso_p99_s": 0.002}
+Evidencia en: Entrega 3/evidencia/D1/sin_r1

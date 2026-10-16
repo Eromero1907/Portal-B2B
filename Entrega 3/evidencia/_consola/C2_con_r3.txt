@@ -1,0 +1,27 @@
+2026-10-16T17:12:00Z host=1792170720 vm=1792170720 experimento C2 config=con rep=3 (falla en t=60s durante 300s; carga 420s + 30s de calentamiento)
+2026-10-16T17:12:01Z host=1792170721 vm=1792170721 recreando app1 app2 app3 nginx consumidor-eventos con: -f docker-compose.yml -f docker-compose.resiliencia.yml
+2026-10-16T17:12:18Z host=1792170738 vm=1792170738 carga iniciada: t0 aprox. (calentamiento de 30s; t=0 de la ficha es el fin del calentamiento)
+2026-10-16T17:13:48Z host=1792170828 vm=1792170828 ACTIVAR C2 (t=60s)
+[OK] Falla C2 marcada como ACTIVA en faults.yaml (Kill switch: enabled=true)
+  -> Aplicando falla C2 (Infra): pausando consumidor de outbox (portal-consumidor-eventos)...
+2026-10-16T17:18:47Z host=1792171127 vm=1792171127 DESACTIVAR C2 (t=360s)
+[OK] Falla C2 marcada como INACTIVA en faults.yaml
+  -> Revirtiendo C2: reanudando portal-consumidor-eventos...
+2026-10-16T17:28:48Z host=1792171728 vm=1792171728 C2: la cola NO se vació en 600 s (quedan 50); se purga para no contaminar la siguiente corrida
+2026-10-16T17:28:49Z host=1792171729 vm=1792171729 carga terminada
+== verificación de negocio previa al reset (2026-10-16T17:28:50Z) ==
+eventos_procesados_total_antes=685777
+eventos_procesados_total_despues=708996
+ordenes_CONFIRMADA|23269
+ordenes_RECHAZADA|21628
+outbox_total|23269
+outbox_pendientes|0
+reservas_CONFIRMADA|23269
+reservas_LIBERADA|690
+idempotencia_EN_CURSO|0
+violaciones_invariante_reservada_mayor_total|0
+franja_91150_reservada_de_total|10/10
+
+== Resultado global (C2 con r3) ==
+{"global": {"p50_ms": 8.82, "p95_ms": 54.513, "p99_ms": 87.271, "tasa_error_pct": 0.0}, "confirmar": 64.703, "throughput_s": 199.48, "slo": "PASA", "generador_retraso_p99_s": 0.003}
+Evidencia en: Entrega 3/evidencia/C2/con_r3

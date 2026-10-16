@@ -1,0 +1,27 @@
+portal-nginx	Up 7 minutes
+portal-app3	Up 7 minutes (healthy)
+portal-app2	Up 7 minutes (healthy)
+portal-app1	Up 7 minutes (healthy)
+portal-consumidor-eventos	Up 46 minutes
+portal-stub-credito	Up 13 hours
+portal-publicador-outbox	Up 13 hours
+portal-prometheus	Up 13 hours
+portal-grafana	Up 13 hours
+portal-jaeger	Up 13 hours
+portal-nginx-exporter	Up 13 hours
+portal-cadvisor	Up 13 hours (healthy)
+portal-postgres-exporter	Up 13 hours
+portal-rabbitmq	Up 14 hours (healthy)
+pg-portal-b2b	Up 42 minutes (healthy)
+code-sentinel-front-1	Exited (0) 5 weeks ago
+code-sentinel-back-1	Exited (137) 5 weeks ago
+code-sentinel-db-1	Exited (0) 5 weeks ago
+pg_taller	Exited (0) 5 weeks ago
+dynamodb-local	Exited (143) 4 months ago
+mybookstore-frontend	Exited (0) 14 hours ago
+mybookstore-books	Exited (1) 14 hours ago
+mybookstore-mongodb	Exited (0) 14 hours ago
+mybookstore-reviews	Exited (1) 14 hours ago
+mybookstore-auth	Exited (1) 14 hours ago
+groupsapp-pgadmin	Exited (137) 5 months ago
+groupsapp-db	Exited (0) 5 months ago

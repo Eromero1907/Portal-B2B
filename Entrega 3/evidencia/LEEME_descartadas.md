@@ -13,3 +13,4 @@ Es decir, el equipo ya estaba degradado antes de la falla, por lo que no se pued
 
 Las repeticiones válidas llevan los números siguientes (r3/r4 según el caso) y se corrieron con el equipo enchufado en modo de alto rendimiento.
 Causa de la degradación: no demostrada. Con las dos últimas tandas coincide con el equipo sin enchufar y al sol.
+| C1/sin-cpu010_r2 | 15,4 ms (p95 346 ms) | arranque degradado antes de la falla; cpu010 sin queda con 1 sola corrida válida (r1) |
