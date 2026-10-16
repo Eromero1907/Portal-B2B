@@ -1,0 +1,14 @@
+fase,objeto,filas,segundos,filas_por_segundo
+copy,proveedores.proveedores,100000,0.566,176678
+copy,proveedores.contratos_suministro,10000,0.251,39841
+copy,catalogo.sku_catalogo,200000,1.074,186220
+copy,logistica.franjas_cedi,91250,0.677,134786
+copy,ordenes.ordenes_compra,300000,1.380,217391
+copy,ordenes.lineas_orden,1944001,3.704,524838
+copy,auditoria.eventos_auditoria,500000,2.733,182949
+copy,TOTAL,3145251,13.273,236966
+restricciones,unique+fk,3145251,1.132,2778490
+indices,rendimiento,3145251,1.425,2207194
+analyze,base_completa,3145251,3.749,838957
+vacuum,base_completa,3145251,0.612,5139299
+total,reset+copy+restricciones+indices+analyze+vacuum,3145251,21.642,145331

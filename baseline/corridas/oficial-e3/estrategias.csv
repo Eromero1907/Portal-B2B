@@ -1,0 +1,6 @@
+estrategia,descripcion,filas,segundos,filas_por_s,detalle
+E1a,COPY con índices,375199,1.367,274420,
+E1b,COPY sin índices,375199,0.857,437682,
+E2,Lotes de 1000,375199,10.407,36052,
+E3,Fila a fila (muestra),37478,43.419,863,muestra de 5000 órdenes
+E4,Ruta transaccional,219720,437.615,502,"aceptadas=29235/50000 motivos={'confirmada': 29235, 'sku_invalido_o_precio': 1, 'sin_proveedor_o_contrato': 20764}"

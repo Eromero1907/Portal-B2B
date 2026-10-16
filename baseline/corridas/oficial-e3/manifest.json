@@ -1,0 +1,84 @@
+{
+  "corrida": "oficial-e3",
+  "fecha_utc": "2026-10-16T04:51:57+00:00",
+  "nota": "Linea base oficial E3, maquina del E2 (i5-12500H); Docker 14 CPU / 9,7 GiB (.wslconfig)",
+  "git": {
+    "commit": "e0ff5b30f3ebc6a67c696958232d161543d3fa44",
+    "rama": "main",
+    "cambios_sin_commit": true
+  },
+  "datos": {
+    "semilla": 42,
+    "escala": "min",
+    "fecha_pivote": "2026-09-16",
+    "zipf_proveedores": {
+      "modelo": "Zipf-Mandelbrot",
+      "s": 1.15,
+      "q": 1940,
+      "peso": "1 / (rango + q) ** s",
+      "ordenes_forzadas_proveedor_1": 5250
+    },
+    "conteos_por_entidad": {
+      "proveedores.proveedores": 100000,
+      "proveedores.contratos_suministro": 10000,
+      "catalogo.sku_catalogo": 200000,
+      "logistica.franjas_cedi": 91250,
+      "ordenes.ordenes_compra": 300000,
+      "ordenes.lineas_orden": 1944001,
+      "auditoria.eventos_auditoria": 500000
+    }
+  },
+  "postgresql": {
+    "version": "PostgreSQL 16.15 (Debian 16.15-1.pgdg13+2) on x86_64-pc-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit",
+    "shared_buffers": "512MB",
+    "work_mem": "32MB",
+    "effective_cache_size": "1GB",
+    "max_wal_size": "2GB",
+    "synchronous_commit": "on",
+    "fsync": "on",
+    "random_page_cost": "4",
+    "max_parallel_workers_per_gather": "2",
+    "track_io_timing": "on",
+    "max_connections": "100",
+    "TimeZone": "UTC",
+    "jit": "on"
+  },
+  "imagenes_docker": {
+    "pg-portal-b2b": "postgres:16 sha256:f1c3376c26f2609ab9f29f71f824103fe2fcd8ee0346485cb6122a4f93df6f94",
+    "portal-app1": "portal-b2b-app:e3 sha256:ab24645767fdff3d68000c7c04df3e363cf6d9cab838464d17f36e9477736d60",
+    "portal-app2": "portal-b2b-app:e3 sha256:ab24645767fdff3d68000c7c04df3e363cf6d9cab838464d17f36e9477736d60",
+    "portal-app3": "portal-b2b-app:e3 sha256:ab24645767fdff3d68000c7c04df3e363cf6d9cab838464d17f36e9477736d60",
+    "portal-nginx": "nginx:1.27-alpine sha256:65645c7bb6a0661892a8b03b89d0743208a18dd2f3f17a54ef4b76fb8e2f2a10",
+    "portal-stub-credito": "portal-b2b-stub:e3 sha256:0b158de016ad88be32d689a09b5a6eadad3f1de954217fd60b875f84fd11d9f3"
+  },
+  "plataforma": {
+    "portal-app1": {
+      "RESERVA_TTL_S": "60",
+      "BD_POOL_MIN": "4",
+      "BD_POOL_TIMEOUT_S": "10",
+      "CREDITO_TIMEOUT_S": "30",
+      "BD_POOL_MAX": "10",
+      "FECHA_OPERACION": "2026-09-17"
+    },
+    "portal-stub-credito": {
+      "PORCENTAJE_SIN_CUPO": "3",
+      "LATENCIA_BASE_MS": "20"
+    }
+  },
+  "maquina": {
+    "sistema": "Windows-11-10.0.26200-SP0",
+    "python_host": "3.13.3",
+    "nucleos_logicos": 16,
+    "cpu": "12th Gen Intel(R) Core(TM) i5-12500H",
+    "ram_gb": 15.7,
+    "docker": "29.4.1",
+    "docker_cpus": "14",
+    "docker_mem_gb": 9.7
+  },
+  "protocolo": {
+    "q1_q5": "medicion/medir.py: 20 de calentamiento + 200 mediciones por consulta y escenario, force_custom_plan, latencia en el cliente hasta fetchall(), numpy.percentile lineal",
+    "q3_concurrente": "medicion/concurrencia_q3.py, 16/32/64 hilos, DURACION_S por punto",
+    "estrategias": "baseline/estrategias.py sobre medicion/benchmark_carga.py (S = 375 199 filas)",
+    "ruta_confirmacion": "carga/generador.py, modelo abierto Poisson con semilla"
+  }
+}
