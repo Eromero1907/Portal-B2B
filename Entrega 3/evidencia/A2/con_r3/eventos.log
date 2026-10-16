@@ -1,0 +1,8 @@
+2026-10-16T12:43:57Z host=1792154637 vm=1792154637 experimento A2 config=con rep=3 (falla en t=60s durante 300s; carga 420s + 30s de calentamiento)
+2026-10-16T12:43:57Z host=1792154637 vm=1792154638 recreando app1 app2 app3 nginx con la configuración 'con'
+2026-10-16T12:44:12Z host=1792154652 vm=1792154652 carga iniciada: t0 aprox. (calentamiento de 30s; t=0 de la ficha es el fin del calentamiento)
+2026-10-16T12:45:42Z host=1792154742 vm=1792154742 ACTIVAR A2 (t=60s)
+[OK] Falla A2 marcada como ACTIVA en faults.yaml (Kill switch: enabled=true)
+2026-10-16T12:50:40Z host=1792155040 vm=1792155040 DESACTIVAR A2 (t=360s)
+[OK] Falla A2 marcada como INACTIVA en faults.yaml
+2026-10-16T12:51:38Z host=1792155098 vm=1792155099 carga terminada
