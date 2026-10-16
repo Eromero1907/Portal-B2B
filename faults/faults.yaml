@@ -1,5 +1,5 @@
 version: 1
-enabled: false
+enabled: true
 semilla: 42
 fallas:
 - id: A1
