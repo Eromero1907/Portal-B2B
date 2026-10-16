@@ -1,0 +1,15 @@
+                                                         List of relations
+ Schema  |            Name             | Type  |  Owner   |     Table      | Persistence | Access method |    Size    | Description 
+---------+-----------------------------+-------+----------+----------------+-------------+---------------+------------+-------------
+ ordenes | idempotencia_pkey           | index | postgres | idempotencia   | permanent   | btree         | 8192 bytes | 
+ ordenes | idx_lineas_orden            | index | postgres | lineas_orden   | permanent   | btree         | 75 MB      | 
+ ordenes | idx_ordenes_proveedor_fecha | index | postgres | ordenes_compra | permanent   | btree         | 23 MB      | 
+ ordenes | idx_outbox_pendientes       | index | postgres | outbox         | permanent   | btree         | 8192 bytes | 
+ ordenes | lineas_orden_pkey           | index | postgres | lineas_orden   | permanent   | btree         | 50 MB      | 
+ ordenes | ordenes_compra_pkey         | index | postgres | ordenes_compra | permanent   | btree         | 8448 kB    | 
+ ordenes | outbox_evento_id_key        | index | postgres | outbox         | permanent   | btree         | 8192 bytes | 
+ ordenes | outbox_pkey                 | index | postgres | outbox         | permanent   | btree         | 8192 bytes | 
+ ordenes | uq_ordenes_idempotency      | index | postgres | ordenes_compra | permanent   | btree         | 16 MB      | 
+ ordenes | uq_ordenes_numero           | index | postgres | ordenes_compra | permanent   | btree         | 14 MB      | 
+(10 rows)
+

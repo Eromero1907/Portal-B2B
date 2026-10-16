@@ -1,0 +1,8 @@
+       name       | setting 
+------------------+---------
+ jit              | on
+ random_page_cost | 1.1
+ shared_buffers   | 65536
+ work_mem         | 32768
+(4 rows)
+

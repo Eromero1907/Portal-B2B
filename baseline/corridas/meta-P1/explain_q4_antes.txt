@@ -1,0 +1,17 @@
+                                                                 QUERY PLAN                                                                 
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Bitmap Heap Scan on ordenes_compra o  (cost=284.76..5770.88 rows=910 width=12) (actual time=0.582..1.737 rows=3986 loops=1)
+   Recheck Cond: ((proveedor_id = 1) AND (fecha_emision >= '2024-09-17'::date) AND (fecha_emision < '2026-09-17'::date))
+   Filter: ((fecha_entrega IS NOT NULL) AND ((estado)::text = 'CONFIRMADA'::text))
+   Rows Removed by Filter: 1307
+   Heap Blocks: exact=136
+   Buffers: shared hit=169
+   ->  Bitmap Index Scan on idx_ordenes_proveedor_fecha  (cost=0.00..284.54 rows=5449 width=0) (actual time=0.547..0.547 rows=5293 loops=1)
+         Index Cond: ((proveedor_id = 1) AND (fecha_emision >= '2024-09-17'::date) AND (fecha_emision < '2026-09-17'::date))
+         Buffers: shared hit=33
+ Planning:
+   Buffers: shared hit=149
+ Planning Time: 0.479 ms
+ Execution Time: 1.932 ms
+(13 rows)
+

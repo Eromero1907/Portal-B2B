@@ -116,6 +116,43 @@ la carga COPY y, además, la ruta de confirmación bajo carga estable. Deja en `
 
 ---
 
+## Entregable 3 · experimentos de falla y evidencia
+Informe: `Entrega 3/informe.md` · fichas con la predicción previa (no se editan): `Entrega 3/experimentos/<ID>.md` ·
+análisis predicho-vs-medido: `Entrega 3/experimentos/<ID>_resultado.md` · correcciones con su predicción previa:
+`Entrega 3/experimentos/<ID>_correccion_*.md` · evidencia por corrida: `Entrega 3/evidencia/<ID>/<config>_r<n>/`
+(`solicitudes.csv`, `resumen.json`, `eventos.log`, `manifest.txt`, `recursos.csv`, `verificacion.txt`) · corridas
+descartadas y por qué: `Entrega 3/evidencia/LEEME_descartadas.md` · checklist: `Entrega 3/checklist.md`.
+
+| Familia | Falla | Qué hace | Variantes de corrección |
+|---|---|---|---|
+| A | A1 `tributaria-lenta` | +500–1 100 ms al 30 % de las llamadas al crédito, 300 s | — |
+| A | A2 `cola-larga-lognormal` | latencia lognormal (σ = 1,5) en el 100 % de las llamadas | — |
+| B | B1 `db-caida` | `docker stop` de PostgreSQL 45 s | — |
+| B | B2 `bloqueo-franja-91150` | `SELECT … FOR UPDATE` sobre la franja 91150 | `lock0` (bloqueo desde t = 0), arreglo `LockNotAvailable` → 503 |
+| C | C1 `saturacion-cpu-app1` | `docker update --cpus` sobre app1 (0,25) | `cpu010` (0,10 CPU) |
+| C | C2 `consumidor-pausado-lag` | `docker pause` del consumidor 300 s | — |
+| D | D1 `matar-instancia-app2` | `docker kill` de app2, 60 s sin reinicio | — |
+| D | D2 `error-5xx-stub-credito` | 503 al 50 % de las llamadas al crédito | `umbral70` (breaker al 70 %) |
+
+**Un experimento:** `bash faults/experimento.sh <ID> <sin|con|con-VARIANTE> <rep>` (Git Bash). Reinicia el estado, recrea
+las apps (`con` añade `docker-compose.resiliencia.yml`), programa la falla con `docker exec … date/sleep`, corre la carga
+(100 flujos/s = 200 solicitudes/s, 330 s con 30 s de calentamiento, semilla 42), apaga la falla (`trap` ante cualquier
+salida) y guarda la verificación de negocio (`outbox_total` = CONFIRMADAS, `reservada ≤ total`, claves EN_CURSO).
+**Una cola:** `make cola LISTA=<resto|rep3|rep4|d2fix|fixb2>` (`faults/cola.sh`; registra en `Entrega 3/evidencia/cola.log`).
+**Empaquetar:** `make empaquetar` (solo con el equipo en reposo). **Palancas de la meta −10 %:** `make palanca P=P1|P2|P3`
+(índice cubriente, `jit = off`, `random_page_cost`) y `make palanca-p8` (E4: validación de catálogo en una consulta por orden).
+
+**Perfil M (resiliencia)** = `docker-compose.resiliencia.yml`: timeout por intento 200 ms, 3 reintentos con *full jitter* y
+presupuesto 1,5 s, breaker (umbral 50 %, ventana 10 s, ≥ 20 intentos), bulkhead 20, degradación con `Retry-After`,
+`DB_LOCK_TIMEOUT_MS=2000`, `BD_POOL_TIMEOUT_S=2`. Variantes: `docker-compose.var-umbral70.yml`, `docker-compose.ratelimit.yml`
+(rate limit en nginx, porque `RATE_LIMIT_*` no está conectado en la app), `docker-compose.c2-sin.yml`.
+
+**Cómo leer una corrida:** la ventana de análisis está en `inicio_s` del generador (t de la ficha + 30 s de calentamiento).
+Una corrida es válida si la mediana previa a la falla (inicio_s 31–90) está cerca de 7 ms; si no, se descarta
+(`*_descartada`). Las fichas no se editan: la diferencia con lo medido va en `<ID>_resultado.md`.
+
+---
+
 ## Entregable 2 (referencia)
 `make datos` · `make verificar` · `make determinismo` · `make indices-off` / `make indices-on`. Detalle de tablas y
 columnas en el contrato de datos del equipo; consultas en `datos/consultas.sql`; parámetros frío/caliente en

@@ -1,0 +1,78 @@
+
+===== [15:59:58] 0. Plataforma detenida (las consultas del E2 se miden sin aplicación) y base en el mismo estado para antes y después =====
+time="2026-10-16T15:59:58-05:00" level=warning msg="Found orphan containers ([portal-prometheus portal-grafana portal-jaeger portal-nginx-exporter portal-cadvisor portal-postgres-exporter]) for this project. If you removed or renamed this service in your compose file, you can run this command with the --remove-orphans flag to clean it up."
+ Container pg-portal-b2b Running 
+ Container pg-portal-b2b Waiting 
+ Container pg-portal-b2b Healthy 
+       name       | setting 
+------------------+---------
+ jit              | on
+ random_page_cost | 4
+ shared_buffers   | 65536
+ work_mem         | 32768
+(4 rows)
+
+
+===== [16:00:01] 1. ANTES (control): Q1–Q5 frío/caliente x5 =====
+
+===== [16:00:38] 2. Aplicar P2 =====
+ pg_reload_conf 
+----------------
+ t
+(1 row)
+
+       name       | setting 
+------------------+---------
+ jit              | off
+ random_page_cost | 4
+ shared_buffers   | 65536
+ work_mem         | 32768
+(4 rows)
+
+
+===== [16:00:39] 3. DESPUÉS: Q1–Q5 frío/caliente x5 =====
+
+===== [16:01:19] 4. Revertir P2 (la base queda como estaba) =====
+ pg_reload_conf 
+----------------
+ t
+(1 row)
+
+
+===== [16:01:19] 5. Comparación antes/después contra el objetivo −10 % =====
+métrica                                          antes   ±rango   después   cambio  veredicto / objetivo
+consulta:q1:caliente:p50                        0.7288   0.5844    1.0047    37.9%  DENTRO DEL RUIDO / meta NO
+consulta:q1:caliente:p95                        1.0317   0.9160    1.4592    41.4%  DENTRO DEL RUIDO / meta NO
+consulta:q1:caliente:p99                        2.0004   1.4713    1.8064    -9.7%  DENTRO DEL RUIDO / meta NO
+consulta:q1:frio:p50                            0.8097   0.5731    0.8693     7.4%  DENTRO DEL RUIDO / meta NO
+consulta:q1:frio:p95                            1.1404   1.1047    1.1985     5.1%  DENTRO DEL RUIDO / meta NO
+consulta:q1:frio:p99                            1.7152   1.8514    1.8924    10.3%  DENTRO DEL RUIDO / meta NO
+consulta:q2:caliente:p50                        0.8757   0.5072    0.9888    12.9%  DENTRO DEL RUIDO / meta NO
+consulta:q2:caliente:p95                        1.3469   1.0164    1.9656    45.9%  DENTRO DEL RUIDO / meta NO
+consulta:q2:caliente:p99                        1.8848   0.8612    3.6443    93.4%  EMPEORA / meta NO
+consulta:q2:frio:p50                            0.9288   0.8500    1.0403    12.0%  DENTRO DEL RUIDO / meta NO
+consulta:q2:frio:p95                            1.6542   4.6455    1.6463    -0.5%  DENTRO DEL RUIDO / meta NO
+consulta:q2:frio:p99                            3.1511   5.7139    2.6535   -15.8%  DENTRO DEL RUIDO / meta NO
+consulta:q3:caliente:p50                        0.8215   0.4577    0.9899    20.5%  DENTRO DEL RUIDO / meta NO
+consulta:q3:caliente:p95                        0.9991   0.9526    1.2129    21.4%  DENTRO DEL RUIDO / meta NO
+consulta:q3:caliente:p99                        1.2295   1.1592    1.2615     2.6%  DENTRO DEL RUIDO / meta NO
+consulta:q3:frio:p50                            0.8861   1.0070    0.9195     3.8%  DENTRO DEL RUIDO / meta NO
+consulta:q3:frio:p95                            1.7287   1.6750    1.4617   -15.4%  DENTRO DEL RUIDO / meta NO
+consulta:q3:frio:p99                            2.3718   2.7135    2.6355    11.1%  DENTRO DEL RUIDO / meta NO
+consulta:q4:caliente:p50                        2.0243   0.8897    2.0428     0.9%  DENTRO DEL RUIDO / meta NO
+consulta:q4:caliente:p95                       17.2254   8.3709   18.0618     4.9%  DENTRO DEL RUIDO / meta NO
+consulta:q4:caliente:p99                       19.4930  12.6105   24.1473    23.9%  DENTRO DEL RUIDO / meta NO
+consulta:q4:frio:p50                            1.2124   0.3930    1.5535    28.1%  DENTRO DEL RUIDO / meta NO
+consulta:q4:frio:p95                            1.5884   0.8207    2.3440    47.6%  DENTRO DEL RUIDO / meta NO
+consulta:q4:frio:p99                            2.0420   1.3984    2.7078    32.6%  DENTRO DEL RUIDO / meta NO
+consulta:q5:keyset:p50                          0.9074   0.2800    1.3263    46.2%  EMPEORA / meta NO
+consulta:q5:keyset:p95                          1.2989   0.6465    2.0284    56.2%  EMPEORA / meta NO
+consulta:q5:keyset:p99                          2.0738   2.3439    2.9661    43.0%  DENTRO DEL RUIDO / meta NO
+consulta:q5:offset5000:p50                      3.2047   1.4498    3.6007    12.4%  DENTRO DEL RUIDO / meta NO
+consulta:q5:offset5000:p95                      4.1011   1.8246    4.8574    18.4%  DENTRO DEL RUIDO / meta NO
+consulta:q5:offset5000:p99                      6.1732   3.7831    6.7093     8.7%  DENTRO DEL RUIDO / meta NO
+consulta:q5:pagina1:p50                         0.8864   0.4142    1.0178    14.8%  DENTRO DEL RUIDO / meta NO
+consulta:q5:pagina1:p95                         1.1352   1.9787    1.4558    28.2%  DENTRO DEL RUIDO / meta NO
+consulta:q5:pagina1:p99                         1.3703   3.8783    2.6945    96.6%  DENTRO DEL RUIDO / meta NO
+
+===== [16:01:20] Listo: baseline/corridas/meta-P2 =====

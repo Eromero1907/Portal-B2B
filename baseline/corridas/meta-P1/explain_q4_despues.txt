@@ -1,0 +1,15 @@
+                                                                             QUERY PLAN                                                                              
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Index Only Scan using idx_ordenes_proveedor_fecha_cubriente on ordenes_compra o  (cost=0.42..302.40 rows=873 width=12) (actual time=0.105..1.300 rows=3986 loops=1)
+   Index Cond: ((proveedor_id = 1) AND (fecha_emision >= '2024-09-17'::date) AND (fecha_emision < '2026-09-17'::date))
+   Filter: ((fecha_entrega IS NOT NULL) AND ((estado)::text = 'CONFIRMADA'::text))
+   Rows Removed by Filter: 1307
+   Heap Fetches: 0
+   Buffers: shared hit=4 read=42
+   I/O Timings: shared read=0.267
+ Planning:
+   Buffers: shared hit=181
+ Planning Time: 0.468 ms
+ Execution Time: 1.458 ms
+(11 rows)
+

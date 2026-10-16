@@ -1,3 +1,4 @@
+import os
 import sys
 import csv
 import time
@@ -12,6 +13,9 @@ from db import conectar, RAIZ
 COLS_ORDENES = "id,numero_orden,proveedor_id,franja_id,fecha_emision,estado,total_orden,idempotency_key,created_at,fecha_compromiso,fecha_entrega"
 COLS_LINEAS = "id,orden_id,sku_id,cantidad,precio_unitario,subtotal,cantidad_entregada"
 COLS_LINEA_INSERT = "id,orden_id,sku_id,cantidad,precio_unitario,subtotal,cantidad_entregada"
+
+# Variante de E4 para la palanca P8; por defecto E4 es idéntico al del E2 (una consulta por línea).
+VARIANTE_LOTE = os.environ.get("E4_VARIANTE", "") == "lote"
 
 
 def agrupar_lineas_por_orden(lineas):
@@ -169,7 +173,25 @@ def procesar_orden_e4(conn, orden, lineas_orden):
             return False, "sin_proveedor_o_contrato"
 
         # Paso 2 -- RN-03/04/05: cada SKU debe ser oferta vigente del proveedor, precio correcto
-        for linea in lineas_orden:
+        if VARIANTE_LOTE:
+            # Palanca P8 (baseline/palancas.md): una sola consulta por orden (unnest) en vez de una por línea.
+            # Misma regla: la orden es válida si TODAS sus líneas casan con una oferta vigente al precio negociado.
+            if lineas_orden:
+                cur.execute(
+                    """
+                    SELECT count(*)
+                      FROM unnest(%s::bigint[], %s::numeric[]) AS l(sku_id, precio)
+                      JOIN catalogo.sku_catalogo s ON s.id = l.sku_id AND s.proveedor_id = %s
+                       AND s.vigencia_desde <= %s AND s.vigencia_hasta >= %s
+                       AND s.precio_negociado = l.precio
+                    """,
+                    ([int(l["sku_id"]) for l in lineas_orden], [l["precio_unitario"] for l in lineas_orden],
+                     proveedor_id, fecha, fecha),
+                )
+                if cur.fetchone()[0] != len(lineas_orden):
+                    conn.rollback()
+                    return False, "sku_invalido_o_precio"
+        for linea in ([] if VARIANTE_LOTE else lineas_orden):
             cur.execute(
                 """
                 SELECT 1 FROM catalogo.sku_catalogo
@@ -204,15 +226,19 @@ def procesar_orden_e4(conn, orden, lineas_orden):
             f"INSERT INTO bench.ordenes_compra ({COLS_ORDENES}) VALUES ({','.join(['%s']*11)})",
             valores_orden,
         )
-        for l in lineas_orden:
-            valores_linea = [
-                l["id"], l["orden_id"], l["sku_id"], l["cantidad"],
-                l["precio_unitario"], l["subtotal"], l["cantidad_entregada"] or None,
-            ]
-            cur.execute(
-                f"INSERT INTO bench.lineas_orden ({COLS_LINEA_INSERT}) VALUES ({','.join(['%s']*7)})",
-                valores_linea,
-            )
+        valores_lineas = [
+            [l["id"], l["orden_id"], l["sku_id"], l["cantidad"],
+             l["precio_unitario"], l["subtotal"], l["cantidad_entregada"] or None]
+            for l in lineas_orden
+        ]
+        sql_linea = f"INSERT INTO bench.lineas_orden ({COLS_LINEA_INSERT}) VALUES ({','.join(['%s']*7)})"
+        if VARIANTE_LOTE:
+            # P8: todas las líneas de la orden en un solo viaje (executemany usa modo pipeline en psycopg 3.2)
+            if valores_lineas:
+                cur.executemany(sql_linea, valores_lineas)
+        else:
+            for valores_linea in valores_lineas:
+                cur.execute(sql_linea, valores_linea)
 
     # Paso 5 -- COMMIT
     conn.commit()
