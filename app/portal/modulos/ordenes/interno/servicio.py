@@ -19,6 +19,8 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from decimal import Decimal
 
+import psycopg.errors
+
 from portal import config, trazas
 from portal.bd import pool
 from portal.integraciones import credito
@@ -108,6 +110,20 @@ async def _confirmar_orden_impl(orden_id: int, clave: str, trace_id: str) -> Res
 
     try:
         return await _confirmar(orden_id, clave, trace_id)
+    except psycopg.errors.LockNotAvailable:
+        # Hallazgo E3 (B2, variante lock0): con DB_LOCK_TIMEOUT_MS > 0 el UPDATE de la franja bloqueada aborta a los 2 s.
+        # Es una condición técnica transitoria, no una regla de negocio: la reserva no se creó (T1 hizo ROLLBACK), la orden
+        # sigue EN_PROCESO y se libera la clave para que el cliente reintente con la misma. Antes salía como 500 genérico.
+        try:
+            async with pool.connection() as conn:
+                await repositorio.idem_borrar(conn, clave)
+        except Exception as e:
+            registrar("idempotencia_no_liberada", clave=clave, error=type(e).__name__, trace_id=trace_id)
+        CONFIRMACIONES.labels("no_disponible", "franja_bloqueada").inc()
+        registrar("franja_bloqueada", orden_id=orden_id, idempotency_key=clave, trace_id=trace_id)
+        cabeceras = {"Retry-After": str(config.DEGRADACION_RETRY_AFTER_S)} if config.DEGRADACION_ACTIVA else {}
+        return Respuesta(503, {"error": "franja_bloqueada", "causa": "franja_bloqueada", "orden_id": orden_id,
+                               "estado": EN_PROCESO, "trace_id": trace_id}, cabeceras=cabeceras)
     except BaseException:
         # Falla técnica no prevista: se libera la clave para que el cliente pueda reintentar con la misma.
         # La reserva PENDIENTE (si alcanzó a crearse) expira sola. El error se propaga (500) y queda en los logs.

@@ -36,6 +36,9 @@ elif [ ${#CORRIDAS[@]} -eq 0 ] && [ "${LISTA:-}" = "rep4" ]; then
               "B2 sin-lock0 3" "B2 con-lock0 3" "B2 sin-lock0 4" "B2 con-lock0 4"
               "D2 con-umbral70 3" "D2 con-umbral70 4"
               "C1 sin-cpu010 2" "C1 con-cpu010 2")
+elif [ ${#CORRIDAS[@]} -eq 0 ] && [ "${LISTA:-}" = "fixb2" ]; then
+    # Corrección de código (LockNotAvailable -> 503 franja_bloqueada). Requiere haber reconstruido la imagen de la app.
+    CORRIDAS=("B2 con-lock0 5" "B2 con-lock0 6")
 elif [ ${#CORRIDAS[@]} -eq 0 ] && [ "${LISTA:-}" = "d2fix" ]; then
     CORRIDAS=("D2 con-umbral70 1" "D2 con-umbral70 2")
 fi

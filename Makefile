@@ -198,5 +198,8 @@ experimento:
 cola:
 	$(BASH) faults/cola.sh
 
+palanca:
+	$(BASH) baseline/palanca.sh $(P) $(N)
+
 empaquetar:
 	$(BASH) faults/empaquetar_evidencia.sh
