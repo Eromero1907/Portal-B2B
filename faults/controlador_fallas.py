@@ -37,6 +37,26 @@ def ejecutar_cmd(cmd: list[str], check: bool = False) -> subprocess.CompletedPro
     return subprocess.run(cmd, capture_output=True, text=True, check=check)
 
 
+def _duracion_falla(falla_id: str, defecto: int = 45) -> int:
+    for fcfg in cargar_config().get("fallas", []):
+        if fcfg.get("id", "").upper() == falla_id:
+            return int(fcfg.get("duracion_s", defecto))
+    return defecto
+
+
+def _psql_en_db(sql: str, appname: str, detach: bool = False) -> subprocess.CompletedProcess:
+    cmd = ["docker", "exec"] + (["-d"] if detach else []) + [
+        "-e", "PGUSER=postgres", "-e", f"PGAPPNAME={appname}", "pg-portal-b2b",
+        "psql", "-X", "-q", "-At", "-d", "portal_b2b", "-c", sql]
+    return ejecutar_cmd(cmd)
+
+
+def liberar_bloqueo_b2() -> None:
+    """Termina la sesión que retiene el FOR UPDATE de la franja 91150 (ROLLBACK implícito). Idempotente."""
+    _psql_en_db("SELECT count(pg_terminate_backend(pid)) FROM pg_stat_activity WHERE application_name = 'falla-B2'",
+                "controlador")
+
+
 def estado_plataforma() -> None:
     cfg = cargar_config()
     activo_ks = cfg.get("enabled", False)
@@ -88,10 +108,17 @@ def activar_falla(falla_id: str) -> None:
         print("  -> Aplicando falla C2 (Infra): pausando consumidor de outbox (portal-consumidor-eventos)...")
         ejecutar_cmd(["docker", "pause", "portal-consumidor-eventos"])
     elif falla_id == "D1":
-        print("  -> Aplicando falla D1 (Infra): deteniendo portal-app2...")
-        ejecutar_cmd(["docker", "stop", "portal-app2"])
+        print("  -> Aplicando falla D1 (Infra): SIGKILL a portal-app2 (docker kill)...")
+        ejecutar_cmd(["docker", "kill", "portal-app2"])
     elif falla_id == "B2":
-        print("  -> Falla B2 (Contención franja 91150): requiere script de bloqueo o concurrencia sobre franja.")
+        retener = _duracion_falla("B2") + 10  # margen: el controlador la libera antes con pg_terminate_backend
+        print(f"  -> Aplicando falla B2: sesión con SELECT ... FOR UPDATE sobre franjas_cedi id=91150 (hasta {retener} s)...")
+        _psql_en_db(f"SELECT id FROM logistica.franjas_cedi WHERE id = 91150 FOR UPDATE; SELECT pg_sleep({retener});",
+                    "falla-B2", detach=True)
+        time.sleep(1.0)
+        r = _psql_en_db("SELECT count(*) FROM pg_locks l JOIN pg_stat_activity a USING (pid) "
+                        "WHERE a.application_name = 'falla-B2' AND l.locktype = 'transactionid' AND l.granted", "controlador")
+        print(f"  -> Verificación: sesión falla-B2 reteniendo bloqueo = {r.stdout.strip() or '?'} (esperado 1)")
 
 
 def desactivar_falla(falla_id: str) -> None:
@@ -118,13 +145,16 @@ def desactivar_falla(falla_id: str) -> None:
         ejecutar_cmd(["docker", "start", "pg-portal-b2b"])
     elif falla_id == "C1":
         print("  -> Revirtiendo C1: restaurando CPU sin límite en portal-app1...")
-        ejecutar_cmd(["docker", "update", "--cpus", "2.0", "portal-app1"])
+        ejecutar_cmd(["docker", "update", "--cpus", "0", "portal-app1"])
     elif falla_id == "C2":
         print("  -> Revirtiendo C2: reanudando portal-consumidor-eventos...")
         ejecutar_cmd(["docker", "unpause", "portal-consumidor-eventos"])
     elif falla_id == "D1":
         print("  -> Revirtiendo D1: reiniciando portal-app2...")
         ejecutar_cmd(["docker", "start", "portal-app2"])
+    elif falla_id == "B2":
+        print("  -> Revirtiendo B2: terminando la sesión que retiene el bloqueo (ROLLBACK)...")
+        liberar_bloqueo_b2()
 
 
 def kill_switch(activar: bool) -> None:
@@ -139,8 +169,9 @@ def kill_switch(activar: bool) -> None:
     # Revertir toda infraestructura alterada
     ejecutar_cmd(["docker", "start", "pg-portal-b2b"])
     ejecutar_cmd(["docker", "start", "portal-app2"])
-    ejecutar_cmd(["docker", "update", "--cpus", "2.0", "portal-app1"])
+    ejecutar_cmd(["docker", "update", "--cpus", "0", "portal-app1"])
     ejecutar_cmd(["docker", "unpause", "portal-consumidor-eventos"])
+    liberar_bloqueo_b2()
 
     if activar:
         print("[KILL SWITCH ACTIVADO] Fallas deshabilitadas globalmente (enabled=false). Infraestructura restaurada.")

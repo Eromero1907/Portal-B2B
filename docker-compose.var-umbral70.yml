@@ -1,0 +1,12 @@
+# Variante de corrección de D2 (corridas "con-umbral70"): perfil M con el umbral del circuit breaker en 70 % (en lugar de 50 %).
+# Se usa SIEMPRE junto con docker-compose.resiliencia.yml (lo agrega experimento.sh para CFG=con-umbral70).
+services:
+  app1:
+    environment:
+      BREAKER_UMBRAL_FALLOS_PCT: "70"
+  app2:
+    environment:
+      BREAKER_UMBRAL_FALLOS_PCT: "70"
+  app3:
+    environment:
+      BREAKER_UMBRAL_FALLOS_PCT: "70"

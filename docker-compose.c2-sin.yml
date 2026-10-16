@@ -1,0 +1,6 @@
+# Solo para C2 "sin": consumidor SIN deduplicación idempotente (CONSUMIDOR_DEDUPLICAR=false): consume y confirma sin
+# escribir en notificaciones.eventos_procesados. "con" usa el valor por defecto (true).
+services:
+  consumidor-eventos:
+    environment:
+      CONSUMIDOR_DEDUPLICAR: "false"

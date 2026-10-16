@@ -1,0 +1,6 @@
+# Solo para C1 "con": nginx con limit_req (250 req/s, ráfaga 100). Se suma al perfil M:
+#   docker compose -f docker-compose.yml -f docker-compose.resiliencia.yml -f docker-compose.ratelimit.yml up -d --force-recreate --wait app1 app2 app3 nginx
+services:
+  nginx:
+    volumes:
+      - ./infra/nginx/nginx.ratelimit.conf:/etc/nginx/nginx.conf:ro

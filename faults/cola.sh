@@ -4,6 +4,7 @@
 #  - Si una corrida falla, apaga las fallas, aparta la carpeta incompleta y sigue con la siguiente.
 #  - Si fallan 3 seguidas aborta (algo está roto; no tiene sentido gastar la noche).
 # Uso: make cola                      (A1, D2 y A2: sin/con x 2 repeticiones, alternando)
+#      EXPS="D1 B1 B2 C1 C2" bash faults/cola.sh      (otros experimentos; CFGS="con-umbral70" para variantes)
 #      bash faults/cola.sh "A1 sin 2" "A1 con 2"   (lista explícita: "ID cfg rep")
 cd "$(dirname "$0")/.."
 export MSYS_NO_PATHCONV=1
@@ -14,8 +15,18 @@ PY=.venv/Scripts/python.exe
 [ -f "$PY" ] || PY=.venv/bin/python
 
 CORRIDAS=("$@")
+# Listas predefinidas:  make cola LISTA=resto   (B1, B2, C1, C2, D1: primero una corrida de cada una para detectar
+# fallas del montaje pronto, después el resto hasta 2 repeticiones sin/con)   |   make cola LISTA=d2fix (corrección de D2)
+if [ ${#CORRIDAS[@]} -eq 0 ] && [ "${LISTA:-}" = "resto" ]; then
+    CORRIDAS=("D1 sin 1" "B2 sin 1" "C2 sin 1" "B1 sin 1" "C1 sin 1"
+              "D1 con 1" "B2 con 1" "C2 con 1" "B1 con 1" "C1 con 1"
+              "D1 sin 2" "B2 sin 2" "C2 sin 2" "B1 sin 2" "C1 sin 2"
+              "D1 con 2" "B2 con 2" "C2 con 2" "B1 con 2" "C1 con 2")
+elif [ ${#CORRIDAS[@]} -eq 0 ] && [ "${LISTA:-}" = "d2fix" ]; then
+    CORRIDAS=("D2 con-umbral70 1" "D2 con-umbral70 2")
+fi
 if [ ${#CORRIDAS[@]} -eq 0 ]; then
-    for e in A1 D2 A2; do for r in 1 2; do for c in sin con; do CORRIDAS+=("$e $c $r"); done; done; done
+    for e in ${EXPS:-A1 D2 A2}; do for r in 1 2; do for c in ${CFGS:-sin con}; do CORRIDAS+=("$e $c $r"); done; done; done
 fi
 
 seguidas=0

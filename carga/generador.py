@@ -134,7 +134,28 @@ async def ejecutar_flujo(cliente, flujo, t0, filas):
     filas.append(r2)
 
 
+REINTENTOS_CLIENTE = 0          # se fija con --reintentos-cliente (0 = el cliente no reintenta)
+REINTENTO_BASE_S = 0.1          # espera antes del reintento k: 0,1 s, 0,2 s, 0,4 s ... (misma Idempotency-Key)
+CODIGOS_REINTENTABLES = (502, 503, 504)
+
+
 async def _solicitud(cliente, metodo, ruta, cuerpo, cabeceras, t0):
+    """Un intento + (opcional) reintentos del cliente con la MISMA Idempotency-Key (la que hace seguro reintentar).
+    La latencia registrada es la que ve el usuario: desde el primer intento hasta la respuesta final."""
+    inicio = time.perf_counter()
+    fila = await _intento(cliente, metodo, ruta, cuerpo, cabeceras, t0)
+    fila["intentos"] = 1
+    while fila["intentos"] <= REINTENTOS_CLIENTE and (fila["codigo"] == 0 or fila["codigo"] in CODIGOS_REINTENTABLES):
+        await asyncio.sleep(REINTENTO_BASE_S * (2 ** (fila["intentos"] - 1)))
+        previo = fila["intentos"]
+        fila = await _intento(cliente, metodo, ruta, cuerpo, cabeceras, t0)
+        fila["intentos"] = previo + 1
+    fila["inicio_s"] = round(inicio - t0, 4)
+    fila["latencia_ms"] = round((time.perf_counter() - inicio) * 1000, 3)
+    return fila
+
+
+async def _intento(cliente, metodo, ruta, cuerpo, cabeceras, t0):
     inicio = time.perf_counter()
     fila = {"inicio_s": round(inicio - t0, 4), "codigo": 0, "estado": "", "causa": "", "instancia": "",
             "trace_id": "", "cuerpo": {}}
@@ -199,6 +220,8 @@ def resumir(args, filas, flujos, duracion_real):
                    "timeout_cliente_s": args.timeout_cliente},
         "flujos_planificados": len(flujos),
         "duracion_real_s": round(duracion_real, 2),
+        "reintentos_cliente_max": args.reintentos_cliente,
+        "solicitudes_con_reintento": sum(1 for f in medidas if f.get("intentos", 1) > 1),
         "solicitudes_medidas": len(medidas),
         "throughput_solicitudes_s": round(len(medidas) / ventana, 2),
         "por_fase": {},
@@ -234,7 +257,7 @@ def resumir(args, filas, flujos, duracion_real):
 def guardar(salida: Path, filas, resumen):
     salida.mkdir(parents=True, exist_ok=True)
     campos = ["flujo", "fase", "caso", "inicio_s", "retraso_inicio_s", "latencia_ms", "codigo", "estado", "causa",
-              "instancia", "trace_id"]
+              "instancia", "trace_id", "intentos"]
     with open(salida / "solicitudes.csv", "w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=campos, extrasaction="ignore")
         w.writeheader()
@@ -265,9 +288,13 @@ def main():
     ap.add_argument("--fecha-desde", default="2026-09-17", help="primera fecha de franjas futuras")
     ap.add_argument("--timeout-cliente", type=float, default=60.0)
     ap.add_argument("--max-conexiones", type=int, default=1000)
+    ap.add_argument("--reintentos-cliente", type=int, default=0,
+                    help="reintentos del cliente ante 502/503/504/error de conexión, con la misma Idempotency-Key (0 = ninguno)")
     ap.add_argument("--salida", required=True)
     args = ap.parse_args()
 
+    global REINTENTOS_CLIENTE
+    REINTENTOS_CLIENTE = args.reintentos_cliente
     pesos, ofertas, franjas, previas = cargar_referencia(args.dsn, args.fecha_desde)
     if previas:
         sys.exit(f"Hay {previas} órdenes de corridas previas: ejecuta `make reset-estado` antes (la carga debe partir "
