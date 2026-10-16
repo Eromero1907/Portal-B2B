@@ -1,0 +1,11 @@
+2026-10-16T17:12:00Z host=1792170720 vm=1792170720 experimento C2 config=con rep=3 (falla en t=60s durante 300s; carga 420s + 30s de calentamiento)
+2026-10-16T17:12:01Z host=1792170721 vm=1792170721 recreando app1 app2 app3 nginx consumidor-eventos con: -f docker-compose.yml -f docker-compose.resiliencia.yml
+2026-10-16T17:12:18Z host=1792170738 vm=1792170738 carga iniciada: t0 aprox. (calentamiento de 30s; t=0 de la ficha es el fin del calentamiento)
+2026-10-16T17:13:48Z host=1792170828 vm=1792170828 ACTIVAR C2 (t=60s)
+[OK] Falla C2 marcada como ACTIVA en faults.yaml (Kill switch: enabled=true)
+  -> Aplicando falla C2 (Infra): pausando consumidor de outbox (portal-consumidor-eventos)...
+2026-10-16T17:18:47Z host=1792171127 vm=1792171127 DESACTIVAR C2 (t=360s)
+[OK] Falla C2 marcada como INACTIVA en faults.yaml
+  -> Revirtiendo C2: reanudando portal-consumidor-eventos...
+2026-10-16T17:28:48Z host=1792171728 vm=1792171728 C2: la cola NO se vació en 600 s (quedan 50); se purga para no contaminar la siguiente corrida
+2026-10-16T17:28:49Z host=1792171729 vm=1792171729 carga terminada
