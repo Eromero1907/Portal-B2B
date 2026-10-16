@@ -52,3 +52,10 @@ resultados/carga/
 generar_google_slide.gs
 imagenes_extraidas/
 *GUIA_relevo_Santiago.md
+
+# --- Entrega 3: la evidencia SÍ se versiona (los *.txt/*.md de arriba no deben esconderla) ---
+!Entrega 3/**/*.txt
+!Entrega 3/**/*.md
+# El CSV crudo de cada corrida pesa ~9 MB: se sube comprimido (solicitudes.csv.gz, ver faults/empaquetar_evidencia.sh)
+Entrega 3/evidencia/**/solicitudes.csv
+Entrega 3/evidencia/**/compose.log

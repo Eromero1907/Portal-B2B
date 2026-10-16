@@ -197,3 +197,6 @@ experimento:
 
 cola:
 	$(BASH) faults/cola.sh
+
+empaquetar:
+	$(BASH) faults/empaquetar_evidencia.sh
