@@ -191,3 +191,6 @@ obs-up:
 
 obs-down:
 	docker compose $(OBS_COMPOSE) stop $(OBS_SERVICIOS)
+
+experimento:
+	$(BASH) faults/experimento.sh $(ID) $(CFG) $(REP)

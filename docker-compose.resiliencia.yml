@@ -1,0 +1,34 @@
+# Perfil M de resiliencia (Entrega 3). Se superpone a docker-compose.yml SIN rebuild:
+#   docker compose -f docker-compose.yml -f docker-compose.resiliencia.yml up -d --force-recreate --wait app1 app2 app3 nginx
+# Volver a "sin mecanismos": mismo comando solo con -f docker-compose.yml.
+# Valores definidos en Entrega 3/experimentos/00_protocolo_comun.md (sección 3).
+# Nota: RATE_LIMIT_* (nginx limit_req) no está cableado por variable de entorno; no aplica a A1/A2/D2.
+x-perfil-m: &perfil_m
+  CREDITO_TIMEOUT_S: "5"
+  CREDITO_TIMEOUT_INTENTO_MS: "200"
+  REINTENTOS_ACTIVO: "true"
+  REINTENTOS_MAX: "3"
+  REINTENTOS_BASE_MS: "50"
+  REINTENTOS_TOPE_MS: "400"
+  REINTENTOS_PRESUPUESTO_MS: "1500"
+  BREAKER_ACTIVO: "true"
+  BREAKER_UMBRAL_FALLOS_PCT: "50"
+  BREAKER_VENTANA_S: "10"
+  BREAKER_MIN_LLAMADAS: "20"
+  BREAKER_ESPERA_ABIERTO_S: "5"
+  BREAKER_PRUEBAS_SEMIABIERTO: "5"
+  BULKHEAD_ACTIVO: "true"
+  BULKHEAD_MAX_CONCURRENTES: "20"
+  BULKHEAD_ESPERA_MS: "50"
+  DEGRADACION_ACTIVA: "true"
+  DEGRADACION_RETRY_AFTER_S: "5"
+  DB_LOCK_TIMEOUT_MS: "2000"
+  BD_POOL_TIMEOUT_S: "2"
+
+services:
+  app1:
+    environment: *perfil_m
+  app2:
+    environment: *perfil_m
+  app3:
+    environment: *perfil_m
