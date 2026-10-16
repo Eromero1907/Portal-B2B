@@ -180,3 +180,14 @@ fallas-estado:
 
 kill-switch:
 	$(VENV_BIN)/python faults/controlador_fallas.py kill-switch on
+
+# --- Observabilidad (Relevo 3): Prometheus, Grafana, cAdvisor, exporters y Jaeger ---
+OBS_COMPOSE = -f docker-compose.yml -f docker-compose.observabilidad.yml
+OBS_SERVICIOS = prometheus grafana cadvisor postgres-exporter nginx-exporter jaeger
+
+obs-up:
+	docker compose $(OBS_COMPOSE) up -d $(OBS_SERVICIOS)
+	@echo "Grafana: http://localhost:3000 | Prometheus: http://localhost:9090/targets | Jaeger: http://localhost:16686"
+
+obs-down:
+	docker compose $(OBS_COMPOSE) stop $(OBS_SERVICIOS)

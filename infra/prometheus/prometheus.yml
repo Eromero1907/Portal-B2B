@@ -1,0 +1,40 @@
+# Prometheus del Entregable 3. Scrape cada 5 s para que el p99 se vea "en tiempo real" en Grafana.
+global:
+  scrape_interval: 5s
+  evaluation_interval: 5s
+
+scrape_configs:
+  - job_name: portal-app
+    metrics_path: /metrics
+    static_configs:
+      - { targets: ["app1:8000"], labels: { instancia: app1 } }
+      - { targets: ["app2:8000"], labels: { instancia: app2 } }
+      - { targets: ["app3:8000"], labels: { instancia: app3 } }
+
+  - job_name: stub-credito
+    static_configs:
+      - { targets: ["stub-credito:9000"], labels: { instancia: stub-credito } }
+
+  - job_name: outbox-publicador
+    static_configs:
+      - { targets: ["publicador-outbox:8004"], labels: { instancia: publicador } }
+
+  - job_name: outbox-consumidor
+    static_configs:
+      - { targets: ["consumidor-eventos:8005"], labels: { instancia: consumidor } }
+
+  - job_name: nginx
+    static_configs:
+      - { targets: ["nginx-exporter:9113"], labels: { instancia: nginx } }
+
+  - job_name: postgres
+    static_configs:
+      - { targets: ["postgres-exporter:9187"], labels: { instancia: postgres } }
+
+  - job_name: cadvisor
+    static_configs:
+      - { targets: ["cadvisor:8080"], labels: { instancia: cadvisor } }
+
+  - job_name: rabbitmq
+    static_configs:
+      - { targets: ["rabbitmq:15692"], labels: { instancia: rabbitmq } }
