@@ -108,3 +108,9 @@
 [cola] 14:38:51 inicio C1 con-cpu010 2
 [cola] 14:46:51 OK    C1 con-cpu010 2 :: {"global": {"p50_ms": 7.168, "p95_ms": 101.212, "p99_ms": 411.48, "tasa_error_pct": 0.0}, "confirmar": 175.449, "throughput_s": 199.48, "slo": "PASA", "generador_retraso_p99_s": 0.002}
 [cola] 2026-10-16 14:46:52 TERMINADA
+[cola] 2026-10-16 15:43:24 comienzo: 2 corridas
+[cola] 15:43:24 inicio B2 con-lock0 5
+[cola] 15:49:37 OK    B2 con-lock0 5 :: {"global": {"p50_ms": 10.82, "p95_ms": 109.76, "p99_ms": 509.445, "tasa_error_pct": 1.978}, "confirmar": 181.999, "throughput_s": 199.56, "slo": "FALLA", "generador_retraso_p99_s": 0.011}
+[cola] 15:49:37 inicio B2 con-lock0 6
+[cola] 15:55:40 OK    B2 con-lock0 6 :: {"global": {"p50_ms": 10.572, "p95_ms": 65.874, "p99_ms": 169.973, "tasa_error_pct": 0.012}, "confirmar": 86.346, "throughput_s": 199.56, "slo": "PASA", "generador_retraso_p99_s": 0.005}
+[cola] 2026-10-16 15:55:40 TERMINADA
