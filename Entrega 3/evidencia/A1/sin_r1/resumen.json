@@ -1,0 +1,83 @@
+{
+  "perfil": {
+    "flujos_por_s": 100.0,
+    "solicitudes_por_s_objetivo": 200.0,
+    "duracion_s": 420.0,
+    "calentamiento_s": 30.0,
+    "semilla": 42,
+    "p_contrato_vencido": 0.005,
+    "p_sku_ajeno": 0.005,
+    "p_ultima_franja": 0.005,
+    "objetivo": "http://nginx:80",
+    "timeout_cliente_s": 60.0
+  },
+  "flujos_planificados": 44897,
+  "duracion_real_s": 450.02,
+  "solicitudes_medidas": 83783,
+  "throughput_solicitudes_s": 199.48,
+  "por_fase": {
+    "crear": {
+      "n": 41891,
+      "throughput_s": 99.74,
+      "p50_ms": 5.117,
+      "p95_ms": 11.424,
+      "p99_ms": 20.445,
+      "max_ms": 142.361,
+      "errores": 0,
+      "tasa_error_pct": 0.0,
+      "codigos": {
+        "201": 41891
+      },
+      "resultados": {
+        "EN_PROCESO:-": 41891
+      },
+      "por_instancia": {
+        "app3": 14174,
+        "app1": 13809,
+        "app2": 13908
+      }
+    },
+    "confirmar": {
+      "n": 41892,
+      "throughput_s": 99.74,
+      "p50_ms": 31.773,
+      "p95_ms": 885.875,
+      "p99_ms": 1089.854,
+      "max_ms": 1196.74,
+      "errores": 0,
+      "tasa_error_pct": 0.0,
+      "codigos": {
+        "200": 41892
+      },
+      "resultados": {
+        "RECHAZADA:sin_contrato_vigente": 16538,
+        "CONFIRMADA:-": 21760,
+        "RECHAZADA:proveedor_no_activo": 2760,
+        "RECHAZADA:credito_denegado": 631,
+        "RECHAZADA:sin_cupo_franja": 96,
+        "RECHAZADA:sku_fuera_de_catalogo_o_precio": 107
+      },
+      "por_instancia": {
+        "app2": 14038,
+        "app1": 13816,
+        "app3": 14038
+      }
+    }
+  },
+  "global": {
+    "p50_ms": 7.257,
+    "p95_ms": 629.791,
+    "p99_ms": 1038.479,
+    "tasa_error_pct": 0.0
+  },
+  "generador": {
+    "retraso_inicio_p99_s": 0.002,
+    "retraso_inicio_max_s": 0.1326,
+    "nota": "retraso entre la hora programada y la real; si el p99 supera ~0,05 s el generador no sostuvo el ritmo y la corrida no es válida"
+  },
+  "slo_rnf10": {
+    "p95_menor_400ms": false,
+    "errores_menor_0_5pct": true,
+    "veredicto": "FALLA"
+  }
+}

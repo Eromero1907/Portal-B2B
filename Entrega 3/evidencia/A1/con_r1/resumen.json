@@ -1,0 +1,85 @@
+{
+  "perfil": {
+    "flujos_por_s": 100.0,
+    "solicitudes_por_s_objetivo": 200.0,
+    "duracion_s": 420.0,
+    "calentamiento_s": 30.0,
+    "semilla": 42,
+    "p_contrato_vencido": 0.005,
+    "p_sku_ajeno": 0.005,
+    "p_ultima_franja": 0.005,
+    "objetivo": "http://nginx:80",
+    "timeout_cliente_s": 60.0
+  },
+  "flujos_planificados": 44897,
+  "duracion_real_s": 450.02,
+  "solicitudes_medidas": 83783,
+  "throughput_solicitudes_s": 199.48,
+  "por_fase": {
+    "crear": {
+      "n": 41891,
+      "throughput_s": 99.74,
+      "p50_ms": 5.121,
+      "p95_ms": 10.438,
+      "p99_ms": 16.533,
+      "max_ms": 112.4,
+      "errores": 0,
+      "tasa_error_pct": 0.0,
+      "codigos": {
+        "201": 41891
+      },
+      "resultados": {
+        "EN_PROCESO:-": 41891
+      },
+      "por_instancia": {
+        "app3": 13925,
+        "app1": 13885,
+        "app2": 14081
+      }
+    },
+    "confirmar": {
+      "n": 41892,
+      "throughput_s": 99.74,
+      "p50_ms": 32.153,
+      "p95_ms": 283.1,
+      "p99_ms": 685.003,
+      "max_ms": 1107.57,
+      "errores": 126,
+      "tasa_error_pct": 0.301,
+      "codigos": {
+        "200": 41766,
+        "503": 126
+      },
+      "resultados": {
+        "CONFIRMADA:-": 21636,
+        "RECHAZADA:sin_contrato_vigente": 16538,
+        "RECHAZADA:proveedor_no_activo": 2760,
+        "RECHAZADA:credito_denegado": 629,
+        "RECHAZADA:sin_cupo_franja": 96,
+        "RECHAZADA:sku_fuera_de_catalogo_o_precio": 107,
+        "EN_PROCESO:TimeoutError: ": 126
+      },
+      "por_instancia": {
+        "app1": 13882,
+        "app2": 14149,
+        "app3": 13861
+      }
+    }
+  },
+  "global": {
+    "p50_ms": 7.296,
+    "p95_ms": 251.101,
+    "p99_ms": 527.767,
+    "tasa_error_pct": 0.15
+  },
+  "generador": {
+    "retraso_inicio_p99_s": 0.002,
+    "retraso_inicio_max_s": 0.1083,
+    "nota": "retraso entre la hora programada y la real; si el p99 supera ~0,05 s el generador no sostuvo el ritmo y la corrida no es válida"
+  },
+  "slo_rnf10": {
+    "p95_menor_400ms": true,
+    "errores_menor_0_5pct": true,
+    "veredicto": "PASA"
+  }
+}
