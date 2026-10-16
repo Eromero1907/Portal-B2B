@@ -1,0 +1,93 @@
+{
+  "perfil": {
+    "flujos_por_s": 100.0,
+    "solicitudes_por_s_objetivo": 200.0,
+    "duracion_s": 300.0,
+    "calentamiento_s": 30.0,
+    "semilla": 42,
+    "p_contrato_vencido": 0.005,
+    "p_sku_ajeno": 0.005,
+    "p_ultima_franja": 0.005,
+    "objetivo": "http://nginx:80",
+    "timeout_cliente_s": 60.0
+  },
+  "flujos_planificados": 32939,
+  "duracion_real_s": 330.04,
+  "reintentos_cliente_max": 0,
+  "solicitudes_con_reintento": 0,
+  "solicitudes_medidas": 56151,
+  "throughput_solicitudes_s": 187.17,
+  "por_fase": {
+    "crear": {
+      "n": 29933,
+      "throughput_s": 99.78,
+      "p50_ms": 5.888,
+      "p95_ms": 10002.382,
+      "p99_ms": 10003.794,
+      "max_ms": 10072.016,
+      "errores": 3716,
+      "tasa_error_pct": 12.414,
+      "codigos": {
+        "201": 26217,
+        "500": 3674,
+        "502": 42
+      },
+      "resultados": {
+        "EN_PROCESO:-": 26217,
+        "-:error_interno": 3674,
+        "-:-": 42
+      },
+      "por_instancia": {
+        "app3": 8821,
+        "app2": 8635,
+        "app1": 8761,
+        "-": 3716
+      }
+    },
+    "confirmar": {
+      "n": 26218,
+      "throughput_s": 87.39,
+      "p50_ms": 32.972,
+      "p95_ms": 1511.997,
+      "p99_ms": 3703.108,
+      "max_ms": 7956.179,
+      "errores": 4,
+      "tasa_error_pct": 0.015,
+      "codigos": {
+        "200": 26214,
+        "500": 4
+      },
+      "resultados": {
+        "CONFIRMADA:-": 13636,
+        "RECHAZADA:sin_contrato_vigente": 10329,
+        "RECHAZADA:proveedor_no_activo": 1732,
+        "RECHAZADA:credito_denegado": 391,
+        "RECHAZADA:sin_cupo_franja": 65,
+        "RECHAZADA:sku_fuera_de_catalogo_o_precio": 61,
+        "-:error_interno": 4
+      },
+      "por_instancia": {
+        "app3": 8676,
+        "app1": 8780,
+        "app2": 8758,
+        "-": 4
+      }
+    }
+  },
+  "global": {
+    "p50_ms": 8.53,
+    "p95_ms": 10001.688,
+    "p99_ms": 10003.208,
+    "tasa_error_pct": 6.625
+  },
+  "generador": {
+    "retraso_inicio_p99_s": 0.002,
+    "retraso_inicio_max_s": 0.1133,
+    "nota": "retraso entre la hora programada y la real; si el p99 supera ~0,05 s el generador no sostuvo el ritmo y la corrida no es válida"
+  },
+  "slo_rnf10": {
+    "p95_menor_400ms": false,
+    "errores_menor_0_5pct": false,
+    "veredicto": "FALLA"
+  }
+}

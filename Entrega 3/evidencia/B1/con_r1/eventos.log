@@ -1,0 +1,11 @@
+2026-10-16T14:17:41Z host=1792160261 vm=1792160261 experimento B1 config=con rep=1 (falla en t=120s durante 45s; carga 300s + 30s de calentamiento)
+2026-10-16T14:17:42Z host=1792160262 vm=1792160262 recreando app1 app2 app3 nginx con: -f docker-compose.yml -f docker-compose.resiliencia.yml
+2026-10-16T14:17:57Z host=1792160277 vm=1792160277 carga iniciada: t0 aprox. (calentamiento de 30s; t=0 de la ficha es el fin del calentamiento)
+2026-10-16T14:20:26Z host=1792160426 vm=1792160427 ACTIVAR B1 (t=120s)
+[OK] Falla B1 marcada como ACTIVA en faults.yaml (Kill switch: enabled=true)
+  -> Aplicando falla B1 (Infra): deteniendo contenedor pg-portal-b2b...
+2026-10-16T14:21:12Z host=1792160472 vm=1792160472 DESACTIVAR B1 (t=165s)
+[OK] Falla B1 marcada como INACTIVA en faults.yaml
+  -> Revirtiendo B1: iniciando pg-portal-b2b...
+2026-10-16T14:21:14Z host=1792160474 vm=1792160474 B1: PostgreSQL acepta conexiones (+0 s tras docker start)
+2026-10-16T14:23:26Z host=1792160606 vm=1792160606 carga terminada
