@@ -62,6 +62,9 @@ services:
       CREDITO_TIMEOUT_S: "30"
       RESERVA_TTL_S: "60"
       FECHA_OPERACION: "2026-09-17"
+      OTEL_ACTIVO: ${OTEL_ACTIVO:-false}        # trazas OpenTelemetry -> Jaeger (apagado en la línea base)
+      OTEL_MUESTREO: ${OTEL_MUESTREO:-1.0}
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318
     ports:
       - "127.0.0.1:8001:8000"          # /metrics y acceso directo a la instancia (diagnóstico)
     healthcheck:
@@ -98,6 +101,9 @@ services:
       LATENCIA_BASE_MS: "20"
       PORCENTAJE_SIN_CUPO: "3"
       RUTA_FALLAS: "/srv/faults/faults.yaml"
+      OTEL_ACTIVO: ${OTEL_ACTIVO:-false}        # trazas OpenTelemetry -> Jaeger (apagado en la línea base)
+      OTEL_MUESTREO: ${OTEL_MUESTREO:-1.0}
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318
     volumes:
       - ./faults:/srv/faults:ro
     ports:

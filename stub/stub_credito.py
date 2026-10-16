@@ -38,6 +38,9 @@ class Validacion(BaseModel):
 
 
 import fallas
+import trazas
+
+trazas.iniciar("stub-credito")
 
 
 def _sin_cupo(proveedor_id: int) -> bool:
@@ -58,15 +61,23 @@ def _log(**campos) -> None:
 
 @app.post("/v1/validaciones")
 async def validar(solicitud: Validacion, request: Request):
+    with trazas.span_entrante("stub-credito POST /v1/validaciones", request.headers,
+                             orden_id=solicitud.orden_id, proveedor_id=solicitud.proveedor_id):
+        return await _validar_impl(solicitud, request)
+
+
+async def _validar_impl(solicitud: Validacion, request: Request):
     inicio = time.perf_counter()
     trace_id = request.headers.get("x-trace-id")
     try:
         intento = int(request.headers.get("x-intento", "1"))
     except ValueError:
         intento = 1
-    await asyncio.sleep(LATENCIA_BASE_MS / 1000)
+    with trazas.span("stub.latencia_base", latencia_base_ms=LATENCIA_BASE_MS):
+        await asyncio.sleep(LATENCIA_BASE_MS / 1000)
     try:
-        await _aplicar_fallas(solicitud, intento)
+        with trazas.span("stub.aplicar_fallas", intento=intento):
+            await _aplicar_fallas(solicitud, intento)
     except Exception as e:
         duracion = time.perf_counter() - inicio
         codigo_status = getattr(e, "status_code", 500)

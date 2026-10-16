@@ -17,7 +17,7 @@ import aio_pika
 import psycopg
 from prometheus_client import start_http_server
 
-from portal import config
+from portal import config, trazas
 from portal.modulos.ordenes import (
     outbox_contar_pendientes,
     outbox_marcar_publicados,
@@ -78,7 +78,9 @@ async def publicar_lote(conn, channel: aio_pika.RobustChannel) -> int:
                 delivery_mode=aio_pika.DeliveryMode.PERSISTENT,
                 headers={"agregado_id": agregado_id, "tipo": tipo},
             )
-            await channel.default_exchange.publish(mensaje, routing_key=OUTBOX_COLA)
+            _tid = payload.get("trace_id") if isinstance(payload, dict) else None
+            with trazas.span("outbox.publicar_rabbitmq", trace_id=_tid, evento_id=str(evento_id)):
+                await channel.default_exchange.publish(mensaje, routing_key=OUTBOX_COLA)
             ids_publicados.append(id_fila)
 
         await outbox_marcar_publicados(conn, ids_publicados)
@@ -90,6 +92,7 @@ async def publicar_lote(conn, channel: aio_pika.RobustChannel) -> int:
 
 async def main():
     logger.info("Iniciando servicio de Publicador Outbox...")
+    trazas.iniciar("portal-outbox-publicador")
     start_http_server(PUERTO_METRICAS)
     logger.info(f"Servidor de métricas expuesto en http://0.0.0.0:{PUERTO_METRICAS}/metrics")
 

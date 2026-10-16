@@ -4,7 +4,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
 WORKDIR /srv
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-COPY stub_credito.py fallas.py .
+COPY stub_credito.py fallas.py trazas.py .
 RUN mkdir -p /srv/faults
 
 EXPOSE 9000

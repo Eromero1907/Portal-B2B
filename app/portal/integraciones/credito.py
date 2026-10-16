@@ -18,7 +18,7 @@ from decimal import Decimal
 
 import aiohttp
 
-from portal import config
+from portal import config, trazas
 from portal.observabilidad import CREDITO_DURACION, CREDITO_LLAMADAS, traceparent
 
 
@@ -68,17 +68,19 @@ async def _llamar_stub(
     if idempotency_key:
         cabeceras["x-idempotency-key"] = idempotency_key
 
-    async with _sesion.post(
-        "/v1/validaciones",
-        json={"proveedor_id": proveedor_id, "orden_id": orden_id, "total": str(total)},
-        headers=cabeceras,
-    ) as r:
-        if r.status >= 500:
-            raise CreditoNoDisponible(f"HTTP {r.status}")
-        if r.status >= 400:
-            raise CreditoNoDisponible(f"HTTP {r.status} inesperado")
-        cuerpo = await r.json()
-    return ResultadoCredito(bool(cuerpo["aprobado"]), cuerpo.get("motivo"), cuerpo.get("referencia"))
+    with trazas.span("credito.http_post", intento=intento, orden_id=orden_id, idempotency_key=idempotency_key):
+        cabeceras.update(trazas.cabeceras())
+        async with _sesion.post(
+            "/v1/validaciones",
+            json={"proveedor_id": proveedor_id, "orden_id": orden_id, "total": str(total)},
+            headers=cabeceras,
+        ) as r:
+            if r.status >= 500:
+                raise CreditoNoDisponible(f"HTTP {r.status}")
+            if r.status >= 400:
+                raise CreditoNoDisponible(f"HTTP {r.status} inesperado")
+            cuerpo = await r.json()
+        return ResultadoCredito(bool(cuerpo["aprobado"]), cuerpo.get("motivo"), cuerpo.get("referencia"))
 
 
 async def validar(

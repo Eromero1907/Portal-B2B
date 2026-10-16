@@ -19,7 +19,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from decimal import Decimal
 
-from portal import config
+from portal import config, trazas
 from portal.bd import pool
 from portal.integraciones import credito
 from portal.modulos import catalogo, logistica, proveedores
@@ -77,6 +77,16 @@ def _cuerpo(orden_id: int, estado: str, causa: str | None, trace_id: str) -> dic
 
 
 async def confirmar_orden(orden_id: int, clave: str, trace_id: str) -> Respuesta:
+    with trazas.span("confirmar_orden", trace_id=trace_id, orden_id=orden_id, idempotency_key=clave) as sp:
+        r = await _confirmar_orden_impl(orden_id, clave, trace_id)
+        if sp is not None:
+            sp.set_attribute("resultado.http", r.codigo_http)
+            sp.set_attribute("resultado.estado", str(r.cuerpo.get("estado")))
+            sp.set_attribute("resultado.causa", str(r.cuerpo.get("causa")))
+        return r
+
+
+async def _confirmar_orden_impl(orden_id: int, clave: str, trace_id: str) -> Respuesta:
     # ---- T0 · idempotencia ------------------------------------------------
     async with pool.connection() as conn:
         async with conn.transaction():
@@ -119,35 +129,36 @@ async def _completar(conn, clave: str, orden_id: int, estado: str, causa: str | 
 
 async def _confirmar(orden_id: int, clave: str, trace_id: str) -> Respuesta:
     # ---- T1 · validaciones y reserva (transacción corta) -------------------
-    async with pool.connection() as conn:
-        async with conn.transaction():
-            if config.DB_LOCK_TIMEOUT_MS > 0:
-                await conn.execute(f"SET LOCAL lock_timeout = '{config.DB_LOCK_TIMEOUT_MS}ms'")
-            orden = await repositorio.orden_para_confirmar(conn, orden_id)
-            if orden is None:
-                await repositorio.idem_borrar(conn, clave)
-                return Respuesta(404, {"error": "orden_inexistente", "orden_id": orden_id})
-            _, proveedor_id, franja_id, estado, fecha_emision, total = orden
-            if estado != EN_PROCESO:
-                # Ya resuelta antes (con otra clave): se informa su estado, no se repite ningún efecto.
-                return await _completar(conn, clave, orden_id, estado, "ya_resuelta", trace_id)
-
-            fecha = fecha_emision.astimezone(timezone.utc).date()
-            causa = await proveedores.validar_elegibilidad(conn, proveedor_id, fecha)
-            if causa is None:
-                causa = await catalogo.validar_lineas(conn, proveedor_id, fecha,
-                                                      await repositorio.lineas(conn, orden_id))
-            if causa is None:
-                try:
-                    async with conn.transaction():  # savepoint: si falla, la transacción T1 sigue utilizable
-                        causa = await logistica.reservar(conn, franja_id, orden_id, config.RESERVA_TTL_S)
-                except logistica.ReservaActivaExistente:
-                    # Otra confirmación de la misma orden (con otra clave) ya tiene el cupo: no se reserva dos veces.
+    with trazas.span("bd.T1_validar_y_reservar", orden_id=orden_id):
+        async with pool.connection() as conn:
+            async with conn.transaction():
+                if config.DB_LOCK_TIMEOUT_MS > 0:
+                    await conn.execute(f"SET LOCAL lock_timeout = '{config.DB_LOCK_TIMEOUT_MS}ms'")
+                orden = await repositorio.orden_para_confirmar(conn, orden_id)
+                if orden is None:
                     await repositorio.idem_borrar(conn, clave)
-                    return Respuesta(409, {"error": "confirmacion_en_curso", "orden_id": orden_id})
-            if causa is not None:
-                await repositorio.cambiar_estado(conn, orden_id, RECHAZADA)
-                return await _completar(conn, clave, orden_id, RECHAZADA, causa, trace_id)
+                    return Respuesta(404, {"error": "orden_inexistente", "orden_id": orden_id})
+                _, proveedor_id, franja_id, estado, fecha_emision, total = orden
+                if estado != EN_PROCESO:
+                    # Ya resuelta antes (con otra clave): se informa su estado, no se repite ningún efecto.
+                    return await _completar(conn, clave, orden_id, estado, "ya_resuelta", trace_id)
+
+                fecha = fecha_emision.astimezone(timezone.utc).date()
+                causa = await proveedores.validar_elegibilidad(conn, proveedor_id, fecha)
+                if causa is None:
+                    causa = await catalogo.validar_lineas(conn, proveedor_id, fecha,
+                                                          await repositorio.lineas(conn, orden_id))
+                if causa is None:
+                    try:
+                        async with conn.transaction():  # savepoint: si falla, la transacción T1 sigue utilizable
+                            causa = await logistica.reservar(conn, franja_id, orden_id, config.RESERVA_TTL_S)
+                    except logistica.ReservaActivaExistente:
+                        # Otra confirmación de la misma orden (con otra clave) ya tiene el cupo: no se reserva dos veces.
+                        await repositorio.idem_borrar(conn, clave)
+                        return Respuesta(409, {"error": "confirmacion_en_curso", "orden_id": orden_id})
+                if causa is not None:
+                    await repositorio.cambiar_estado(conn, orden_id, RECHAZADA)
+                    return await _completar(conn, clave, orden_id, RECHAZADA, causa, trace_id)
 
     # ---- Llamada al externo, sin transacción abierta -----------------------
     try:
@@ -169,28 +180,30 @@ async def _confirmar(orden_id: int, clave: str, trace_id: str) -> Respuesta:
 
 
     # ---- T2 · cierre atómico ------------------------------------------------
-    async with pool.connection() as conn:
-        async with conn.transaction():
-            if not veredicto.aprobado:
-                await repositorio.cambiar_estado(conn, orden_id, RECHAZADA)
-                await logistica.liberar_reserva(conn, orden_id)
-                return await _completar(conn, clave, orden_id, RECHAZADA, "credito_denegado", trace_id)
+    with trazas.span("bd.T2_cierre_atomico_y_outbox", orden_id=orden_id):
+        async with pool.connection() as conn:
+            async with conn.transaction():
+                if not veredicto.aprobado:
+                    await repositorio.cambiar_estado(conn, orden_id, RECHAZADA)
+                    await logistica.liberar_reserva(conn, orden_id)
+                    return await _completar(conn, clave, orden_id, RECHAZADA, "credito_denegado", trace_id)
 
-            if not await repositorio.cambiar_estado(conn, orden_id, CONFIRMADA):
-                # La orden ya fue modificada/resuelta concurrentemente
-                await logistica.liberar_reserva(conn, orden_id)
-                return await _completar(conn, clave, orden_id, RECHAZADA, "ya_resuelta", trace_id)
+                if not await repositorio.cambiar_estado(conn, orden_id, CONFIRMADA):
+                    # La orden ya fue modificada/resuelta concurrentemente
+                    await logistica.liberar_reserva(conn, orden_id)
+                    return await _completar(conn, clave, orden_id, RECHAZADA, "ya_resuelta", trace_id)
 
-            if not await logistica.confirmar_reserva(conn, orden_id):
-                # La reserva expiró mientras se esperaba al externo: el cupo ya se devolvió.
-                await repositorio.cambiar_estado(conn, orden_id, RECHAZADA)
-                return await _completar(conn, clave, orden_id, RECHAZADA, "reserva_expirada", trace_id)
-            evento_id = uuid.uuid4()
-            await repositorio.registrar_evento(conn, evento_id=evento_id, tipo="OrdenConfirmada", agregado_id=orden_id,
-                                               payload={"evento_id": str(evento_id), "tipo": "OrdenConfirmada",
-                                                        "orden_id": orden_id, "proveedor_id": proveedor_id,
-                                                        "franja_id": franja_id, "total_orden": str(total),
-                                                        "referencia_credito": veredicto.referencia,
-                                                        "ocurrido_en": datetime.now(timezone.utc).isoformat(),
-                                                        "trace_id": trace_id})
-            return await _completar(conn, clave, orden_id, CONFIRMADA, None, trace_id)
+                if not await logistica.confirmar_reserva(conn, orden_id):
+                    # La reserva expiró mientras se esperaba al externo: el cupo ya se devolvió.
+                    await repositorio.cambiar_estado(conn, orden_id, RECHAZADA)
+                    return await _completar(conn, clave, orden_id, RECHAZADA, "reserva_expirada", trace_id)
+                evento_id = uuid.uuid4()
+                with trazas.span("outbox.registrar_evento", orden_id=orden_id):
+                    await repositorio.registrar_evento(conn, evento_id=evento_id, tipo="OrdenConfirmada", agregado_id=orden_id,
+                                                       payload={"evento_id": str(evento_id), "tipo": "OrdenConfirmada",
+                                                                "orden_id": orden_id, "proveedor_id": proveedor_id,
+                                                                "franja_id": franja_id, "total_orden": str(total),
+                                                                "referencia_credito": veredicto.referencia,
+                                                                "ocurrido_en": datetime.now(timezone.utc).isoformat(),
+                                                                "trace_id": trace_id})
+                return await _completar(conn, clave, orden_id, CONFIRMADA, None, trace_id)

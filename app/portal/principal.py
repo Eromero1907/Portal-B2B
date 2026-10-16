@@ -21,7 +21,7 @@ from fastapi import FastAPI, Header, Request
 from fastapi.responses import JSONResponse, Response
 from pydantic import BaseModel, Field, condecimal
 
-from portal import config
+from portal import config, trazas
 from portal.bd import pool
 from portal.integraciones import credito
 from portal.modulos import logistica, ordenes
@@ -65,6 +65,7 @@ async def ciclo_de_vida(_app: FastAPI):
 app = FastAPI(title="Portal B2B · Entregable 3", version=config.VERSION, lifespan=ciclo_de_vida,
               docs_url=None, redoc_url=None)
 app.add_middleware(MiddlewareObservabilidad)
+trazas.iniciar("portal-app")
 
 
 # ---------------------------------------------------------------------------
