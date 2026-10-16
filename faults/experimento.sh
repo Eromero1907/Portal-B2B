@@ -22,15 +22,22 @@ REP="${3:?Falta el número de repetición}"
 BASECFG="${CFG%%-*}"
 VARIANTE=""; if [[ "$CFG" == *-* ]]; then VARIANTE="${CFG#*-}"; fi
 case "$BASECFG" in sin|con) ;; *) echo "CFG debe ser 'sin', 'con' o 'con-VARIANTE'"; exit 1 ;; esac
-if [ -n "$VARIANTE" ] && [ ! -f "docker-compose.var-$VARIANTE.yml" ]; then echo "Falta docker-compose.var-$VARIANTE.yml"; exit 1; fi
+# Variantes: con archivo docker-compose.var-<v>.yml (cambian configuración) o de montaje de la falla (lock0, cpu010)
+if [ -n "$VARIANTE" ] && [ ! -f "docker-compose.var-$VARIANTE.yml" ] && [ "$VARIANTE" != lock0 ] && [ "$VARIANTE" != cpu010 ]; then
+    echo "Variante desconocida '$VARIANTE' (falta docker-compose.var-$VARIANTE.yml)"; exit 1
+fi
 
 PY=.venv/Scripts/python.exe
 [ -f "$PY" ] || PY=.venv/bin/python
 CTRL="$PY faults/controlador_fallas.py"
 
 read -r INICIO DUR <<< "$($PY -c "import sys,yaml; c=yaml.safe_load(open('faults/faults.yaml',encoding='utf-8')); f=[x for x in c['fallas'] if x['id']==sys.argv[1]][0]; print(f['inicio_s'], f['duracion_s'])" "$ID" | tr -d '\r')"
+# lock0 (B2): bloqueo desde el arranque de la carga (t=-30 s de la ficha) durante 60 s: la franja 91150 aún tiene cupo
+if [ "$VARIANTE" = lock0 ]; then INICIO=-30; DUR=60; fi
+if [ "$VARIANTE" = cpu010 ]; then export C1_CPUS=0.10; fi
 INICIO="${INICIO_S:-$INICIO}"
 DUR="${DURACION_FALLA_S:-$DUR}"
+export FALLA_DURACION_S="$DUR"
 CALENT=30
 case "$ID" in B1|B2|D1) CARGA_DEF=300 ;; *) CARGA_DEF=$((INICIO + DUR + 60)) ;; esac   # duraciones de carga de las fichas
 CARGA_S="${DURACION_CARGA_S:-$CARGA_DEF}"
@@ -38,7 +45,7 @@ CARGA_S="${DURACION_CARGA_S:-$CARGA_DEF}"
 # --- Archivos de compose y servicios a recrear según experimento/configuración -----------------------------
 FILES="-f docker-compose.yml"
 if [ "$BASECFG" = con ] && [ "$ID" != D1 ]; then FILES="$FILES -f docker-compose.resiliencia.yml"; fi
-if [ -n "$VARIANTE" ]; then FILES="$FILES -f docker-compose.var-$VARIANTE.yml"; fi
+if [ -f "docker-compose.var-$VARIANTE.yml" ]; then FILES="$FILES -f docker-compose.var-$VARIANTE.yml"; fi
 if [ "$ID" = C1 ] && [ "$BASECFG" = con ]; then FILES="$FILES -f docker-compose.ratelimit.yml"; fi
 if [ "$ID" = C2 ] && [ "$BASECFG" = sin ]; then FILES="$FILES -f docker-compose.c2-sin.yml"; fi
 SERVICIOS="app1 app2 app3 nginx"

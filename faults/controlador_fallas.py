@@ -38,6 +38,8 @@ def ejecutar_cmd(cmd: list[str], check: bool = False) -> subprocess.CompletedPro
 
 
 def _duracion_falla(falla_id: str, defecto: int = 45) -> int:
+    if os.environ.get("FALLA_DURACION_S"):          # lo fija experimento.sh (p. ej. variante lock0 de B2)
+        return int(os.environ["FALLA_DURACION_S"])
     for fcfg in cargar_config().get("fallas", []):
         if fcfg.get("id", "").upper() == falla_id:
             return int(fcfg.get("duracion_s", defecto))
@@ -102,8 +104,9 @@ def activar_falla(falla_id: str) -> None:
         print("  -> Aplicando falla B1 (Infra): deteniendo contenedor pg-portal-b2b...")
         ejecutar_cmd(["docker", "stop", "pg-portal-b2b"])
     elif falla_id == "C1":
-        print("  -> Aplicando falla C1 (Infra): estrangulando CPU de portal-app1 a 0.25 CPUs...")
-        ejecutar_cmd(["docker", "update", "--cpus", "0.25", "portal-app1"])
+        cpus = os.environ.get("C1_CPUS", "0.25")      # variante cpu010 de C1: C1_CPUS=0.10
+        print(f"  -> Aplicando falla C1 (Infra): CPU de portal-app1 limitada a {cpus} CPUs...")
+        ejecutar_cmd(["docker", "update", "--cpus", cpus, "portal-app1"])
     elif falla_id == "C2":
         print("  -> Aplicando falla C2 (Infra): pausando consumidor de outbox (portal-consumidor-eventos)...")
         ejecutar_cmd(["docker", "pause", "portal-consumidor-eventos"])

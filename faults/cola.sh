@@ -22,6 +22,13 @@ if [ ${#CORRIDAS[@]} -eq 0 ] && [ "${LISTA:-}" = "resto" ]; then
               "D1 con 1" "B2 con 1" "C2 con 1" "B1 con 1" "C1 con 1"
               "D1 sin 2" "B2 sin 2" "C2 sin 2" "B1 sin 2" "C1 sin 2"
               "D1 con 2" "B2 con 2" "C2 con 2" "B1 con 2" "C1 con 2")
+elif [ ${#CORRIDAS[@]} -eq 0 ] && [ "${LISTA:-}" = "rep3" ]; then
+    # (1) repetición de 4 corridas "con r2" contaminadas (B2 no se repite en su forma original: no ejercita el bloqueo);
+    # (2) B2 variante lock0, (3) D2 con umbral 70, (4) C1 con 0,10 CPU
+    CORRIDAS=("D1 con 3" "C2 con 3" "B1 con 3" "C1 con 3"
+              "B2 sin-lock0 1" "B2 con-lock0 1" "B2 sin-lock0 2" "B2 con-lock0 2"
+              "D2 con-umbral70 1" "D2 con-umbral70 2"
+              "C1 sin-cpu010 1" "C1 con-cpu010 1")
 elif [ ${#CORRIDAS[@]} -eq 0 ] && [ "${LISTA:-}" = "d2fix" ]; then
     CORRIDAS=("D2 con-umbral70 1" "D2 con-umbral70 2")
 fi
