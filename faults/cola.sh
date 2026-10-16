@@ -29,6 +29,13 @@ elif [ ${#CORRIDAS[@]} -eq 0 ] && [ "${LISTA:-}" = "rep3" ]; then
               "B2 sin-lock0 1" "B2 con-lock0 1" "B2 sin-lock0 2" "B2 con-lock0 2"
               "D2 con-umbral70 1" "D2 con-umbral70 2"
               "C1 sin-cpu010 1" "C1 con-cpu010 1")
+elif [ ${#CORRIDAS[@]} -eq 0 ] && [ "${LISTA:-}" = "rep4" ]; then
+    # Repetición de las corridas de rep3 que salieron con el host degradado ANTES de la falla (portátil sin enchufar / calor):
+    # D1 con r3, las 4 de B2 lock0 y las 2 de D2 umbral70.
+    CORRIDAS=("D1 con 4"
+              "B2 sin-lock0 3" "B2 con-lock0 3" "B2 sin-lock0 4" "B2 con-lock0 4"
+              "D2 con-umbral70 3" "D2 con-umbral70 4"
+              "C1 sin-cpu010 2" "C1 con-cpu010 2")
 elif [ ${#CORRIDAS[@]} -eq 0 ] && [ "${LISTA:-}" = "d2fix" ]; then
     CORRIDAS=("D2 con-umbral70 1" "D2 con-umbral70 2")
 fi
