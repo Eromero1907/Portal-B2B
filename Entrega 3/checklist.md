@@ -48,7 +48,7 @@ criterios duros). Estado a 2026-10-16. `[x]` hecho y con evidencia · `[~]` parc
 ## 6. Meta de mejora −10 %
 - [x] Línea base oficial del E3 en la máquina del E2 (`baseline/corridas/oficial-e3`): p50 7,4 / p95 47,6 / p99 61,0 ms, 0 % errores.
 - [x] Palancas P1–P3 con A/B alternado y rango de ruido: todas dentro del ruido (se reporta tal cual).
-- [ ] Palanca P8 (E4): `make palanca-p8` y resultado en el informe §7 (`[[P8]]`).
+- [x] Palanca P8 (E4): A/B −49,3 % (ruido 18,3 %); E4 completo 298,9 s vs 486,42 s del E2 (−38,5 %); equivalencia verificada (`baseline/corridas/meta-P8`).
 
 ## 7. Entrega
 - [x] Informe ≤ 10 páginas, 8 secciones, sin anexos: `Entrega 3/informe.md` (convertir a PDF/Word y contar páginas). [ ] Figuras de Grafana insertadas.

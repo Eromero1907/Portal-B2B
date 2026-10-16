@@ -205,5 +205,4 @@ empaquetar:
 	$(BASH) faults/empaquetar_evidencia.sh
 
 palanca-p8:
-	@mkdir -p baseline/corridas
 	$(BASH) baseline/palanca_p8.sh

@@ -1,0 +1,5 @@
+E4 sobre las primeras 10000 órdenes, 3 repeticiones alternadas
+control: mediana 134.83 s (min 131.43, max 156.10; rango 18.3 %)
+lote   : mediana 68.33 s (min 67.67, max 68.80)
+cambio : -49.3 % en tiempo  (meta ≤ −10 %; ruido ±18.3 %)
+equivalencia: aceptadas control=7783 lote=7783; filas insertadas 58589 vs 58589
