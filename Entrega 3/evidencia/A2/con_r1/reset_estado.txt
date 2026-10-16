@@ -1,0 +1,15 @@
+ setval 
+--------
+ 300000
+(1 row)
+
+ setval  
+---------
+ 1944001
+(1 row)
+
+ ordenes_plataforma | reservas | franja_91150_reservada | violaciones_invariante 
+--------------------+----------+------------------------+------------------------
+                  0 |        0 |                      9 |                      0
+(1 row)
+
