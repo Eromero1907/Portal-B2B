@@ -1,0 +1,110 @@
+version: 1
+enabled: false
+semilla: 42
+fallas:
+- id: A1
+  familia: A
+  nombre: tributaria-lenta
+  enabled: false
+  inyector: proceso
+  objetivo:
+    servicio: stub-credito
+    endpoint: /v1/validaciones
+    porcentaje: 30
+  parametros:
+    latencia_ms: 800
+    jitter_ms: 300
+  inicio_s: 60
+  duracion_s: 300
+- id: A2
+  familia: A
+  nombre: cola-larga-lognormal
+  enabled: false
+  inyector: proceso
+  objetivo:
+    servicio: stub-credito
+    endpoint: /v1/validaciones
+    porcentaje: 100
+  parametros:
+    distribucion: lognormal
+    mediana_ms: 50
+    sigma: 1.5
+    tope_ms: 20000
+  inicio_s: 60
+  duracion_s: 300
+- id: B1
+  familia: B
+  nombre: db-caida
+  enabled: false
+  inyector: infraestructura
+  objetivo:
+    servicio: db
+    contenedor: pg-portal-b2b
+  parametros:
+    accion: stop
+  inicio_s: 120
+  duracion_s: 45
+- id: B2
+  familia: B
+  nombre: bloqueo-franja-91150
+  enabled: false
+  inyector: infraestructura
+  objetivo:
+    servicio: db
+    tabla: logistica.franjas_cedi
+    franja_id: 91150
+  parametros:
+    retener_s: 45
+  inicio_s: 60
+  duracion_s: 45
+- id: C1
+  familia: C
+  nombre: saturacion-cpu-app1
+  enabled: false
+  inyector: infraestructura
+  objetivo:
+    servicio: app
+    contenedor: portal-app1
+  parametros:
+    cpus: 0.25
+  inicio_s: 60
+  duracion_s: 300
+- id: C2
+  familia: C
+  nombre: consumidor-pausado-lag
+  enabled: false
+  inyector: infraestructura
+  objetivo:
+    servicio: consumidor-eventos
+    contenedor: portal-consumidor-eventos
+  parametros:
+    accion: pause
+  inicio_s: 60
+  duracion_s: 300
+- id: D1
+  familia: D
+  nombre: matar-instancia-app2
+  enabled: false
+  inyector: infraestructura
+  objetivo:
+    servicio: app
+    contenedor: portal-app2
+  parametros:
+    accion: kill
+    sin_reinicio_s: 60
+  inicio_s: 120
+  duracion_s: 60
+- id: D2
+  familia: D
+  nombre: error-5xx-stub-credito
+  enabled: false
+  inyector: proceso
+  objetivo:
+    servicio: stub-credito
+    endpoint: /v1/validaciones
+    porcentaje: 100
+  parametros:
+    codigo_error: 503
+    probabilidad: 50
+  inicio_s: 60
+  duracion_s: 300

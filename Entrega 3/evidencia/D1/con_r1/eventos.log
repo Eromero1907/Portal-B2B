@@ -1,0 +1,12 @@
+2026-10-16T13:57:42Z host=1792159062 vm=1792159063 experimento D1 config=con rep=1 (falla en t=120s durante 60s; carga 300s + 30s de calentamiento)
+2026-10-16T13:57:43Z host=1792159063 vm=1792159064 recreando app1 app2 app3 nginx con: -f docker-compose.yml
+2026-10-16T13:57:58Z host=1792159078 vm=1792159079 carga iniciada: t0 aprox. (calentamiento de 30s; t=0 de la ficha es el fin del calentamiento)
+2026-10-16T14:00:28Z host=1792159228 vm=1792159228 ACTIVAR D1 (t=120s)
+[OK] Falla D1 marcada como ACTIVA en faults.yaml (Kill switch: enabled=true)
+  -> Aplicando falla D1 (Infra): SIGKILL a portal-app2 (docker kill)...
+2026-10-16T14:00:29Z host=1792159229 vm=1792159229 D1 +0s: portal-app2 estado=exited
+2026-10-16T14:00:55Z host=1792159255 vm=1792159255 D1 +25s: portal-app2 estado=exited (debe seguir exited: sin reinicio automático)
+2026-10-16T14:01:28Z host=1792159288 vm=1792159288 DESACTIVAR D1 (t=180s)
+[OK] Falla D1 marcada como INACTIVA en faults.yaml
+  -> Revirtiendo D1: reiniciando portal-app2...
+2026-10-16T14:03:27Z host=1792159407 vm=1792159407 carga terminada

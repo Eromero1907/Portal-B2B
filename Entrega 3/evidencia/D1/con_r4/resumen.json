@@ -1,0 +1,87 @@
+{
+  "perfil": {
+    "flujos_por_s": 100.0,
+    "solicitudes_por_s_objetivo": 200.0,
+    "duracion_s": 300.0,
+    "calentamiento_s": 30.0,
+    "semilla": 42,
+    "p_contrato_vencido": 0.005,
+    "p_sku_ajeno": 0.005,
+    "p_ultima_franja": 0.005,
+    "objetivo": "http://nginx:80",
+    "timeout_cliente_s": 60.0
+  },
+  "flujos_planificados": 32939,
+  "duracion_real_s": 330.04,
+  "reintentos_cliente_max": 2,
+  "solicitudes_con_reintento": 2,
+  "solicitudes_medidas": 59867,
+  "throughput_solicitudes_s": 199.56,
+  "por_fase": {
+    "crear": {
+      "n": 29933,
+      "throughput_s": 99.78,
+      "p50_ms": 6.677,
+      "p95_ms": 21.488,
+      "p99_ms": 76.37,
+      "max_ms": 2008.48,
+      "errores": 0,
+      "tasa_error_pct": 0.0,
+      "codigos": {
+        "201": 29933
+      },
+      "resultados": {
+        "EN_PROCESO:-": 29933
+      },
+      "por_instancia": {
+        "app1": 10931,
+        "app3": 11089,
+        "app2": 7913
+      }
+    },
+    "confirmar": {
+      "n": 29934,
+      "throughput_s": 99.78,
+      "p50_ms": 34.796,
+      "p95_ms": 74.919,
+      "p99_ms": 219.276,
+      "max_ms": 2050.288,
+      "errores": 0,
+      "tasa_error_pct": 0.0,
+      "codigos": {
+        "200": 29933,
+        "409": 1
+      },
+      "resultados": {
+        "CONFIRMADA:-": 15596,
+        "RECHAZADA:sin_contrato_vigente": 11764,
+        "RECHAZADA:proveedor_no_activo": 1978,
+        "RECHAZADA:credito_denegado": 442,
+        "RECHAZADA:sin_cupo_franja": 76,
+        "RECHAZADA:sku_fuera_de_catalogo_o_precio": 77,
+        "-:confirmacion_en_curso": 1
+      },
+      "por_instancia": {
+        "app2": 7974,
+        "app1": 11042,
+        "app3": 10918
+      }
+    }
+  },
+  "global": {
+    "p50_ms": 9.536,
+    "p95_ms": 60.558,
+    "p99_ms": 146.048,
+    "tasa_error_pct": 0.0
+  },
+  "generador": {
+    "retraso_inicio_p99_s": 0.004,
+    "retraso_inicio_max_s": 0.1439,
+    "nota": "retraso entre la hora programada y la real; si el p99 supera ~0,05 s el generador no sostuvo el ritmo y la corrida no es válida"
+  },
+  "slo_rnf10": {
+    "p95_menor_400ms": true,
+    "errores_menor_0_5pct": true,
+    "veredicto": "PASA"
+  }
+}
