@@ -1,0 +1,12 @@
+2026-10-16T06:58:13Z host=1792133893 vm=1792133893 experimento A2 config=sin rep=1 (falla en t=60s durante 300s; carga 420s + 30s de calentamiento)
+2026-10-16T06:58:14Z host=1792133894 vm=1792133894 recreando app1 app2 app3 nginx con la configuración 'sin'
+2026-10-16T06:58:28Z host=1792133909 vm=1792133909 carga iniciada: t0 aprox. (calentamiento de 30s; t=0 de la ficha es el fin del calentamiento)
+2026-10-16T06:59:55Z host=1792133995 vm=1792133996 ACTIVAR A2 (t=60s)
+[OK] Falla A2 marcada como ACTIVA en faults.yaml (Kill switch: enabled=true)
+2026-10-16T07:04:47Z host=1792134287 vm=1792134288 DESACTIVAR A2 (t=360s)
+[OK] Falla A2 marcada como INACTIVA en faults.yaml
+2026-10-16T07:05:42Z host=1792134342 vm=1792134343 carga terminada
+
+== Resultado global (A2 sin r1) ==
+{"global": {"p50_ms": 6.642, "p95_ms": 172.617, "p99_ms": 597.66, "tasa_error_pct": 0.0}, "confirmar": 310.663, "throughput_s": 199.48, "slo": "PASA", "generador_retraso_p99_s": 0.002}
+Evidencia en: Entrega 3/evidencia/A2/sin_r1

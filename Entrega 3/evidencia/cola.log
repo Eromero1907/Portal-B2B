@@ -1,0 +1,22 @@
+[cola] 2026-10-16 01:28:07 comienzo: 12 corridas
+[cola] salto A1 sin 1 (ya existe)
+[cola] salto A1 con 1 (ya existe)
+[cola] salto A1 sin 2 (ya existe)
+[cola] salto A1 con 2 (ya existe)
+[cola] 01:28:07 inicio D2 sin 1
+[cola] 01:35:37 OK    D2 sin 1 :: {"global": {"p50_ms": 7.025, "p95_ms": 46.275, "p99_ms": 60.268, "tasa_error_pct": 9.682}, "confirmar": 52.055, "throughput_s": 199.48, "slo": "FALLA", "generador_retraso_p99_s": 0.002}
+[cola] 01:35:37 inicio D2 con 1
+[cola] 01:43:10 OK    D2 con 1 :: {"global": {"p50_ms": 6.576, "p95_ms": 48.264, "p99_ms": 154.13, "tasa_error_pct": 15.521}, "confirmar": 66.012, "throughput_s": 199.48, "slo": "FALLA", "generador_retraso_p99_s": 0.002}
+[cola] 01:43:10 inicio D2 sin 2
+[cola] 01:50:41 OK    D2 sin 2 :: {"global": {"p50_ms": 8.935, "p95_ms": 53.954, "p99_ms": 76.573, "tasa_error_pct": 9.646}, "confirmar": 61.534, "throughput_s": 199.48, "slo": "FALLA", "generador_retraso_p99_s": 0.002}
+[cola] 01:50:41 inicio D2 con 2
+[cola] 01:58:13 OK    D2 con 2 :: {"global": {"p50_ms": 5.998, "p95_ms": 42.154, "p99_ms": 126.293, "tasa_error_pct": 15.316}, "confirmar": 57.337, "throughput_s": 199.48, "slo": "FALLA", "generador_retraso_p99_s": 0.002}
+[cola] 01:58:13 inicio A2 sin 1
+[cola] 02:05:44 OK    A2 sin 1 :: {"global": {"p50_ms": 6.642, "p95_ms": 172.617, "p99_ms": 597.66, "tasa_error_pct": 0.0}, "confirmar": 310.663, "throughput_s": 199.48, "slo": "PASA", "generador_retraso_p99_s": 0.002}
+[cola] 02:05:44 inicio A2 con 1
+[cola] 02:13:16 OK    A2 con 1 :: {"global": {"p50_ms": 7.169, "p95_ms": 205.1, "p99_ms": 562.733, "tasa_error_pct": 0.627}, "confirmar": 316.391, "throughput_s": 199.42, "slo": "FALLA", "generador_retraso_p99_s": 0.002}
+[cola] 02:13:16 inicio A2 sin 2
+[cola] 02:20:48 OK    A2 sin 2 :: {"global": {"p50_ms": 6.571, "p95_ms": 173.546, "p99_ms": 603.242, "tasa_error_pct": 0.0}, "confirmar": 316.704, "throughput_s": 199.48, "slo": "PASA", "generador_retraso_p99_s": 0.002}
+[cola] 02:20:48 inicio A2 con 2
+[cola] 02:28:21 OK    A2 con 2 :: {"global": {"p50_ms": 6.815, "p95_ms": 171.498, "p99_ms": 403.255, "tasa_error_pct": 0.037}, "confirmar": 299.493, "throughput_s": 199.48, "slo": "PASA", "generador_retraso_p99_s": 0.002}
+[cola] 2026-10-16 02:28:21 TERMINADA
