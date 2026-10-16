@@ -17,7 +17,7 @@ import aio_pika
 import psycopg
 from prometheus_client import start_http_server
 
-from portal import config
+from portal import config, trazas
 from portal.observabilidad import CONSUMIDOR_PROCESADOS
 
 logging.basicConfig(
@@ -34,6 +34,16 @@ CONSUMIDOR_DEDUPLICAR = os.environ.get("CONSUMIDOR_DEDUPLICAR", "true").lower() 
 
 
 async def procesar_mensaje(message: aio_pika.IncomingMessage, pg_conn: psycopg.AsyncConnection) -> None:
+    """Envuelve el procesamiento en un span de la misma traza que originó el evento (trace_id del payload)."""
+    try:
+        tid = json.loads(message.body.decode("utf-8")).get("trace_id")
+    except Exception:
+        tid = None
+    with trazas.span("consumidor.procesar_evento", trace_id=tid, evento_id=message.message_id):
+        await _procesar(message, pg_conn)
+
+
+async def _procesar(message: aio_pika.IncomingMessage, pg_conn: psycopg.AsyncConnection) -> None:
     """Procesa un mensaje de evento aplicando deduplicación idempotente."""
     try:
         cuerpo = json.loads(message.body.decode("utf-8"))
@@ -74,13 +84,21 @@ async def procesar_mensaje(message: aio_pika.IncomingMessage, pg_conn: psycopg.A
         # Solo enviamos el ack tras persistir de forma segura en Postgres
         await message.ack()
 
+    except psycopg.Error as e:
+        # Hallazgo E3 (B1): si la conexión a PostgreSQL se pierde, el mensaje se devuelve a la cola y el error
+        # SE PROPAGA al bucle principal para reconectar. Antes se tragaba aquí y el consumidor quedaba
+        # reencolando en bucle con una conexión muerta, sin recuperarse nunca.
+        logger.error(f"Falla de PostgreSQL procesando mensaje: {e}. Devolviendo a la cola y reconectando.")
+        await message.reject(requeue=True)
+        raise
     except Exception as e:
-        logger.error(f"Falla procesando mensaje: {e}. Rechazando sin requeue.")
+        logger.error(f"Falla procesando mensaje: {e}. Devolviendo a la cola (requeue).")
         await message.reject(requeue=True)
 
 
 async def main():
     logger.info("Iniciando servicio de Consumidor Idempotente de Eventos...")
+    trazas.iniciar("portal-consumidor")
     start_http_server(PUERTO_METRICAS)
     logger.info(f"Servidor de métricas expuesto en http://0.0.0.0:{PUERTO_METRICAS}/metrics")
 

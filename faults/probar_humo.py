@@ -63,7 +63,7 @@ def probar_a1() -> bool:
     # Probamos varias solicitudes para observar el efecto de la inyección (30% de probabilidad, latencia 800ms)
     for i in range(8):
         payload = {"proveedor_id": 10 + i, "orden_id": 99901 + i, "total": "1000.00"}
-        status, _, dur_ms = post_json("http://localhost:9000/v1/validaciones", payload, timeout=3.0)
+        status, _, dur_ms = post_json("http://127.0.0.1:9000/v1/validaciones", payload, timeout=3.0)
         latencias.append(dur_ms)
 
     max_lat = max(latencias) if latencias else 0
@@ -73,7 +73,7 @@ def probar_a1() -> bool:
     time.sleep(0.5)
 
     payload_base = {"proveedor_id": 1, "orden_id": 99999, "total": "1000.00"}
-    status2, _, dur2_ms = post_json("http://localhost:9000/v1/validaciones", payload_base, timeout=2.0)
+    status2, _, dur2_ms = post_json("http://127.0.0.1:9000/v1/validaciones", payload_base, timeout=2.0)
     print(f"  -> Respuesta tras Kill Switch: HTTP {status2} en {dur2_ms:.1f} ms")
 
     # A1 inyecta entre 500ms y 1100ms; la línea base sin falla es < 300ms
@@ -89,17 +89,17 @@ def probar_a2() -> bool:
 
     # Disparamos una solicitud para que el stub recargue el yaml
     payload = {"proveedor_id": 1, "orden_id": 88801, "total": "500.00"}
-    post_json("http://localhost:9000/v1/validaciones", payload, timeout=3.0)
+    post_json("http://127.0.0.1:9000/v1/validaciones", payload, timeout=3.0)
 
-    status, text = get("http://localhost:9000/metrics")
+    status, text = get("http://127.0.0.1:9000/metrics")
     activo = "stub_motor_fallas_activo 1.0" in text
     print(f"  -> Métrica stub_motor_fallas_activo = 1.0: {activo}")
 
     kill_switch(True)
     time.sleep(0.5)
-    post_json("http://localhost:9000/v1/validaciones", payload, timeout=2.0)
+    post_json("http://127.0.0.1:9000/v1/validaciones", payload, timeout=2.0)
 
-    _, text2 = get("http://localhost:9000/metrics")
+    _, text2 = get("http://127.0.0.1:9000/metrics")
     desactivado = "stub_motor_fallas_activo 0.0" in text2
     print(f"  -> Métrica tras Kill Switch = 0.0: {desactivado}")
     pasa = activo and desactivado
@@ -215,7 +215,7 @@ def probar_d2() -> bool:
     total = 10
     for i in range(total):
         payload = {"proveedor_id": 10 + i, "orden_id": 99800 + i, "total": "500.00"}
-        st, _, _ = post_json("http://localhost:9000/v1/validaciones", payload, timeout=2.0)
+        st, _, _ = post_json("http://127.0.0.1:9000/v1/validaciones", payload, timeout=2.0)
         if st in (500, 502, 503):
             errores_5xx += 1
 
@@ -228,7 +228,7 @@ def probar_d2() -> bool:
     errores_post = 0
     for i in range(5):
         payload = {"proveedor_id": 20 + i, "orden_id": 99900 + i, "total": "500.00"}
-        st, _, _ = post_json("http://localhost:9000/v1/validaciones", payload, timeout=2.0)
+        st, _, _ = post_json("http://127.0.0.1:9000/v1/validaciones", payload, timeout=2.0)
         if st in (500, 502, 503):
             errores_post += 1
 
@@ -251,7 +251,7 @@ def probar_kill_switch_rapidez() -> bool:
 
     # Comprobar que de inmediato el stub no inyecta nada
     payload = {"proveedor_id": 1, "orden_id": 1234, "total": "100.00"}
-    st, _, dt = post_json("http://localhost:9000/v1/validaciones", payload, timeout=2.0)
+    st, _, dt = post_json("http://127.0.0.1:9000/v1/validaciones", payload, timeout=2.0)
     print(f"  -> Tiempo de ejecución del Kill Switch: {t_reversion*1000.0:.2f} ms")
     print(f"  -> Respuesta inmediata tras switch: HTTP {st} en {dt:.1f} ms")
 
