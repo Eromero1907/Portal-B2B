@@ -194,3 +194,6 @@ obs-down:
 
 experimento:
 	$(BASH) faults/experimento.sh $(ID) $(CFG) $(REP)
+
+cola:
+	$(BASH) faults/cola.sh
