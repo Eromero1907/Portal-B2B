@@ -37,27 +37,43 @@ RED por endpoint y por instancia (`portal_http_*`, p50/p95/p99), USE por recurso
 
 ![Resumen de las 8 fallas: Estado Inicial vs Intermedio vs Final](evidencia/resumen_graficas/resumen_8_fallas_antes_despues.png)
 *(Figuras detalladas por experimento en `Entrega 3/evidencia/<ID>/capturas/<config>.png` — p99, p95, errores y recursos/lag durante la falla, con la ventana sombreada.)*
+*(Figuras: capturas de Grafana por experimento; las originales están en `Entrega 3/evidencia/<ID>/capturas/`.)*
 
 ## 5. Resultados por experimento (predicho vs medido)
 Cifras en la ventana de falla salvo indicación. "Sin" = valores por defecto; "con" = perfil M.
 
 **A1 · Latencia fija (30 % de las llamadas al externo, +500–1 100 ms).** Predicción cumplida. p95 global: sin **765** ms (predicho 770) · con **268** (300). p99 global 1 066 / 552 (1 070 / 545). Errores: 0 % / **0,21 %** (0,22 %), todos 503 `TimeoutError` a 1,0 s; el breaker no abrió. Mecanismo: el 30 % de ≈ 27 % de las solicitudes es ≈ 8 % > 5 %, así que la cola lenta entra al p95. SLO: sin **NO**, con **SÍ**. *Evidencia:* `A1/{sin,con}_r{1,2}`.
 
+![Figura A1. Latencia p50/p95/p99 (arriba) y tasa de error global (abajo), sin resiliencia (izq., r1) y con perfil M (der., r1). Falla de 5 min en el centro de cada ventana.](figuras/A1.png)
+
 **A2 · Cola larga lognormal (σ = 1,5).** Sin M casi exacto: p95 global 228 (260), p99 confirmar 1 171 (1 200), máximo 20 s. Con M el p99 de confirmar bajó **−50 % (1 180 → 585 ms)** y desaparecieron los rezagados de 20 s, pero **el p95 global subió 230 → 262 ms (+14 %)** y el p99 global (513) quedó por encima de lo predicho (350). Los reintentos intercambian p95 por p99: el 20 % de las llamadas con intento > 200 ms paga timeout + backoff. Errores 0,05 %. `con_r1` tuvo un episodio ajeno (522 errores) y se excluyó. *Evidencia:* `A2/{sin_r1,sin_r2,con_r2,con_r3}`.
+
+![Figura A2. Sin resiliencia (r1) y con perfil M (r3): el p99 baja, pero el p95 sube; la tasa de error con M es ≤ 0,12 %. El pico de errores al inicio de la gráfica sin M es la cola de la corrida anterior, no parte de esta.](figuras/A2.png)
 
 **B1 · PostgreSQL detenido 45 s.** Latencia de los errores como se predijo: **10,0 s** sin M y **2,0 s** con M (`BD_POOL_TIMEOUT_S=2`); p95 de la corrida 10,0 / 2,0 s. Dos números fallaron: (1) errores en la corrida **6,6–7,0 %** (sin) y **8,1–8,5 %** (con), no 18–25 %, porque un flujo es secuencial y un `crear` fallido cancela su `confirmar`: la carga real fue ≈ 104 req/s, no 200; (2) la recuperación fue de **4–9 s** tras `docker start`, no 10–35 s: el backoff del pool no se materializó. Con M se gana latencia del error (−80 %) a costa de más errores totales: es un intercambio espera↔error, no una mejora neta. Negocio: `outbox_total` = CONFIRMADAS en las 4 corridas (0 eventos perdidos), 0 violaciones de capacidad. Hallazgo abierto: `con_r3` mostró 109 respuestas `breaker_abierto` y 112 órdenes EN_PROCESO (causa no investigada). *Evidencia:* `B1/{sin_r1,sin_r2,con_r1,con_r3}`.
 
 **B2 · Bloqueo `FOR UPDATE` de la franja 91150.** Original: **0** solicitudes bloqueadas, no las ≈ 12 predichas: la franja se llena a los 15,5 s del generador y desde entonces `UPDATE … WHERE reservada < total` no tiene fila candidata, así que no espera el bloqueo (el caso borde del último cupo quedó protegido, pero la prueba no ejercitó el bloqueo). Variante `lock0` (bloqueo desde el arranque, 60 s): **sin M** 6 confirmaciones medidas (11 en total) esperaron hasta **28,8 s** (predicho 25–30); **con M** `lock_timeout` las cortó a **2,0 s** (−93 %), sin tocar p95/p99 globales. Esa re-ejecución destapó un defecto: las bloqueadas devolvían **HTTP 500** (`LockNotAvailable` sin mapear). Se corrigió en `servicio.py` (→ 503 `franja_bloqueada`, orden EN_PROCESO, clave liberada, `Retry-After`), con predicción fechada antes de re-ejecutar; las corridas r5/r6 confirmaron 11–12 × 503 y 0 × 500. Invariante `reservada ≤ total`: 0 violaciones en todas. *Evidencia:* `B2/{sin,con}_r{1,2}`, `B2/{sin,con}-lock0_r{3..6}`.
 
+![Figura B2. Bloqueo de la franja con `lock0`: sin M (r3) y con M (r6, con el mapeo a 503). El pico inicial de errores con M corresponde a la ventana del bloqueo (≈ 60 s).](figuras/B2.png)
+
 **C1 · CPU saturada en app1.** Original (0,25 CPU): reparto **26/37/37 %** (predicho 12/44/44), p95 global **51–59 ms** (380–480): cada solicitud cuesta ≈ 4–5 ms de CPU y 0,25 CPU atiende ≈ 55 req/s, casi su cuota. Re-ejecución a **0,10 CPU** (predicción previa): reparto **11/44/44 %** ✓, p95 de app1 **394 ms** (predicho ≈ 300, rango 150–600) ✓, p95 global **98 ms** (≈ 100) ✓, 0 % de errores, SLO sí. `least_conn` sí desvía por carga efectiva. **El perfil M no aportó nada**: el `limit_req` de 250 req/s no se activa a 200 req/s; con M la cola de app1 fue peor (p95 544–601 vs 394 ms; "sin 0,10" tiene una sola repetición válida). La recuperación tardó ≈ 60 s, no ≤ 5 s. *Evidencia:* `C1/{sin,con}_r*`, `C1/{sin,con}-cpu010_r*`.
+
+![Figura C1. App1 limitada a 0,10 CPU: sin M (r1) y con M (r1). Con M la latencia crece a lo largo de la falla porque el reparto no corrige la falta de CPU.](figuras/C1.png)
 
 **C2 · Consumidor pausado 300 s.** Independencia síncrono/asíncrono confirmada: p95/p99 HTTP **45–49 / 56–63 ms**, 0 % de errores. Cola de RabbitMQ creció linealmente hasta **15 285–15 405** (predicho ≈ 15 600), outbox ≤ 37, **0 eventos perdidos** (`outbox_total` = CONFIRMADAS = 23 269). Falló el drenado: **74 s** (predicho 15–30 s) con p50 HTTP de 11–16 ms durante el catch-up. **Hallazgo abierto:** en 3 de 4 corridas quedan **exactamente 50 mensajes** (el `prefetch`) sin confirmar; en `con_r3` los eventos procesados son 23 219 de 23 269. No se perdió nada (siguen en la cola) pero la causa no está diagnosticada. *Evidencia:* `C2/{sin_r1,sin_r2,con_r1,con_r3}`.
 
+![Figura C2. Consumidor pausado 300 s: la latencia HTTP no se altera ni sin ni con M (r1); 0 % de errores.](figuras/C2.png)
+
 **D1 · Matar app2 60 s.** Reparto 50/0/50 % ✓, nginx dejó de enviarle tráfico desde el segundo siguiente a la muerte, **2 × 502** sin reintentos de cliente (predicho 2–8) y 0 con reintentos, errores 0,003 %, 0 duplicados, p95 **44–49 ms** (predicho 110–140: sobreestimado). No predicho: nginx sondea a la caída cada ≈ 13 s y cada sondeo cuesta ≈ **2,0 s** a 1–2 solicitudes (10–12 solicitudes > 1 s en 60 s); la reintegración tardó **4,6–14,9 s** (predicho ≤ 5). El reintento de cliente tiene un hueco: un 409 `confirmacion_en_curso` (clave dejada EN_CURSO por la instancia muerta) no es reintentable. *Evidencia:* `D1/{sin_r1,sin_r2,con_r1,con_r4}`.
+
+![Figura D1. Instancia app2 detenida 60 s: sin M (r1) y con M (r1). La gráfica con M muestra el hueco de la instancia caída y ningún error 5xx.](figuras/D1.png)
 
 **D2 · 5xx del crédito al 50 %.** Sin M exacto: **13,4 %** de errores (predicho 13,5). **Con M (umbral 50 %) falló: 21,0 %**, 12 700 de ellos por `breaker_abierto`: la falla devuelve 503 con probabilidad 50 %, igual al umbral, así que la tasa observada oscila alrededor y el breaker abre y cierra continuamente, rechazando incluso las llamadas que el stub habría atendido; el remedio **empeoró** el error de 13,4 a 21 %. Corrección (predicción previa): umbral **70 %**. Resultado: errores **1,7 % y 2,7 %** (predicho ≈ 1,7 %, 1–3 %), −80 a −87 % frente a "sin"; el residuo es 0,5⁴ = 6,25 % de las llamadas lógicas que agotan 4 intentos. En una de las dos corridas el breaker abrió igualmente (523 rechazos): subir el umbral reduce la oscilación pero no la elimina con un host lento. RN-11 intacta: ninguna orden se aprobó sin crédito. SLO de errores sigue **NO** (esperado y declarado). *Evidencia:* `D2/{sin,con}_r{1,2}`, `D2/con-umbral70_r{3,4}`.
 
+![Figura D2. 5xx del crédito al 50 %: sin M (r1), con M y umbral 50 % (r1, 25 % de errores máx.) y con M y umbral 70 % (r4, ≈ 2,4 % máx.).](figuras/D2.png)
+
 ## 6. Qué se corrigió y qué se volvió a medir
+
 | Hallazgo | Causa raíz | Corrección | Re-medición |
 |---|---|---|---|
 | Breaker del 50 % empeoraba D2 | Umbral = probabilidad de la falla | `BREAKER_UMBRAL_FALLOS_PCT=70` | 21,0 % → 1,7–2,7 % de errores |
@@ -90,6 +106,7 @@ Cifras en la ventana de falla salvo indicación. "Sin" = valores por defecto; "c
 | **Consulta Q4 Ejecución en Servidor (`EXPLAIN ANALYZE`, Palanca P1 Índice Cubriente)** | **1,932 ms** (Bitmap Scan) | ≤ 1,739 ms | **1,458 ms** (Index Only, 0 Heap) | **−24,5 % en servidor** | **SÍ** |
 
 **Palancas de consulta (P1–P3), A/B alternado antes/después en la misma base, N = 5:**
+
 | Palanca | Cambio | Efecto medido | Veredicto |
 |---|---|---|---|
 | P1 índice cubriente Q4 (`(proveedor_id, fecha_emision DESC, id DESC) INCLUDE (estado, fecha_compromiso, fecha_entrega)`) | Bitmap Heap Scan → **Index Only Scan, 0 Heap Fetches**; ejecución en servidor 1,93 → 1,46 ms (−24,5 %) | p95 Q4 caliente 14,9 → 16,1 ms (rango ±10 ms) | **Mejora −24,5 % en motor**; dentro del ruido en cliente |
