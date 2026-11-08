@@ -136,7 +136,7 @@ async def ejecutar_flujo(cliente, flujo, t0, filas):
 
 REINTENTOS_CLIENTE = 0          # se fija con --reintentos-cliente (0 = el cliente no reintenta)
 REINTENTO_BASE_S = 0.1          # espera antes del reintento k: 0,1 s, 0,2 s, 0,4 s ... (misma Idempotency-Key)
-CODIGOS_REINTENTABLES = (502, 503, 504)
+CODIGOS_REINTENTABLES = (409, 502, 503, 504)
 
 
 async def _solicitud(cliente, metodo, ruta, cuerpo, cabeceras, t0):

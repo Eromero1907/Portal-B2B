@@ -20,5 +20,5 @@ SELECT p.estado,
 
 async def leer_elegibilidad(conn: AsyncConnection, proveedor_id: int, fecha: date):
     async with conn.cursor() as cur:
-        await cur.execute(_SQL_ELEGIBILIDAD, {"proveedor_id": proveedor_id, "fecha": fecha})
+        await cur.execute(_SQL_ELEGIBILIDAD, {"proveedor_id": proveedor_id, "fecha": fecha}, prepare=True)
         return await cur.fetchone()

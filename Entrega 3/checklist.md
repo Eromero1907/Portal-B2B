@@ -33,7 +33,7 @@ criterios duros). Estado a 2026-10-16. `[x]` hecho y con evidencia · `[~]` parc
 - [x] RED por endpoint con p50 / p95 / p99 (no promedios): `solicitudes.csv`, `resumen.json`, tablero Grafana `portal-b2b`.
 - [x] USE por recurso: cAdvisor (CPU/memoria), pool de BD, colas de RabbitMQ; `recursos.csv`, `salud.csv`, `lag.csv`.
 - [x] Traza distribuida: `x-trace-id` en cada respuesta + Jaeger en el flujo principal.
-- [x] Tablero único con el p99 en tiempo real. [ ] Capturas de Grafana por experimento (`Entrega 3/evidencia/<ID>/capturas/`).
+- [x] Tablero único con el p99 en tiempo real. [x] Capturas de Grafana por experimento (`Entrega 3/evidencia/<ID>/capturas/`).
 - [x] SLO declarados con presupuesto de error (RNF-10: p95 < 400 ms, errores < 0,5 %), evaluados en cada experimento.
 - [~] Métricas citadas en las fichas que no existían (`portal_bd_lock_timeouts_total`, `portal_degradaciones_total`); transiciones del breaker y `unacked` no archivadas por corrida. Declarado en el informe §4.
 
@@ -51,8 +51,8 @@ criterios duros). Estado a 2026-10-16. `[x]` hecho y con evidencia · `[~]` parc
 - [x] Palanca P8 (E4): A/B −49,3 % (ruido 18,3 %); E4 completo 298,9 s vs 486,42 s del E2 (−38,5 %); equivalencia verificada (`baseline/corridas/meta-P8`).
 
 ## 7. Entrega
-- [x] Informe ≤ 10 páginas, 8 secciones, sin anexos: `Entrega 3/informe.md` (convertir a PDF/Word y contar páginas). [ ] Figuras de Grafana insertadas.
+- [x] Informe ≤ 10 páginas, 8 secciones, sin anexos: `Entrega 3/informe.md` (convertir a PDF/Word y contar páginas). [x] Figuras de Grafana insertadas.
 - [x] README actualizado (sección "Entregable 3").
 - [x] Un commit por experimento y por corrección (historial `E3 evidencia …`).
-- [ ] `make empaquetar` con el equipo en reposo.
+- [x] `make empaquetar` con el equipo en reposo.
 - [ ] `git push` **antes de las 23:00 (America/Bogota)**.

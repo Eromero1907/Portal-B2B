@@ -22,6 +22,6 @@ async def contar_lineas_validas(conn: AsyncConnection, proveedor_id: int, fecha:
                                 skus: list[int], precios: list[Decimal]) -> int:
     async with conn.cursor() as cur:
         await cur.execute(_SQL_LINEAS_VALIDAS, {"skus": skus, "precios": precios,
-                                                "proveedor_id": proveedor_id, "fecha": fecha})
+                                                "proveedor_id": proveedor_id, "fecha": fecha}, prepare=True)
         (n,) = await cur.fetchone()
         return n

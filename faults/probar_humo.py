@@ -110,7 +110,7 @@ def probar_a2() -> bool:
 def probar_b1() -> bool:
     print("\n[HUMO B1] Caída de base de datos (PostgreSQL)")
     activar_falla("B1")
-    time.sleep(1.0)
+    time.sleep(0.5)
 
     # Verificar que postgres está detenido
     estado = ejecutar_docker(["inspect", "-f", "{{.State.Running}}", "pg-portal-b2b"])
@@ -121,19 +121,21 @@ def probar_b1() -> bool:
     print("  -> Kill switch activado: restaurando PostgreSQL...")
     salud = "starting"
     for _ in range(25):
-        time.sleep(0.5)
+        time.sleep(0.3)
         salud = ejecutar_docker(["inspect", "-f", "{{.State.Health.Status}}", "pg-portal-b2b"])
         if salud == "healthy":
             break
 
     print(f"  -> PostgreSQL salud restaurada: {salud}")
-    print("  -> Refrescando apps para renovación limpia de pools...")
-    subprocess.run(["docker", "compose", "restart", "app1", "app2", "app3"], capture_output=True)
-    for _ in range(20):
-        time.sleep(0.5)
-        salud1 = ejecutar_docker(["inspect", "-f", "{{.State.Health.Status}}", "portal-app1"])
-        if salud1 == "healthy":
-            break
+    st_app1, _ = get("http://127.0.0.1:8001/salud", timeout=2.0)
+    if st_app1 != 200:
+        print("  -> Refrescando apps para renovación limpia de pools...")
+        subprocess.run(["docker", "compose", "restart", "app1", "app2", "app3"], capture_output=True)
+        for _ in range(20):
+            time.sleep(0.3)
+            salud1 = ejecutar_docker(["inspect", "-f", "{{.State.Health.Status}}", "portal-app1"])
+            if salud1 == "healthy":
+                break
     pasa = estado == "false" and salud == "healthy"
     print(f"  -> Resultado B1: {'PASA' if pasa else 'FALLA'}")
     return pasa
@@ -141,11 +143,23 @@ def probar_b1() -> bool:
 
 def probar_b2() -> bool:
     print("\n[HUMO B2] Contención por lock en franja crítica 91150")
-    salida = ejecutar_docker(["exec", "pg-portal-b2b", "psql", "-U", "postgres", "-d", "portal_b2b", "-t", "-c",
-                             "SELECT count(*) FROM logistica.franjas_cedi WHERE id = 91150;"])
-    existe = "1" in salida
-    print(f"  -> Franja 91150 presente en esquema logistica: {existe}")
-    pasa = existe
+    activar_falla("B2")
+    salida_lock = ejecutar_docker([
+        "exec", "pg-portal-b2b", "psql", "-U", "postgres", "-d", "portal_b2b", "-t", "-A", "-c",
+        "SELECT count(*) FROM pg_locks l JOIN pg_stat_activity a USING (pid) "
+        "WHERE a.application_name = 'falla-B2' AND l.locktype = 'transactionid' AND l.granted;"
+    ])
+    lock_activo = salida_lock.strip() == "1"
+    print(f"  -> Sesión falla-B2 reteniendo FOR UPDATE en franja 91150: {lock_activo} (locks={salida_lock.strip()})")
+
+    kill_switch(True)
+    salida_post = ejecutar_docker([
+        "exec", "pg-portal-b2b", "psql", "-U", "postgres", "-d", "portal_b2b", "-t", "-A", "-c",
+        "SELECT count(*) FROM pg_stat_activity WHERE application_name = 'falla-B2';"
+    ])
+    lock_liberado = salida_post.strip() == "0"
+    print(f"  -> Sesión falla-B2 tras Kill Switch: liberada={lock_liberado} (activas={salida_post.strip()})")
+    pasa = lock_activo and lock_liberado
     print(f"  -> Resultado B2: {'PASA' if pasa else 'FALLA'}")
     return pasa
 

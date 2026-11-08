@@ -93,14 +93,6 @@ WITH meses AS (
        AND o.fecha_emision <  $3
        AND o.estado = 'CONFIRMADA'
        AND o.fecha_entrega IS NOT NULL
-), lin AS (
-    SELECT l.orden_id,
-           sum(l.cantidad)                                   AS pedido,
-           sum(least(l.cantidad_entregada, l.cantidad))      AS surtido,
-           bool_and(l.cantidad_entregada >= l.cantidad)      AS completa
-      FROM ordenes.lineas_orden l
-     WHERE l.orden_id IN (SELECT id FROM ord)
-     GROUP BY l.orden_id
 ), agg AS (
     SELECT o.mes,
            count(*)                                                                       AS ordenes_entregadas,
@@ -108,7 +100,14 @@ WITH meses AS (
            sum(l.pedido)                                                                  AS unidades_pedidas,
            sum(l.surtido)                                                                 AS unidades_surtidas
       FROM ord o
-      JOIN lin l ON l.orden_id = o.id
+      CROSS JOIN LATERAL (
+          SELECT sum(li.cantidad)                               AS pedido,
+                 sum(least(li.cantidad_entregada, li.cantidad)) AS surtido,
+                 bool_and(li.cantidad_entregada >= li.cantidad) AS completa
+            FROM ordenes.lineas_orden li
+           WHERE li.orden_id = o.id
+          HAVING count(*) > 0
+      ) l
      GROUP BY o.mes
 )
 SELECT m.mes,

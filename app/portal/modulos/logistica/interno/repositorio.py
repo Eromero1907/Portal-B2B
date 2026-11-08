@@ -74,26 +74,26 @@ RETURNING por_franja.n
 
 async def fecha_de_franja(conn: AsyncConnection, franja_id: int) -> date | None:
     async with conn.cursor() as cur:
-        await cur.execute(_SQL_FECHA_FRANJA, {"franja_id": franja_id})
+        await cur.execute(_SQL_FECHA_FRANJA, {"franja_id": franja_id}, prepare=True)
         fila = await cur.fetchone()
         return fila[0] if fila else None
 
 
 async def reservar(conn: AsyncConnection, franja_id: int, orden_id: int, ttl_s: int) -> bool:
     async with conn.cursor() as cur:
-        await cur.execute(_SQL_RESERVAR, {"franja_id": franja_id, "orden_id": orden_id, "ttl_s": ttl_s})
+        await cur.execute(_SQL_RESERVAR, {"franja_id": franja_id, "orden_id": orden_id, "ttl_s": ttl_s}, prepare=True)
         return await cur.fetchone() is not None
 
 
 async def confirmar(conn: AsyncConnection, orden_id: int) -> bool:
     async with conn.cursor() as cur:
-        await cur.execute(_SQL_CONFIRMAR, {"orden_id": orden_id})
+        await cur.execute(_SQL_CONFIRMAR, {"orden_id": orden_id}, prepare=True)
         return await cur.fetchone() is not None
 
 
 async def liberar(conn: AsyncConnection, orden_id: int) -> bool:
     async with conn.cursor() as cur:
-        await cur.execute(_SQL_LIBERAR, {"orden_id": orden_id})
+        await cur.execute(_SQL_LIBERAR, {"orden_id": orden_id}, prepare=True)
         return await cur.fetchone() is not None
 
 

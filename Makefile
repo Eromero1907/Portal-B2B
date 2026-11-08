@@ -206,3 +206,6 @@ empaquetar:
 
 palanca-p8:
 	$(BASH) baseline/palanca_p8.sh
+
+demo-vivo:
+	$(BASH) faults/demo_vivo.sh $(MODO)

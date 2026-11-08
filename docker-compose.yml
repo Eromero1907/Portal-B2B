@@ -27,6 +27,10 @@ services:
       - -c
       - work_mem=32MB
       - -c
+      - maintenance_work_mem=256MB
+      - -c
+      - max_parallel_maintenance_workers=4
+      - -c
       - max_wal_size=2GB
       - -c
       - track_io_timing=on

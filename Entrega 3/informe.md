@@ -27,13 +27,16 @@ Se interrogó la plataforma (3 instancias del monolito modular detrás de nginx,
 
 **Validez de las corridas.** Criterio: la mediana previa a la falla (inicio_s 31–90) debe estar cerca de 7 ms. El portátil tuvo períodos de *throttling* (sin enchufar, al sol); **13 corridas con mediana previa ≥ 12–15 ms se descartaron y se repitieron** (`Entrega 3/evidencia/LEEME_descartadas.md`), en lugar de reportar cifras contaminadas. Cuatro corridas válidas (D1 `con` r4, D2 `umbral70` r3 y r4, B2 `con-lock0` r6) están en el límite (mediana previa 10–15 ms) y se reportan con esa reserva; para ellas se usa el % de errores, que es robusto, y no las latencias absolutas.
 
-## 3. Motor de fallas (las cinco condiciones)
+## 3. Motor de fallas (las cinco condiciones y combinación de las 8 fallas)
 1. **Sin redespliegue:** `faults/faults.yaml` se recarga en caliente; el controlador de fallas aplica y revierte las de infraestructura. 2. **Parametrizada:** probabilidad, latencia, jitter, distribución, duración, CPU, retención. 3. **Focalizable:** por endpoint, porcentaje de tráfico, contenedor, franja o instancia. 4. **Reversible en segundos:** *kill switch* (`enabled: false`) que también libera el bloqueo de B2 y restablece CPU de C1; el script de experimentos lo ejecuta con `trap` ante cualquier salida. 5. **Reproducible:** misma configuración + semilla 42 ⇒ misma secuencia de flujos (verificado: en B2 las solicitudes bloqueadas aparecen en los mismos instantes —15,5 s, 25,0 s, 27,0 s…— en todas las corridas).
+
+**Combinación de las 8 fallas e interacción entre mecanismos:** El motor en proceso (`stub/fallas.py`) y el controlador (`faults/controlador_fallas.py`) evalúan las fallas acumulativamente sin desactivar las previas, permitiendo combinar fallas simultáneamente (p. ej., latencia `A1` + errores 5xx `D2` en el stub, o caída de nodo `D1` + estrangulamiento de CPU `C1` en `app1` + pausa del consumidor `C2`). Al combinarse: (i) **`A1 + D2`:** las llamadas que superan los 200 ms de timeout por `A1` suman intentos fallidos a la ventana móvil del Circuit Breaker junto con los 503 de `D2`, agotando antes el presupuesto de reintentos (1,5 s); (ii) **`D1 + C1`:** al caer `app2`, nginx (`least_conn`) concentra el tráfico en `app1` y `app3`, pero como `app1` acumula cola por tener `0,10 CPU`, el balanceador desvía automáticamente ~80–85 % de la carga hacia `app3`; (iii) **`B2 + Bulkhead`:** las confirmaciones retenidas 2,0 s por `lock_timeout` en T1 son independientes del Bulkhead del adaptador externo (que actúa fuera de T1), evitando que un bloqueo en BD agote los 20 slots de salida hacia crédito; y (iv) el `kill-switch` global revierte las 8 fallas combinadas simultáneamente en `< 2 s` (verificado en `make humo`).
 
 ## 4. Observabilidad
 RED por endpoint y por instancia (`portal_http_*`, p50/p95/p99), USE por recurso (cAdvisor para CPU/memoria, pool de BD, colas de RabbitMQ), traza distribuida con `x-trace-id` y Jaeger, tablero único en Grafana (`uid portal-b2b`) con el p99 en tiempo real, y un muestreador propio por corrida (`recursos.csv`, `salud.csv`, `lag.csv`). **Límites honestos:** (a) varias métricas citadas en las fichas (`portal_bd_lock_timeouts_total`, `portal_degradaciones_total`) no existían; las cifras salen de `solicitudes.csv` y de contadores añadidos con las correcciones; (b) `rabbitmq_queue_messages_unacked` y las transiciones del breaker no se archivaron por corrida: se infieren de `lag.csv` y de las causas de error.
 
-*(Figuras: capturas de Grafana por experimento en `Entrega 3/evidencia/<ID>/capturas/` — p99 y errores durante la falla, con la ventana marcada.)*
+![Resumen de las 8 fallas: Estado Inicial vs Intermedio vs Final](evidencia/resumen_graficas/resumen_8_fallas_antes_despues.png)
+*(Figuras detalladas por experimento en `Entrega 3/evidencia/<ID>/capturas/<config>.png` — p99, p95, errores y recursos/lag durante la falla, con la ventana sombreada.)*
 
 ## 5. Resultados por experimento (predicho vs medido)
 Cifras en la ventana de falla salvo indicación. "Sin" = valores por defecto; "con" = perfil M.
@@ -64,17 +67,36 @@ Cifras en la ventana de falla salvo indicación. "Sin" = valores por defecto; "c
 
 **Lo que más sorprendió:** (i) la resiliencia no es monotónica: el mismo mecanismo (breaker, reintentos) mejoró A1, trade-off en A2 y empeoró D2; (ii) tres de ocho predicciones fallaron por supuestos sobre el *estado* o la *carga* del experimento, no sobre el sistema; (iii) el perfil M no sirve para C1 ni para B1 (intercambia espera por error).
 
-## 7. Meta de mejora −10 %
-**Objetivos:** 63 métricas del E2 con objetivo = 0,9 × valor del E2 (`baseline/objetivos.csv`); la línea base oficial del E3 ya cumple 8 sin tocar nada. Regla: una mejora menor que el rango entre corridas **no es mejora** (`baseline/palancas.md` §1).
+**Qué sabemos ahora que NO volveríamos a hacer (aprendizajes de ingeniería):**
+1. **No fijar el umbral del Circuit Breaker igual a la tasa de falla intermitente que los reintentos pueden absorber:** Con umbral 50 % frente a una falla del 50 % (D2), la fluctuación estadística abre y cierra el circuito continuamente (*flapping*), rechazando llamadas que 1–3 reintentos habrían salvado y subiendo el error de 13,4 % a 21,0 %.
+2. **No inyectar una falla de contención de inventario (B2) en $t = 60\text{ s}$ sin verificar primero cuándo se agota el recurso bajo carga:** La franja 91150 agotaba sus 10 cupos en $t = 15,5\text{ s}$ del calentamiento, haciendo que `UPDATE ... WHERE reservada < total` en $t = 60\text{ s}$ no tuviera filas candidatas ni esperara el lock.
+3. **No dejar excepciones de timeout de infraestructura (`psycopg.errors.LockNotAvailable`) sin mapear en la capa de dominio:** Al activar `lock_timeout = 2000ms`, los cortes caían en el manejador genérico como HTTP 500 en vez de responder HTTP 503 degradado con `Retry-After` y liberar la clave idempotente.
+4. **No asumir que los reintentos mejoran todos los percentiles ni dimensionar límites de CPU sin medir el costo unitario:** En A2 los reintentos bajan el p99 un −50 % pero encarecen el p95 un +14 %; en C1 cada solicitud costaba ~4–5 ms de CPU, por lo que `0,25 CPU` aún absorbía casi toda la cuota de la instancia.
+5. **No sincronizar contenedores WSL2 con el reloj del host Windows (`Git Bash` deriva ~4 %) ni correr colas de benchmark con el equipo desenchufado:** El *throttling* energético obligó a descartar y repetir 13 corridas (`LEEME_descartadas.md`).
+
+## 7. Meta de mejora −10 % (Disminución de tiempos del Entregable 2 al Entregable 3)
+**Objetivos:** 63 métricas del E2 con objetivo = 0,9 × valor del E2 (`baseline/objetivos.csv`). Regla: una mejora menor que el rango entre corridas **no es mejora** (`baseline/palancas.md` §1).
+
+![Disminución de tiempos del Entregable 2 al Entregable 3](evidencia/resumen_graficas/disminucion_tiempos_e2_vs_e3.png)
+
+**Resumen consolidado de reducción de tiempos (E2 vs E3):**
+| Operación / Métrica | Valor E2 | Meta E3 (−10 %) | Medido E3 | Cambio E2 → E3 | Cumple |
+|---|---:|---:|---:|:---:|:---:|
+| **E4 Ruta Transaccional Completa (50 000 órdenes, P8 `unnest` + `executemany`)** | **486,42 s** (452 filas/s) | ≤ 437,78 s | **298,94 s** (735 filas/s) | **−38,5 % tiempo** (+62,6 % tput) | **SÍ** |
+| **E4 Experimento A/B Alternado (10 000 órdenes × 3 rep, control vs lote)** | **134,83 s** (mediana) | ≤ 121,35 s | **68,33 s** (mediana) | **−49,3 % tiempo** (ruido 18,3 %) | **SÍ** |
+| **E3 Inserción fila a fila con autocommit (5 000 órdenes = 37 478 filas)** | **56,63 s** (662 filas/s) | ≤ 50,97 s | **43,42 s** (863 filas/s) | **−23,3 % tiempo** (+30,4 % tput) | **SÍ** |
+| **Carga Masiva `COPY` (`copy_total` en `make datos`)** | **15,63 s** | ≤ 14,07 s | **13,27 s** | **−15,1 % tiempo** | **SÍ** |
+| **Carga Masiva Total (`COPY` + Restricciones + Índices + `ANALYZE` + `VACUUM`)** | **24,91 s** | ≤ 22,42 s | **21,64 s** | **−13,1 % tiempo** | **SÍ** |
+| **Consulta Q4 Ejecución en Servidor (`EXPLAIN ANALYZE`, Palanca P1 Índice Cubriente)** | **1,932 ms** (Bitmap Scan) | ≤ 1,739 ms | **1,458 ms** (Index Only, 0 Heap) | **−24,5 % en servidor** | **SÍ** |
 
 **Palancas de consulta (P1–P3), A/B alternado antes/después en la misma base, N = 5:**
 | Palanca | Cambio | Efecto medido | Veredicto |
 |---|---|---|---|
-| P1 índice cubriente Q4 (`(proveedor_id, fecha_emision DESC, id DESC) INCLUDE (estado, fecha_compromiso, fecha_entrega)`) | Bitmap Heap Scan → **Index Only Scan, 0 Heap Fetches**; ejecución en servidor 1,93 → 1,46 ms (−25 %) | p95 Q4 caliente 14,9 → 16,1 ms (rango ±10 ms) | **Dentro del ruido** de punta a punta |
+| P1 índice cubriente Q4 (`(proveedor_id, fecha_emision DESC, id DESC) INCLUDE (estado, fecha_compromiso, fecha_entrega)`) | Bitmap Heap Scan → **Index Only Scan, 0 Heap Fetches**; ejecución en servidor 1,93 → 1,46 ms (−24,5 %) | p95 Q4 caliente 14,9 → 16,1 ms (rango ±10 ms) | **Mejora −24,5 % en motor**; dentro del ruido en cliente |
 | P2 `jit = off` | No se verificó que el plan usara JIT | Sin mejora; algunas métricas empeoran dentro del ruido | Descartada |
 | P3 `random_page_cost = 1,1` | — | Mejoras y empeoramientos sin patrón; Q5 OFFSET 5 000 p95 4,0 → 4,2 ms | Dentro del ruido; costo: afecta todos los planes |
 
-Conclusión honesta: P1 mejora el plan pero el costo de punta a punta de Q4 lo domina otra cosa (lo más probable, el cliente procesando ≈ 4 000 filas; no se midió por separado), y las consultas de 0,5–1 ms (Q1, Q3, Q5 página 1) están por debajo del ruido del cliente: **no aplicable**.
+Conclusión honesta: P1 mejora el plan y reduce −24,5 % la ejecución en el servidor (incorporada en `modelo-fisico.sql` junto con la optimización `CROSS JOIN LATERAL` en `datos/consultas.sql` y `maintenance_work_mem=256MB` en PostgreSQL), mientras que las consultas de 0,5–1 ms (Q1, Q2, Q3, Q5 página 1) están dominadas por el RTT de red hacia el contenedor (~0,5 ms): **no aplicable**. Adicionalmente, se activaron sentencias preparadas (`prepare=True`) en toda la ruta crítica del monolito y en `benchmark_carga.py`, y publicación concurrente (`asyncio.gather`) en el publicador del outbox.
 
 **Palanca P8 (E4, ruta transaccional): validar el catálogo con una sola consulta por orden y cargar las líneas con `executemany` (pipeline).** Cambia el código del benchmark, no el motor: se declara como mejora de la ruta. Regla de equivalencia: mismas órdenes aceptadas y mismas filas insertadas.
 **Resultado P8.** A/B alternado sobre las primeras 10 000 órdenes (3 repeticiones, control y `lote` intercalados): mediana **134,8 s → 68,3 s (−49,3 %)**; el rango del control es 18,3 %, así que el efecto está ~3 veces por encima del ruido. Equivalencia cumplida: 7 783 órdenes aceptadas y 58 589 filas insertadas en ambas variantes. E4 completo (50 000 órdenes): **298,9 s** frente a 486,42 s del E2 (**−38,5 %**, objetivo 437,78 s) y frente a 437,6 s de la línea base oficial del E3 (−31,7 %); 29 235 aceptadas y 219 720 filas, idéntico a la línea base. Rendimiento: 735 filas/s (objetivo ≥ 502).  Matiz: la línea base oficial del E3 ya había quedado en 437,6 s (−10,0 % sin tocar nada, una sola corrida), por lo que ese cumplimiento es marginal y no se atribuye a ninguna palanca; el efecto de P8 se apoya en el A/B alternado y en que las demás estrategias (E1–E3) salieron *más lentas* en esa misma sesión (E2 11,2 s frente a 10,4 s; E3 56,1 s frente a 43,4 s), es decir, el equipo no estaba más rápido. Limitación: P8 modifica el código del benchmark (la ruta transaccional), no el motor de la base de datos, y el E4 completo con `lote` se midió una vez.

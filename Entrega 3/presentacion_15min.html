@@ -1,0 +1,1100 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portal B2B — Entrega 3: Ingeniería de Caos, Observabilidad y Rendimiento (15 min)</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg-primary: #0b0f19;
+      --bg-card: #131b2e;
+      --bg-card-alt: #19233c;
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --accent-blue: #38bdf8;
+      --accent-emerald: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-rose: #f43f5e;
+      --accent-purple: #a855f7;
+      --border-subtle: rgba(148, 163, 184, 0.16);
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+    }
+
+    .deck {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      padding: 42px 64px 76px 64px;
+      display: none;
+      flex-direction: column;
+      justify-content: flex-start;
+      gap: 20px;
+      overflow-y: auto;
+      background: radial-gradient(circle at 90% 10%, rgba(56, 189, 248, 0.08), transparent 40%),
+                  radial-gradient(circle at 10% 90%, rgba(16, 185, 129, 0.06), transparent 40%),
+                  var(--bg-primary);
+    }
+
+    .slide.active {
+      display: flex;
+    }
+
+    .slide-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-subtle);
+      padding-bottom: 14px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 14px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      background: rgba(56, 189, 248, 0.14);
+      color: var(--accent-blue);
+      border: 1px solid rgba(56, 189, 248, 0.32);
+    }
+
+    .badge.emerald {
+      background: rgba(16, 185, 129, 0.14);
+      color: var(--accent-emerald);
+      border-color: rgba(16, 185, 129, 0.35);
+    }
+
+    .badge.amber {
+      background: rgba(245, 158, 11, 0.14);
+      color: var(--accent-amber);
+      border-color: rgba(245, 158, 11, 0.35);
+    }
+
+    .badge.rose {
+      background: rgba(244, 63, 94, 0.14);
+      color: var(--accent-rose);
+      border-color: rgba(244, 63, 94, 0.35);
+    }
+
+    .time-pill {
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      background: var(--bg-card);
+      padding: 6px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--border-subtle);
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      line-height: 1.15;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    h2 {
+      font-size: 1.75rem;
+      line-height: 1.2;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+
+    h3 {
+      font-size: 1.08rem;
+      font-weight: 700;
+      color: var(--accent-blue);
+      margin-bottom: 8px;
+    }
+
+    p, li {
+      font-size: 0.96rem;
+      line-height: 1.5;
+      color: #cbd5e1;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+    }
+
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 14px;
+      padding: 18px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .card.highlight {
+      border-color: rgba(56, 189, 248, 0.45);
+      background: linear-gradient(180deg, rgba(56, 189, 248, 0.08), var(--bg-card));
+    }
+
+    .card.success {
+      border-color: rgba(16, 185, 129, 0.45);
+      background: linear-gradient(180deg, rgba(16, 185, 129, 0.08), var(--bg-card));
+    }
+
+    .card.warning {
+      border-color: rgba(245, 158, 11, 0.45);
+      background: linear-gradient(180deg, rgba(245, 158, 11, 0.08), var(--bg-card));
+    }
+
+    .card.danger {
+      border-color: rgba(244, 63, 94, 0.45);
+      background: linear-gradient(180deg, rgba(244, 63, 94, 0.08), var(--bg-card));
+    }
+
+    .kpi-value {
+      font-size: 2.1rem;
+      font-weight: 800;
+      font-family: var(--font-mono);
+      color: var(--text-primary);
+    }
+
+    .kpi-value.emerald { color: var(--accent-emerald); }
+    .kpi-value.blue { color: var(--accent-blue); }
+    .kpi-value.amber { color: var(--accent-amber); }
+    .kpi-value.rose { color: var(--accent-rose); }
+
+    .kpi-label {
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-secondary);
+      font-weight: 600;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.86rem;
+    }
+
+    th, td {
+      padding: 9px 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    th {
+      color: var(--accent-blue);
+      font-weight: 700;
+      text-transform: uppercase;
+      font-size: 0.76rem;
+      letter-spacing: 0.05em;
+      background: rgba(25, 35, 60, 0.7);
+    }
+
+    tr:hover td {
+      background: rgba(56, 189, 248, 0.04);
+    }
+
+    code, pre {
+      font-family: var(--font-mono);
+      font-size: 0.84rem;
+    }
+
+    pre {
+      background: #070a12;
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      padding: 14px 16px;
+      color: #e2e8f0;
+      overflow-x: auto;
+      line-height: 1.45;
+    }
+
+    .cmd-accent { color: var(--accent-emerald); font-weight: 700; }
+    .cmd-comment { color: #64748b; }
+
+    ul {
+      padding-left: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .chart-box {
+      position: relative;
+      width: 100%;
+      height: 290px;
+    }
+
+    .img-preview {
+      width: 100%;
+      max-height: 260px;
+      object-fit: contain;
+      border-radius: 8px;
+      border: 1px solid var(--border-subtle);
+      background: #090d16;
+    }
+
+    .speaker-note {
+      margin-top: auto;
+      background: rgba(15, 23, 42, 0.9);
+      border-left: 4px solid var(--accent-blue);
+      padding: 10px 16px;
+      border-radius: 0 10px 10px 0;
+      font-size: 0.86rem;
+      color: #cbd5e1;
+    }
+
+    .footer-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 54px;
+      background: rgba(11, 15, 25, 0.95);
+      border-top: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 48px;
+      z-index: 100;
+    }
+
+    .nav-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    button {
+      background: var(--bg-card-alt);
+      color: var(--text-primary);
+      border: 1px solid var(--border-subtle);
+      padding: 7px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.85rem;
+      transition: all 0.15s ease;
+    }
+
+    button:hover {
+      border-color: var(--accent-blue);
+      color: var(--accent-blue);
+    }
+
+    .timer-display {
+      font-family: var(--font-mono);
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--accent-emerald);
+      padding: 4px 12px;
+      border-radius: 6px;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .progress-track {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--accent-blue), var(--accent-emerald));
+      transition: width 0.25s ease;
+      z-index: 200;
+    }
+  </style>
+</head>
+<body>
+
+<div class="progress-track" id="progressBar" style="width: 10%;"></div>
+
+<div class="deck">
+
+  <!-- SLIDE 1: PORTADA Y AGENDA DE 15 MINUTOS -->
+  <section class="slide active">
+    <div class="slide-header">
+      <span class="badge">Portal B2B · Entrega 3</span>
+      <span class="time-pill">Minuto 00:00 – 01:00</span>
+    </div>
+
+    <div style="margin-top: 10px;">
+      <h1>Ingeniería de Caos, Observabilidad Full-Stack<br><span style="color: var(--accent-blue);">y Optimización de Tiempos E2 → E3</span></h1>
+      <p style="font-size: 1.1rem; margin-top: 10px; color: var(--text-secondary);">
+        Monolito Modular en FastAPI + PostgreSQL 16 + RabbitMQ + Nginx (3 réplicas) bajo carga reproducible de 8 fallas inyectadas.
+      </p>
+    </div>
+
+    <div class="grid-4" style="margin-top: 8px;">
+      <div class="card highlight">
+        <span class="kpi-label">Catálogo de Caos</span>
+        <span class="kpi-value blue">8 Fallas</span>
+        <p>4 familias (A, B, C, D) + combinaciones en caliente con reversión &lt; 2 s.</p>
+      </div>
+      <div class="card success">
+        <span class="kpi-label">Resiliencia D2 (Umbral 70%)</span>
+        <span class="kpi-value emerald">−87% Error</span>
+        <p>De 13.4% ("sin") y 21.0% (flapping 50%) a solo 1.71%–2.72%.</p>
+      </div>
+      <div class="card success">
+        <span class="kpi-label">Aceleración E4 (E2 → E3)</span>
+        <span class="kpi-value emerald">−38.5%</span>
+        <p>50,000 órdenes: de 486.42 s a 298.94 s (+62.6% throughput).</p>
+      </div>
+      <div class="card highlight">
+        <span class="kpi-label">Invariantes de Negocio</span>
+        <span class="kpi-value blue">100% (0 Viol.)</span>
+        <p>Cero órdenes sin outbox, cero sobre-asignación de cupos logísticos.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Estructura de la Sustentación (15 Minutos Exactos)</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Bloque</th>
+            <th>Ventana</th>
+            <th>Criterio Evaluado</th>
+            <th>Evidencia Principal</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>1. Combinación de 8 Fallas y Observabilidad</strong></td>
+            <td><code>01:00 – 03:30</code></td>
+            <td>Explicar las 8 fallas, sus interacciones y telemetría RED/USE/Jaeger</td>
+            <td>Dashboard Grafana 10 paneles + matriz de acoplamiento</td>
+          </tr>
+          <tr>
+            <td><strong>2. Reproducción en Vivo (Estado Inicial)</strong></td>
+            <td><code>03:30 – 06:30</code></td>
+            <td>Ejecución en vivo sin resiliencia y degradación observable</td>
+            <td><code>make demo-vivo</code> / <code>make humo</code> + colapso de cola y HTTP 5xx</td>
+          </tr>
+          <tr>
+            <td><strong>3. Análisis de Resultados y Aprendizaje</strong></td>
+            <td><code>06:30 – 09:30</code></td>
+            <td>Qué ocurrió, qué corregimos y qué <strong>NO volveríamos a hacer</strong></td>
+            <td>3 hipótesis refutadas (D2 flapping, B2 warmup, C1 holgura) + fix 500→503</td>
+          </tr>
+          <tr>
+            <td><strong>4. Corrección, Reexperimentación y Comunicación</strong></td>
+            <td><code>09:30 – 12:30</code></td>
+            <td>Estado final corregido y análisis de resultados diferentes</td>
+            <td>30 corridas <code>r1..r6</code>, predicciones fechadas previas y gráficas antes/después</td>
+          </tr>
+          <tr>
+            <td><strong>5. Disminución de Tiempos E2 → E3</strong></td>
+            <td><code>12:30 – 15:00</code></td>
+            <td>Evidencias cuantitativas de reducción de tiempos de E2 a E3</td>
+            <td>E4 (−38.5%), E4 A/B (−49.3%), E3 (−23.3%), COPY (−15.1%), Q4 (−24.5%)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="speaker-note">
+      <strong>Guion (00:00–01:00):</strong> "Buenos días. En estos 15 minutos presentaremos los resultados experimentales de nuestro Portal B2B en 5 bloques: la arquitectura de observabilidad y combinación de las 8 fallas, la reproducción en vivo del estado inicial, los aprendizajes de 3 hipótesis que fallaron al primer intento y lo que jamás volveríamos a hacer, la reexperimentación del estado final y las evidencias de disminución de tiempos del Entregable 2 al Entregable 3."
+    </div>
+  </section>
+
+  <!-- SLIDE 2: ARQUITECTURA DE OBSERVABILIDAD Y LAS 8 FALLAS -->
+  <section class="slide">
+    <div class="slide-header">
+      <span class="badge">Criterio 1 · 8 Fallas + Observabilidad</span>
+      <span class="time-pill">Minuto 01:00 – 02:15</span>
+    </div>
+
+    <h2>Catálogo de 8 Fallas y Observabilidad Full-Stack (RED + USE + Trazas)</h2>
+
+    <div class="grid-2">
+      <div class="card">
+        <h3>Las 8 Fallas (4 Familias × 2 Mecanismos)</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Falla Inyectada</th>
+              <th>Señal Primaria en Grafana / Prometheus</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>A1</code></td>
+              <td>Tributaria lenta (+2.5 s fijo)</td>
+              <td><code>portal_stub_duration_seconds{servicio="tributaria"}</code> p95 = 2.5 s</td>
+            </tr>
+            <tr>
+              <td><code>A2</code></td>
+              <td>Cola larga LogNormal ($\mu=-1.5, \sigma=1.8$)</td>
+              <td>Brecha p99 / p50 &gt; 20× en histograma de duración de stubs</td>
+            </tr>
+            <tr>
+              <td><code>B1</code></td>
+              <td>Caída de PostgreSQL (15 s)</td>
+              <td><code>pg_up == 0</code> + HTTP 503 <code>bd_no_disponible</code> + <code>Retry-After: 5</code></td>
+            </tr>
+            <tr>
+              <td><code>B2</code></td>
+              <td>Lock exclusivo franja <code>91150</code> (25 s)</td>
+              <td><code>pg_locks</code> waiting + <code>portal_Respuestas503_franja_bloqueada</code></td>
+            </tr>
+            <tr>
+              <td><code>C1</code></td>
+              <td>Saturación CPU <code>app1</code> (0.10 cores)</td>
+              <td><code>container_cpu_cfs_throttled_seconds_total{app1}</code> + desvío Nginx</td>
+            </tr>
+            <tr>
+              <td><code>C2</code></td>
+              <td>Consumidor RabbitMQ pausado (30 s)</td>
+              <td><code>portal_outbox_pendientes</code> sube a ~570 y drena en &lt; 10 s</td>
+            </tr>
+            <tr>
+              <td><code>D1</code></td>
+              <td><code>SIGKILL</code> a instancia <code>app2</code></td>
+              <td><code>up{job="portal-app"}</code> cae de 3→2; Nginx absorbe en &lt; 3 s</td>
+            </tr>
+            <tr>
+              <td><code>D2</code></td>
+              <td>50% HTTP 5xx en stub de crédito</td>
+              <td><code>portal_breaker_estado{credito}</code> + <code>portal_reintentos_total</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <h3>Correlación de Señales y Trazas Distribuidas</h3>
+        <ul>
+          <li><strong>Métricas RED (Aplicación):</strong> <code>portal_http_request_duration_seconds</code>, <code>portal_ordenes_confirmadas_total</code>, <code>portal_breaker_estado</code>, <code>portal_bulkhead_en_vuelo</code>, <code>portal_outbox_pendientes</code>.</li>
+          <li><strong>Métricas USE (Infraestructura):</strong> cAdvisor (CPU throttling), Postgres Exporter (<code>pg_locks</code>, pool), RabbitMQ, Nginx Exporter.</li>
+          <li><strong>Logs JSON + OpenTelemetry → Jaeger:</strong> Cada log inyecta <code>trace_id</code> y <code>span_id</code> permitiendo saltar de un pico p99 en Grafana al span exacto en Jaeger.</li>
+        </ul>
+        <img class="img-preview" src="./evidencia/resumen_graficas/resumen_8_fallas_antes_despues.png" alt="Resumen 8 Fallas Antes vs Después">
+      </div>
+    </div>
+
+    <div class="speaker-note">
+      <strong>Guion (01:00–02:15):</strong> "Instrumentamos el sistema bajo los métodos RED y USE con Prometheus, Grafana, Loki y trazas OpenTelemetry hacia Jaeger. Las 8 fallas cubren latencia en dependencias externas (A1, A2), contención e indisponibilidad en base de datos (B1, B2), agotamiento de recursos y colas asíncronas (C1, C2), y fallos duros de nodos y cascadas 5xx (D1, D2)."
+    </div>
+  </section>
+
+  <!-- SLIDE 3: COMBINACIÓN DE FALLAS Y COMPORTAMIENTO EMERGENTE -->
+  <section class="slide">
+    <div class="slide-header">
+      <span class="badge">Criterio 1 · Combinación de Fallas</span>
+      <span class="time-pill">Minuto 02:15 – 03:30</span>
+    </div>
+
+    <h2>Explicación de la Combinación de Fallas en Simultáneo</h2>
+
+    <div class="grid-3">
+      <div class="card danger">
+        <h3>Combinación 1: A1 + D2 (Stubs Simultáneos)</h3>
+        <p><strong>Escenario:</strong> <code>tributaria</code> tarda 2,500 ms (A1) mientras <code>credito</code> lanza 50% de HTTP 503 (D2).</p>
+        <p><strong>Sin resiliencia:</strong> Agotamiento cruzado de workers; una orden que pasa crédito tras esperar se bloquea 2.5 s en tributaria.</p>
+        <p><strong>Con resiliencia:</strong> <code>ejecutar_protegido()</code> aisla por dependencia: <code>Bulkhead(8)</code> + <code>Timeout(0.8s)</code> corta A1 rápido, mientras <code>CircuitBreaker(70%)</code> + 2 reintentos con jitter absorbe D2.</p>
+      </div>
+
+      <div class="card warning">
+        <h3>Combinación 2: B2 + A1/A2 (DB Lock + Red)</h3>
+        <p><strong>Escenario:</strong> Lock exclusivo en franja <code>91150</code> junto con latencia en validación externa.</p>
+        <p><strong>Riesgo crítico:</strong> Si la validación HTTP ocurriera dentro de la transacción SQL, las conexiones del pool quedarían retenidas.</p>
+        <p><strong>Diseño aplicado:</strong> Separación estricta de fases: los stubs HTTP se invocan <strong>antes</strong> de abrir la transacción DB, y <code>SELECT ... FOR UPDATE</code> usa <code>lock_timeout = 2000ms</code>.</p>
+      </div>
+
+      <div class="card highlight">
+        <h3>Combinación 3: D1 + C1 + C2 (Infraestructura)</h3>
+        <p><strong>Escenario:</strong> Muerte súbita de <code>app2</code> (D1) mientras <code>app1</code> sufre CPU throttling a 0.10 cores (C1) y el consumidor RabbitMQ se pausa (C2).</p>
+        <p><strong>Comportamiento:</strong> Nginx detecta las conexiones encoladas en <code>app1</code> y la caída de <code>app2</code>, enrutando hacia <code>app3</code> con <code>least_conn</code>; entretanto, el patrón <strong>Transactional Outbox</strong> desacopla el camino crítico HTTP de RabbitMQ.</p>
+      </div>
+    </div>
+
+    <div class="card success">
+      <h3>Mecanismo de Control y Reversión Global (&lt; 2 segundos)</h3>
+      <div class="grid-2" style="align-items: center;">
+        <div>
+          <p>El proxy de caos comparte estado atómico en volumen Docker (<code>faults/estado/config.json</code>) para inyectar cualquier subconjunto de fallas de red simultáneamente y revertirlas en <strong>&lt; 2 s</strong> vía Kill Switch (validado en <code>tests/test_resiliencia_y_mejoras.py</code>).</p>
+        </div>
+        <pre><span class="cmd-comment"># Activar combinación A1 + D2 en vivo y revertir en &lt; 2s:</span>
+<span class="cmd-accent">python -m faults.inyeccion activar A1</span>
+<span class="cmd-accent">python -m faults.inyeccion activar D2</span>
+<span class="cmd-accent">python -m faults.inyeccion kill-switch --on</span></pre>
+      </div>
+    </div>
+
+    <div class="speaker-note">
+      <strong>Guion (02:15–03:30):</strong> "Cuando combinamos fallas, el peligro real es el acoplamiento de recursos. Por ejemplo, al combinar A1 (tributaria lenta) con D2 (50% de error en crédito), sin aislamiento los workers colapsan. Con nuestros 7 mecanismos, cada dependencia tiene su propio Bulkhead de 8 slots y su propio Circuit Breaker, y nunca mantenemos una transacción SQL abierta mientras llamamos a un stub externo."
+    </div>
+  </section>
+
+  <!-- SLIDE 4: REPRODUCCIÓN EN VIVO — ESTADO INICIAL ("SIN" RESILIENCIA) -->
+  <section class="slide">
+    <div class="slide-header">
+      <span class="badge rose">Criterio 2 · Demo en Vivo (Estado Inicial)</span>
+      <span class="time-pill">Minuto 03:30 – 06:30</span>
+    </div>
+
+    <h2>Reproducción en Vivo — Estado Inicial (Sin Resiliencia)</h2>
+
+    <div class="grid-2">
+      <div class="card danger">
+        <h3>Comandos de Demostración en Vivo</h3>
+        <pre><span class="cmd-comment"># Opción A: Demo orquestada completa (Estado Inicial vs Final + Combinación)</span>
+<span class="cmd-accent">make demo-vivo</span>
+
+<span class="cmd-comment"># Opción B: Paso a paso manual frente al jurado</span>
+<span class="cmd-comment"># 1. Levantar en perfil base ("sin" resiliencia)</span>
+<span class="cmd-accent">docker compose -f docker-compose.yml -f docker-compose.caos.yml \</span>
+<span class="cmd-accent">  -f docker-compose.sin-resiliencia.yml up -d</span>
+
+<span class="cmd-comment"># 2. Inyectar combinación en vivo (A1 + D2 + B2)</span>
+<span class="cmd-accent">python -m faults.inyeccion activar A1</span>
+<span class="cmd-accent">python -m faults.inyeccion activar D2</span>
+<span class="cmd-accent">python -m faults.inyeccion activar B2 --duracion 15 --esperar</span>
+
+<span class="cmd-comment"># 3. Revertir instantáneamente (&lt; 2 s)</span>
+<span class="cmd-accent">python -m faults.inyeccion kill-switch --on</span></pre>
+
+        <h3 style="margin-top: 8px;">¿Qué vemos en vivo en el Estado Inicial?</h3>
+        <ul>
+          <li><strong>A1 ("sin"):</strong> 100% de las peticiones a <code>tributaria</code> esperan los <strong>2,500 ms</strong> completos; p95 salta de 72 ms a <strong>2,566 ms</strong> y el throughput cae un <strong>44%</strong>.</li>
+          <li><strong>B2 ("sin"):</strong> Las peticiones sobre la franja <code>91150</code> quedan colgadas en <code>pg_locks</code> hasta <strong>28.83 s</strong> (vs 2.0 s con <code>lock_timeout</code>).</li>
+          <li><strong>D2 ("sin"):</strong> Cada fallo 503 del stub de crédito se propaga directo al cliente como <strong>HTTP 502</strong> (<strong>13.4%</strong> de tasa de error global).</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>Evidencia Visual del Estado Inicial vs Mitigado (A1 y B2)</h3>
+        <img class="img-preview" src="./evidencia/A1/capturas/sin_r1.png" alt="A1 Sin Resiliencia">
+        <img class="img-preview" src="./evidencia/B2/capturas/sin-lock0_r3.png" alt="B2 Lock Wait Sin Resiliencia">
+      </div>
+    </div>
+
+    <div class="speaker-note">
+      <strong>Guion (03:30–06:30):</strong> "Pasamos a la reproducción en vivo del estado inicial con `make demo-vivo`. Con el perfil `sin-resiliencia` activo, timeouts de 30 segundos y sin reintentos ni bulkhead, al activar A1, D2 y B2 observamos inmediatamente en consola y en Grafana cómo la latencia sube a 2.5 segundos, las transacciones en la franja 91150 quedan bloqueadas casi 29 segundos en PostgreSQL y la tasa de error salta por encima del 13%."
+    </div>
+  </section>
+
+  <!-- SLIDE 5: ANÁLISIS DE RESULTADOS — QUÉ OCURRIÓ Y QUÉ CORREGIMOS -->
+  <section class="slide">
+    <div class="slide-header">
+      <span class="badge amber">Criterio 3 · Análisis y Correcciones</span>
+      <span class="time-pill">Minuto 06:30 – 08:00</span>
+    </div>
+
+    <h2>Análisis de Resultados: 3 Hipótesis Refutadas y Qué Corregimos</h2>
+
+    <div class="grid-3">
+      <div class="card danger">
+        <h3>1. Caso D2: El Circuit Breaker que Empeoró el Error</h3>
+        <p><strong>Qué ocurrió:</strong> Sin resiliencia el error era <strong>13.4%</strong>. Al activar el Perfil M (umbral 50%), el error <strong>subió a 21.0%</strong> con 12,817 rechazos por <code>breaker_abierto</code>.</p>
+        <p><strong>Causa raíz:</strong> La tasa de falla inyectada (50%) coincidía exactamente con el umbral del breaker (50%), provocando <em>flapping</em> continuo.</p>
+        <p><strong>Corrección:</strong> Subir <code>BREAKER_UMBRAL_FALLOS_PCT=70</code> (`docker-compose.var-umbral70.yml`). El breaker permanece cerrado y los 2 reintentos absorben la falla: el error cayó a <strong>1.71%–2.72%</strong>.</p>
+      </div>
+
+      <div class="card warning">
+        <h3>2. Caso B2: Cupo Agotado Antes del Disparo + Bug HTTP 500</h3>
+        <p><strong>Qué ocurrió:</strong> En <code>r1..r2</code> ($t=60\text{ s}$), <code>pg_locks</code> mostró <strong>0 bloqueadas</strong> porque la franja <code>91150</code> tenía 9/10 cupos ocupados y el último cupo se agotó a los $15.5\text{ s}$.</p>
+        <p><strong>Segundo hallazgo:</strong> Al mover el lock a $t=0\text{ s}$ (`lock0`), el <code>lock_timeout=2000ms</code> cortó la espera de 28.8 s a 2.0 s, pero lanzó <code>LockNotAvailable</code> no capturado → <strong>11 × HTTP 500</strong>.</p>
+        <p><strong>Corrección en código:</strong> Capturar <code>LockNotAvailable</code> en <code>servicio.py</code> y responder <strong>HTTP 503 <code>franja_bloqueada</code></strong> + <code>Retry-After: 5</code> (<strong>0 HTTP 500</strong> en <code>r5/r6</code>).</p>
+      </div>
+
+      <div class="card highlight">
+        <h3>3. Caso C1: Límite de 0.25 CPU Insuficiente y Balanceo</h3>
+        <p><strong>Qué ocurrió:</strong> Con <code>0.25 CPU</code> en <code>app1</code>, el p95 apenas subió 2 ms (72→74 ms) porque cada request consume solo ~4–5 ms de CPU (~55 req/s de capacidad).</p>
+        <p><strong>Corrección experimental:</strong> Reducir a <strong>0.10 CPU</strong> (`cpu010`). El p95 de <code>app1</code> subió a <strong>394 ms</strong>, pero Nginx (<code>least_conn</code>) desvió el tráfico (solo 10.4% a <code>app1</code> vs 44.8% a <code>app2/app3</code>), manteniendo el p95 global en <strong>98–132 ms</strong>.</p>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <img class="img-preview" src="./evidencia/D2/capturas/con-umbral70_r4.png" alt="D2 Comparación Con Umbral 70%">
+      </div>
+      <div class="card">
+        <img class="img-preview" src="./evidencia/C1/capturas/con-cpu010_r1.png" alt="C1 Desvío Least Conn">
+      </div>
+    </div>
+
+    <div class="speaker-note">
+      <strong>Guion (06:30–08:00):</strong> "Nuestro mayor aprendizaje vino de tres experimentos que no salieron como predijimos. En D2, poner el umbral del Circuit Breaker en 50% frente a una falla del 50% empeoró el error de 13.4% a 21% por flapping; al ajustarlo a 70%, los reintentos absorbieron los fallos y bajamos el error a 1.71%. En B2 descubrimos que el lock_timeout lanzaba una excepción SQL que producía HTTP 500; corregimos `servicio.py` para transformarla en HTTP 503 con Retry-After, eliminando por completo los 500."
+    </div>
+  </section>
+
+  <!-- SLIDE 6: APRENDIZAJE — QUÉ SABEMOS QUE NO VOLVERÍAMOS A HACER -->
+  <section class="slide">
+    <div class="slide-header">
+      <span class="badge amber">Criterio 3 · Lecciones de Ingeniería</span>
+      <span class="time-pill">Minuto 08:00 – 09:30</span>
+    </div>
+
+    <h2>Aprendizaje: 5 Cosas que Sabemos que <span style="color: var(--accent-rose);">NO Volveríamos a Hacer</span></h2>
+
+    <div class="grid-2">
+      <div class="card danger">
+        <h3>1. Nunca parametrizar el umbral de un Circuit Breaker igual o por debajo de la tasa de error transitoria recuperable</h3>
+        <p>Un breaker al 50% frente a fallas intermitentes del 50% entra en oscilación (<em>flapping</em>) y rechaza tráfico sano que 2 reintentos con <em>backoff + jitter</em> habrían salvado sin abrir el circuito.</p>
+
+        <h3 style="margin-top: 10px;">2. Nunca activar un timeout de base de datos (<code>lock_timeout</code> / <code>statement_timeout</code>) sin mapear su excepción en la capa de dominio</h3>
+        <p>Cortar rápido en PostgreSQL sin capturar <code>psycopg.errors.LockNotAvailable</code> convirtió una espera lenta en un <strong>HTTP 500</strong> no reintentable. Todo corte rápido debe traducirse a <strong>HTTP 503 + <code>Retry-After</code></strong>.</p>
+
+        <h3 style="margin-top: 10px;">3. Nunca diseñar un experimento de contención sobre un recurso finito sin calcular su tiempo de agotamiento ($T_{\text{agotamiento}}$)</h3>
+        <p>En B2 programamos el lock a $t=60\text{ s}$ sobre una franja con solo 1 un cupo libre, que se agotó a los $15.5\text{ s}$ durante el calentamiento.</p>
+      </div>
+
+      <div class="card warning">
+        <h3>4. Nunca fijar límites de CPU de caos sin medir antes el costo real de CPU por petición</h3>
+        <p>Asumimos que <code>0.25 CPU</code> saturaría un worker Python I/O-bound, pero cada petición solo consumía ~4.5 ms de CPU. Siempre debemos perfilar <code>cpu_seconds / req</code> antes de elegir la magnitud del caos.</p>
+
+        <h3 style="margin-top: 10px;">5. Nunca dejar brechas entre los códigos HTTP transitorios del servidor y la lista de reintentos del cliente</h3>
+        <p>En D1 y B2 vimos que devolver <code>409 confirmacion_en_curso</code> o <code>500</code> impide que el cliente reintente en otra réplica sana. Alineamos extremo a extremo <code>CODIGOS_REINTENTABLES = (409, 502, 503, 504)</code> e idempotencia por <code>Idempotency-Key</code>.</p>
+
+        <div class="card success" style="margin-top: 10px;">
+          <h3>Regla de Oro Adoptada por el Equipo</h3>
+          <p><strong>"Ningún mecanismo de resiliencia se da por válido hasta contrastar su predicción escrita contra métricas por réplica y códigos HTTP desglosados por causa."</strong></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="speaker-note">
+      <strong>Guion (08:00–09:30):</strong> "Si resumimos qué no volveríamos a hacer jamás en producción: primero, nunca poner el umbral de un Circuit Breaker igual a la tasa de falla que queremos absorber con reintentos; segundo, nunca activar un `lock_timeout` en base de datos sin capturar su excepción en el servicio para devolver 503 en vez de 500; y tercero, nunca diseñar pruebas de contención o CPU a ciegas sin medir primero la tasa de consumo del recurso."
+    </div>
+  </section>
+
+  <!-- SLIDE 7: CORRECCIÓN, REEXPERIMENTACIÓN Y COMUNICACIÓN (ESTADO FINAL) -->
+  <section class="slide">
+    <div class="slide-header">
+      <span class="badge emerald">Criterio 4 · Reexperimentación y Estado Final</span>
+      <span class="time-pill">Minuto 09:30 – 12:30</span>
+    </div>
+
+    <h2>Estado Final: Reexperimentación (30 Corridas) y Análisis de Resultados</h2>
+
+    <div class="grid-2">
+      <div class="card">
+        <h3>Matriz Comparativa Antes vs Intermedio vs Estado Final</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Falla</th>
+              <th>Estado Inicial ("Sin")</th>
+              <th>Iteración Intermedia</th>
+              <th>Estado Final Corregido ("Con")</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>A1</strong></td>
+              <td>p95 = 2,566 ms | 12.1 rps</td>
+              <td>—</td>
+              <td><strong>p95 = 931 ms (−64%) | 17.5 rps (+45%)</strong></td>
+            </tr>
+            <tr>
+              <td><strong>A2</strong></td>
+              <td>p99 = 1,416 ms (cola 12 s)</td>
+              <td>—</td>
+              <td><strong>p99 = 1,037 ms (−27%, acotado a ~800 ms)</strong></td>
+            </tr>
+            <tr>
+              <td><strong>B1</strong></td>
+              <td>15 s caída → HTTP 503 + Retry-After</td>
+              <td>—</td>
+              <td><strong>Recuperación en 1–2 s al volver DB; 0 violaciones</strong></td>
+            </tr>
+            <tr>
+              <td><strong>B2</strong></td>
+              <td>Espera máx = <strong>28.83 s</strong></td>
+              <td>Espera 2.0 s pero <strong>11 × HTTP 500</strong></td>
+              <td><strong>Espera 2.04 s (−93%) | 0 HTTP 500 (13 × 503 limpios)</strong></td>
+            </tr>
+            <tr>
+              <td><strong>C1</strong></td>
+              <td>0.25 CPU: sin efecto (p95 72 ms)</td>
+              <td><code>cpu010</code> sin/con comparados</td>
+              <td><strong><code>app1</code> absorbe 10.4% tráfico; p95 global 98 ms (&lt; 400 ms)</strong></td>
+            </tr>
+            <tr>
+              <td><strong>C2</strong></td>
+              <td>577 eventos acumulados en outbox</td>
+              <td>Drenaje secuencial &lt; 10 s</td>
+              <td><strong>0 ms impacto HTTP + drenaje paralelo <code>asyncio.gather</code></strong></td>
+            </tr>
+            <tr>
+              <td><strong>D1</strong></td>
+              <td>27 errores (0.76%) por <code>SIGKILL app2</code></td>
+              <td>—</td>
+              <td><strong>Nginx desvía en &lt; 3 s; 0 órdenes duplicadas ni perdidas</strong></td>
+            </tr>
+            <tr>
+              <td><strong>D2</strong></td>
+              <td>Error global = <strong>13.4%</strong> (438 × 502)</td>
+              <td>Perfil M (50%): <strong>21.0% error</strong></td>
+              <td><strong>Umbral 70%: Error = 1.71%–2.72% (−87% vs "sin")</strong></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <h3>Impacto Cuantitativo Antes vs Después</h3>
+        <div class="chart-box">
+          <canvas id="resilienceChart"></canvas>
+        </div>
+        <p style="font-size: 0.85rem; color: var(--text-secondary);">
+          Todas las hipótesis fueron pre-registradas con commit fechado antes de ejecutar las tandas <code>r1..r6</code>, verificando <strong>0 violaciones de invariantes</strong> en las 30 corridas.
+        </p>
+      </div>
+    </div>
+
+    <div class="speaker-note">
+      <strong>Guion (09:30–12:30):</strong> "En esta tabla consolidamos las 30 corridas experimentales. Tras aplicar las correcciones y reexperimentar en las tandas r3 a r6, logramos reducciones contundentes: en A1 el p95 bajó un 64% y el throughput subió un 45%; en B2 la espera máxima de lock cayó un 93% (de 28.8 s a 2.0 s) con cero errores 500; y en D2 la tasa de error cayó un 87%, pasando de 13.4% a 1.71%."
+    </div>
+  </section>
+
+  <!-- SLIDE 8: EVIDENCIAS DE LA DISMINUCIÓN DE TIEMPOS E2 → E3 -->
+  <section class="slide">
+    <div class="slide-header">
+      <span class="badge emerald">Criterio 5 · Disminución de Tiempos E2 → E3</span>
+      <span class="time-pill">Minuto 12:30 – 14:15</span>
+    </div>
+
+    <h2>Evidencias de la Disminución de Tiempos: Entregable 2 vs Entregable 3</h2>
+
+    <div class="grid-2">
+      <div class="card">
+        <h3>Comparativa Auditada (<code>comparacion_e2.csv</code> + <code>EXPLAIN ANALYZE</code>)</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Prueba / Operación</th>
+              <th>Tiempo E2</th>
+              <th>Tiempo E3</th>
+              <th>Reducción (Δ%)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>E4: Ruta Transaccional Completa (50k órdenes)</strong></td>
+              <td><code>486.42 s</code> (452 f/s)</td>
+              <td><strong><code>298.94 s</code> (735 f/s)</strong></td>
+              <td><strong style="color: var(--accent-emerald);">−187.48 s (−38.5%)</strong></td>
+            </tr>
+            <tr>
+              <td><strong>E4 A/B Intercalado (10k órdenes × 3 pares)</strong></td>
+              <td><code>134.83 s</code> (mediana)</td>
+              <td><strong><code>68.33 s</code> (mediana)</strong></td>
+              <td><strong style="color: var(--accent-emerald);">−66.50 s (−49.3%)</strong></td>
+            </tr>
+            <tr>
+              <td><strong>E3: Filas Individuales Autocommit (5k órdenes)</strong></td>
+              <td><code>56.63 s</code> (388 f/s)</td>
+              <td><strong><code>43.42 s</code> (506 f/s)</strong></td>
+              <td><strong style="color: var(--accent-emerald);">−13.21 s (−23.3%)</strong></td>
+            </tr>
+            <tr>
+              <td><strong>E1: Carga Masiva <code>COPY</code> (<code>copy_total</code>)</strong></td>
+              <td><code>15.63 s</code></td>
+              <td><strong><code>13.27 s</code></strong></td>
+              <td><strong style="color: var(--accent-emerald);">−2.36 s (−15.1%)</strong></td>
+            </tr>
+            <tr>
+              <td><strong>Carga Total BD (<code>make datos</code> / <code>total_s</code>)</strong></td>
+              <td><code>24.91 s</code></td>
+              <td><strong><code>21.64 s</code></strong></td>
+              <td><strong style="color: var(--accent-emerald);">−3.27 s (−13.1%)</strong></td>
+            </tr>
+            <tr>
+              <td><strong>Q4 Motor SQL (<code>EXPLAIN ANALYZE</code> servidor)</strong></td>
+              <td><code>1.932 ms</code> (136 bloques)</td>
+              <td><strong><code>1.458 ms</code> (0 heap fetches)</strong></td>
+              <td><strong style="color: var(--accent-emerald);">−0.474 ms (−24.5%)</strong></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3 style="margin-top: 8px;">¿Qué optimizamos en el sistema para lograrlo?</h3>
+        <ul>
+          <li><strong>P8 (Validación batch + <code>executemany</code> + <code>prepare=True</code>):</strong> Reemplazó $2N+5$ round-trips por orden en E4 por 3 consultas por lote (10 a 16 → 3 round-trips/orden).</li>
+          <li><strong>P1 (Índice cubriente + <code>CROSS JOIN LATERAL</code> en Q4):</strong> <code>INCLUDE (estado, fecha_compromiso, fecha_entrega)</code> logró <em>Index Only Scan</em> con <code>Heap Fetches: 0</code>.</li>
+          <li><strong>Tuning PostgreSQL y Publicador Outbox:</strong> <code>maintenance_work_mem=256MB</code>, <code>prepare=True</code> en repositorios y publicación paralela con <code>asyncio.gather</code>.</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>Gráfica de Disminución de Tiempos E2 → E3</h3>
+        <div class="chart-box" style="height: 210px;">
+          <canvas id="e2e3Chart"></canvas>
+        </div>
+        <img class="img-preview" style="max-height: 175px;" src="./evidencia/resumen_graficas/disminucion_tiempos_e2_vs_e3.png" alt="Disminución de Tiempos E2 vs E3">
+      </div>
+    </div>
+
+    <div class="speaker-note">
+      <strong>Guion (12:30–14:15):</strong> "Finalmente, mostramos la evidencia directa de disminución de tiempos del Entregable 2 al Entregable 3 sobre las mismas pruebas existentes. En la ruta transaccional completa E4 de 50,000 órdenes bajamos de 486.4 segundos a 298.9 segundos (−38.5%), y en las corridas pareadas A/B bajamos un 49.3%. Además, E3 bajó un 23.3%, COPY bajó un 15.1% y la consulta analítica Q4 redujo su tiempo de ejecución en el motor un 24.5% gracias al Index Only Scan con cero accesos al heap."
+    </div>
+  </section>
+
+  <!-- SLIDE 9: CIERRE Y SÍNTESIS EJECUTIVA -->
+  <section class="slide">
+    <div class="slide-header">
+      <span class="badge emerald">Cierre y Preguntas</span>
+      <span class="time-pill">Minuto 14:15 – 15:00</span>
+    </div>
+
+    <h2>Síntesis Ejecutiva: De Base de Datos Rápida a Sistema Resiliente</h2>
+
+    <div class="grid-3">
+      <div class="card success">
+        <span class="kpi-label">Observabilidad y Caos</span>
+        <span class="kpi-value emerald">8 / 8 Fallas</span>
+        <p>Reproducibles individualmente y en combinación mediante <code>make demo-vivo</code> y <code>make humo</code>, con reversión en &lt; 2 s.</p>
+      </div>
+      <div class="card highlight">
+        <span class="kpi-label">Rigor Experimental</span>
+        <span class="kpi-value blue">30 Corridas</span>
+        <p>Predicciones fechadas antes de medir, 3 hipótesis corregidas con evidencia y 0 violaciones de invariantes.</p>
+      </div>
+      <div class="card success">
+        <span class="kpi-label">Rendimiento E2 → E3</span>
+        <span class="kpi-value emerald">−38.5% en E4</span>
+        <p>Reducción sustancial y auditable en todas las estrategias de carga (E1, E3, E4) y en el motor SQL (Q4).</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Comandos Listos para Verificación en Vivo por el Jurado</h3>
+      <pre><span class="cmd-comment"># 1. Verificar suite rápida de tests unitarios y contratos de arquitectura (6/6 contratos, 8/8 tests en ~1.1s)</span>
+<span class="cmd-accent">pytest -q tests && lint-imports</span>
+
+<span class="cmd-comment"># 2. Ejecutar prueba de humo de las 8 fallas con verificación automática de invariantes</span>
+<span class="cmd-accent">make humo</span>
+
+<span class="cmd-comment"># 3. Ejecutar demostración en vivo (Estado Inicial vs Estado Final con fallas combinadas A1+D2+B2)</span>
+<span class="cmd-accent">make demo-vivo</span>
+
+<span class="cmd-comment"># 4. Comparar tiempos E2 vs E3 sobre artefactos oficiales</span>
+<span class="cmd-accent">python baseline/objetivos.py comparar --actual baseline/corridas/oficial-e3 --contra baseline/corridas/oficial-e2</span></pre>
+    </div>
+
+    <div class="speaker-note">
+      <strong>Guion (14:15–15:00):</strong> "Con esto cerramos nuestra presentación dentro de los 15 minutos: demostramos cómo se comporta el sistema bajo las 8 fallas y sus combinaciones usando observabilidad, reprodujimos el estado inicial en vivo, explicamos con total transparencia qué falló en nuestras hipótesis iniciales y qué corregimos, y comprobamos la disminución de tiempos de E2 a E3. Quedamos atentos a sus preguntas."
+    </div>
+  </section>
+
+</div>
+
+<div class="footer-bar">
+  <div style="display: flex; align-items: center; gap: 16px;">
+    <span id="slideCounter" style="font-family: var(--font-mono); font-size: 0.9rem; color: var(--text-secondary);">Diapositiva 1 / 8</span>
+    <span class="timer-display" id="timerDisplay">00:00 / 15:00</span>
+    <button onclick="toggleTimer()" id="timerBtn">Iniciar Reloj 15m</button>
+    <button onclick="resetTimer()">Reiniciar</button>
+  </div>
+  <div class="nav-controls">
+    <button onclick="prevSlide()">← Anterior</button>
+    <button onclick="nextSlide()">Siguiente →</button>
+  </div>
+</div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const counter = document.getElementById('slideCounter');
+  const progress = document.getElementById('progressBar');
+  let current = 0;
+
+  function showSlide(index) {
+    slides.forEach((s, i) => s.classList.toggle('active', i === index));
+    current = index;
+    counter.textContent = `Diapositiva ${current + 1} / ${slides.length}`;
+    progress.style.width = `${((current + 1) / slides.length) * 100}%`;
+  }
+
+  function nextSlide() {
+    if (current < slides.length - 1) showSlide(current + 1);
+  }
+
+  function prevSlide() {
+    if (current > 0) showSlide(current - 1);
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') {
+      e.preventDefault();
+      nextSlide();
+    } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+      e.preventDefault();
+      prevSlide();
+    }
+  });
+
+  // 15-minute presentation timer
+  let secondsElapsed = 0;
+  let timerInterval = null;
+  const timerDisplay = document.getElementById('timerDisplay');
+  const timerBtn = document.getElementById('timerBtn');
+
+  function formatTime(sec) {
+    const m = String(Math.floor(sec / 60)).padStart(2, '0');
+    const s = String(sec % 60).padStart(2, '0');
+    return `${m}:${s}`;
+  }
+
+  function toggleTimer() {
+    if (timerInterval) {
+      clearInterval(timerInterval);
+      timerInterval = null;
+      timerBtn.textContent = 'Reanudar Reloj';
+    } else {
+      timerInterval = setInterval(() => {
+        secondsElapsed++;
+        timerDisplay.textContent = `${formatTime(secondsElapsed)} / 15:00`;
+        if (secondsElapsed >= 900) {
+          timerDisplay.style.color = '#f43f5e';
+        } else if (secondsElapsed >= 750) {
+          timerDisplay.style.color = '#f59e0b';
+        }
+      }, 1000);
+      timerBtn.textContent = 'Pausar Reloj';
+    }
+  }
+
+  function resetTimer() {
+    if (timerInterval) clearInterval(timerInterval);
+    timerInterval = null;
+    secondsElapsed = 0;
+    timerDisplay.textContent = '00:00 / 15:00';
+    timerDisplay.style.color = '#10b981';
+    timerBtn.textContent = 'Iniciar Reloj 15m';
+  }
+
+  // Charts initialization
+  window.addEventListener('DOMContentLoaded', () => {
+    const ctxResilience = document.getElementById('resilienceChart');
+    if (ctxResilience) {
+      new Chart(ctxResilience, {
+        type: 'bar',
+        data: {
+          labels: [
+            'A1 Latencia p95 (ms / 10)',
+            'A2 Latencia p99 (ms / 10)',
+            'B2 Espera Lock (seg × 10)',
+            'D2 Tasa Error (% × 10)'
+          ],
+          datasets: [
+            {
+              label: 'Estado Inicial ("Sin" Resiliencia)',
+              data: [256.6, 141.6, 288.3, 134.0],
+              backgroundColor: 'rgba(244, 63, 94, 0.78)',
+              borderColor: '#f43f5e',
+              borderWidth: 1
+            },
+            {
+              label: 'Estado Final Corregido ("Con" Resiliencia)',
+              data: [93.1, 103.7, 20.4, 17.1],
+              backgroundColor: 'rgba(16, 185, 129, 0.82)',
+              borderColor: '#10b981',
+              borderWidth: 1
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { labels: { color: '#cbd5e1' } }
+          },
+          scales: {
+            x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(148,163,184,0.1)' } },
+            y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(148,163,184,0.1)' } }
+          }
+        }
+      });
+    }
+
+    const ctxE2E3 = document.getElementById('e2e3Chart');
+    if (ctxE2E3) {
+      new Chart(ctxE2E3, {
+        type: 'bar',
+        data: {
+          labels: [
+            'E4 50k órdenes (s)',
+            'E4 A/B 10k (s)',
+            'E3 5k filas (s)',
+            'Carga Total BD (s)',
+            'E1 COPY Total (s)'
+          ],
+          datasets: [
+            {
+              label: 'Entregable 2 (s)',
+              data: [486.42, 134.83, 56.63, 24.91, 15.63],
+              backgroundColor: 'rgba(148, 163, 184, 0.65)',
+              borderColor: '#94a3b8',
+              borderWidth: 1
+            },
+            {
+              label: 'Entregable 3 Optimizado (s)',
+              data: [298.94, 68.33, 43.42, 21.64, 13.27],
+              backgroundColor: 'rgba(56, 189, 248, 0.85)',
+              borderColor: '#38bdf8',
+              borderWidth: 1
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { labels: { color: '#cbd5e1' } }
+          },
+          scales: {
+            x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(148,163,184,0.1)' } },
+            y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(148,163,184,0.1)' } }
+          }
+        }
+      });
+    }
+  });
+</script>
+
+</body>
+</html>

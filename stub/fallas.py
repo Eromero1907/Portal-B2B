@@ -39,9 +39,10 @@ _ultimo_mtime: float = -1.0
 _config_cache: Dict[str, Any] = {"enabled": False, "semilla": 42, "fallas": []}
 
 
-def _recargar_si_cambio(ruta: str = RUTA_FALLAS_DEFECTO) -> Dict[str, Any]:
+def _recargar_si_cambio(ruta: Optional[str] = None) -> Dict[str, Any]:
     """Recarga el archivo YAML si cambió su timestamp de modificación (mtime)."""
     global _ultimo_mtime, _config_cache
+    ruta = ruta or RUTA_FALLAS_DEFECTO
     try:
         if not os.path.exists(ruta):
             if _config_cache.get("enabled"):

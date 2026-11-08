@@ -59,6 +59,12 @@ async def publicar_lote(conn, channel: aio_pika.RobustChannel) -> int:
             return 0
 
         ids_publicados = []
+        tareas_publicacion = []
+
+        async def _publicar_uno(mensaje: aio_pika.Message, tid: str | None, eid: str) -> None:
+            with trazas.span("outbox.publicar_rabbitmq", trace_id=tid, evento_id=eid):
+                await channel.default_exchange.publish(mensaje, routing_key=OUTBOX_COLA)
+
         for item in filas:
             id_fila = item["id"]
             evento_id = item["evento_id"]
@@ -79,10 +85,10 @@ async def publicar_lote(conn, channel: aio_pika.RobustChannel) -> int:
                 headers={"agregado_id": agregado_id, "tipo": tipo},
             )
             _tid = payload.get("trace_id") if isinstance(payload, dict) else None
-            with trazas.span("outbox.publicar_rabbitmq", trace_id=_tid, evento_id=str(evento_id)):
-                await channel.default_exchange.publish(mensaje, routing_key=OUTBOX_COLA)
+            tareas_publicacion.append(_publicar_uno(mensaje, _tid, str(evento_id)))
             ids_publicados.append(id_fila)
 
+        await asyncio.gather(*tareas_publicacion)
         await outbox_marcar_publicados(conn, ids_publicados)
         cantidad = len(ids_publicados)
         OUTBOX_PUBLICADOS.labels(config.INSTANCIA).inc(cantidad)

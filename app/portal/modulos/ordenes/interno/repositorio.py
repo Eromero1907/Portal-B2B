@@ -109,13 +109,13 @@ SELECT count(*)
 
 async def _una(conn: AsyncConnection, sql: str, params: dict):
     async with conn.cursor() as cur:
-        await cur.execute(sql, params)
+        await cur.execute(sql, params, prepare=True)
         return await cur.fetchone()
 
 
 async def _ejecutar(conn: AsyncConnection, sql: str, params: dict) -> int:
     async with conn.cursor() as cur:
-        await cur.execute(sql, params)
+        await cur.execute(sql, params, prepare=True)
         return cur.rowcount
 
 
@@ -145,7 +145,7 @@ async def orden_para_confirmar(conn: AsyncConnection, orden_id: int):
 
 async def lineas(conn: AsyncConnection, orden_id: int) -> list[tuple[int, Decimal]]:
     async with conn.cursor() as cur:
-        await cur.execute(_SQL_LINEAS, {"orden_id": orden_id})
+        await cur.execute(_SQL_LINEAS, {"orden_id": orden_id}, prepare=True)
         return await cur.fetchall()
 
 

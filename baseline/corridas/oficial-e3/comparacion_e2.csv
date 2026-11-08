@@ -60,5 +60,5 @@ estrategia:E2:Lotes de 1000:tiempo,estrategia,E2,Lotes de 1000,tiempo,s,menor_o_
 estrategia:E2:Lotes de 1000:throughput,estrategia,E2,Lotes de 1000,throughput,filas/s,mayor_o_igual,33664,37404.44,1,36052.0,36052.0,36052.0,0.0,7.1,NO
 estrategia:E3:Fila a fila (muestra):tiempo,estrategia,E3,Fila a fila (muestra),tiempo,s,menor_o_igual,56.629,50.9661,1,43.419,43.419,43.419,0.0,-23.3,SI
 estrategia:E3:Fila a fila (muestra):throughput,estrategia,E3,Fila a fila (muestra),throughput,filas/s,mayor_o_igual,662,735.56,1,863.0,863.0,863.0,0.0,30.4,SI
-estrategia:E4:Ruta transaccional:tiempo,estrategia,E4,Ruta transaccional,tiempo,s,menor_o_igual,486.42,437.778,1,437.615,437.615,437.615,0.0,-10.0,SI
-estrategia:E4:Ruta transaccional:throughput,estrategia,E4,Ruta transaccional,throughput,filas/s,mayor_o_igual,452,502.22,1,502.0,502.0,502.0,0.0,11.1,NO
+estrategia:E4:Ruta transaccional:tiempo,estrategia,E4,Ruta transaccional,tiempo,s,menor_o_igual,486.42,437.778,1,298.937,298.937,298.937,0.0,-38.5,SI
+estrategia:E4:Ruta transaccional:throughput,estrategia,E4,Ruta transaccional,throughput,filas/s,mayor_o_igual,452,502.22,1,735.0,735.0,735.0,0.0,62.6,SI
