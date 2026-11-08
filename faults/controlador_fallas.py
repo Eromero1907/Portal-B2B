@@ -10,6 +10,7 @@ Permite orquestar, activar, desactivar y monitorear las 8 fallas del sistema:
 Incluye Kill Switch Global (`enabled: false`) y reversión inmediata de infraestructura.
 """
 import argparse
+import functools
 import os
 import subprocess
 import sys
@@ -44,6 +45,25 @@ def _duracion_falla(falla_id: str, defecto: int = 45) -> int:
         if fcfg.get("id", "").upper() == falla_id:
             return int(fcfg.get("duracion_s", defecto))
     return defecto
+
+
+@functools.lru_cache(maxsize=1)
+def cpus_sin_limite_app1() -> str:
+    """NanoCpus equivalente a 'sin límite' para portal-app1.
+
+    `docker update --cpus 0` NO quita el límite: en la API de update un 0 significa "no cambiar",
+    así que el contenedor se quedaba en 0.25 CPUs después del kill switch. Se restaura a todas las
+    CPU que ve el motor de Docker (docker info NCPU), que es el techo efectivo de un contenedor sin límite.
+    """
+    r = ejecutar_cmd(["docker", "info", "--format", "{{.NCPU}}"])
+    try:
+        return str(max(1, int(r.stdout.strip())))
+    except ValueError:
+        return "2"
+
+
+def restaurar_cpu_app1() -> None:
+    ejecutar_cmd(["docker", "update", "--cpus", cpus_sin_limite_app1(), "portal-app1"])
 
 
 def _psql_en_db(sql: str, appname: str, detach: bool = False) -> subprocess.CompletedProcess:
@@ -148,7 +168,7 @@ def desactivar_falla(falla_id: str) -> None:
         ejecutar_cmd(["docker", "start", "pg-portal-b2b"])
     elif falla_id == "C1":
         print("  -> Revirtiendo C1: restaurando CPU sin límite en portal-app1...")
-        ejecutar_cmd(["docker", "update", "--cpus", "0", "portal-app1"])
+        restaurar_cpu_app1()
     elif falla_id == "C2":
         print("  -> Revirtiendo C2: reanudando portal-consumidor-eventos...")
         ejecutar_cmd(["docker", "unpause", "portal-consumidor-eventos"])
@@ -167,14 +187,23 @@ def kill_switch(activar: bool) -> None:
     for fcfg in cfg.get("fallas", []):
         if activar:
             fcfg["enabled"] = False
-    guardar_config(cfg)
+    guardar_config(cfg)   # las fallas en proceso (A1, A2, D2) quedan apagadas desde aquí (recarga por mtime)
 
-    # Revertir toda infraestructura alterada
-    ejecutar_cmd(["docker", "start", "pg-portal-b2b"])
-    ejecutar_cmd(["docker", "start", "portal-app2"])
-    ejecutar_cmd(["docker", "update", "--cpus", "0", "portal-app1"])
-    ejecutar_cmd(["docker", "unpause", "portal-consumidor-eventos"])
-    liberar_bloqueo_b2()
+    # Revertir toda infraestructura alterada. Los comandos son independientes entre sí, así que se lanzan
+    # en paralelo: en serie, cada `docker ...` cuesta ~0,3-0,8 s en Docker Desktop y el kill switch pasaba de 2 s.
+    cpus = cpus_sin_limite_app1()   # cacheado: `docker info` es lento y el número de CPU no cambia
+    comandos = [
+        ["docker", "start", "pg-portal-b2b"],
+        ["docker", "start", "portal-app2"],
+        ["docker", "update", "--cpus", cpus, "portal-app1"],
+        ["docker", "unpause", "portal-consumidor-eventos"],
+        ["docker", "exec", "-e", "PGUSER=postgres", "-e", "PGAPPNAME=controlador", "pg-portal-b2b",
+         "psql", "-X", "-q", "-At", "-d", "portal_b2b", "-c",
+         "SELECT count(pg_terminate_backend(pid)) FROM pg_stat_activity WHERE application_name = 'falla-B2'"],
+    ]
+    procesos = [subprocess.Popen(c, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL) for c in comandos]
+    for proc in procesos:
+        proc.wait()
 
     if activar:
         print("[KILL SWITCH ACTIVADO] Fallas deshabilitadas globalmente (enabled=false). Infraestructura restaurada.")

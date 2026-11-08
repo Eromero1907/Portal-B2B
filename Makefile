@@ -43,7 +43,8 @@ SEMILLA ?= 42
 
 .PHONY: all help datos generar cargar verificar determinismo db-up db-down db-reset indices-on indices-off \
         cargar-sin-indices venv plataforma plataforma-down esquema-e3 reset-estado pruebas carga \
-        baseline baseline-rapida objetivos fronteras
+        baseline baseline-rapida objetivos fronteras humo fallas-estado kill-switch observabilidad \
+        obs-up obs-down demo-vivo
 
 all: help
 
@@ -73,6 +74,10 @@ help:
 	@echo "  make baseline-rapida    Linea base sin Q3 concurrente ni E1-E4 (para probar el procedimiento)"
 	@echo "  make objetivos          Regenera baseline/objetivos.csv (0,90 x valores del informe E2)"
 	@echo "  make fronteras          CI local: import-linter + prueba de esquemas por modulo"
+	@echo "  make observabilidad     Prometheus + Grafana + cAdvisor + exporters + Jaeger (alias de obs-up)"
+	@echo "  make obs-down           Detiene la observabilidad (antes de medir la linea base oficial)"
+	@echo "  make humo               Prueba de humo de las 8 fallas + kill switch global"
+	@echo "  make demo-vivo          Demo de 2 min: estado inicial vs final con A1+D2+B2"
 	@echo "====================================================================="
 
 # -------------------------------------------------------------------
@@ -188,6 +193,9 @@ OBS_SERVICIOS = prometheus grafana cadvisor postgres-exporter nginx-exporter jae
 obs-up:
 	docker compose $(OBS_COMPOSE) up -d $(OBS_SERVICIOS)
 	@echo "Grafana: http://localhost:3000 | Prometheus: http://localhost:9090/targets | Jaeger: http://localhost:16686"
+
+# Alias del nombre usado en las instrucciones del equipo (make observabilidad == make obs-up)
+observabilidad: obs-up
 
 obs-down:
 	docker compose $(OBS_COMPOSE) stop $(OBS_SERVICIOS)

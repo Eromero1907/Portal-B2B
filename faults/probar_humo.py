@@ -15,7 +15,7 @@ import time
 import urllib.request
 import urllib.error
 
-from controlador_fallas import activar_falla, desactivar_falla, kill_switch, cargar_config
+from controlador_fallas import activar_falla, desactivar_falla, kill_switch, cargar_config, cpus_sin_limite_app1
 
 
 def get(url: str, timeout: float = 5.0) -> tuple[int, str]:
@@ -54,6 +54,30 @@ def ejecutar_docker(cmd: list[str]) -> str:
     return res.stdout.strip()
 
 
+def esperar_salud(contenedor: str, max_s: float = 90.0, paso_s: float = 1.0) -> str:
+    """Espera a que el healthcheck de Docker reporte 'healthy' (o se agote max_s)."""
+    salud = ""
+    limite = time.time() + max_s
+    while time.time() < limite:
+        salud = ejecutar_docker(["inspect", "-f", "{{.State.Health.Status}}", contenedor])
+        if salud == "healthy":
+            break
+        time.sleep(paso_s)
+    return salud
+
+
+def esperar_pg_acepta_conexiones(max_s: float = 60.0) -> bool:
+    """pg_isready dentro del contenedor: más rápido y preciso que esperar el siguiente ciclo del healthcheck."""
+    limite = time.time() + max_s
+    while time.time() < limite:
+        r = subprocess.run(["docker", "exec", "pg-portal-b2b", "pg_isready", "-U", "postgres", "-q"],
+                           capture_output=True, text=True)
+        if r.returncode == 0:
+            return True
+        time.sleep(0.5)
+    return False
+
+
 def probar_a1() -> bool:
     print("\n[HUMO A1] Latencia en servicio externo (tributaria-lenta)")
     activar_falla("A1")
@@ -72,12 +96,21 @@ def probar_a1() -> bool:
     kill_switch(True)
     time.sleep(0.5)
 
-    payload_base = {"proveedor_id": 1, "orden_id": 99999, "total": "1000.00"}
-    status2, _, dur2_ms = post_json("http://127.0.0.1:9000/v1/validaciones", payload_base, timeout=2.0)
-    print(f"  -> Respuesta tras Kill Switch: HTTP {status2} en {dur2_ms:.1f} ms")
+    # Una sola muestra es frágil (en Windows/Docker Desktop la primera conexión tras los `docker` del kill
+    # switch puede tardar >300 ms sin que haya falla). Se toman 5 muestras: la falla A1 inyecta como mínimo
+    # latencia_ms - jitter_ms = 500 ms, así que ninguna muestra puede llegar ahí y la mediana debe ser de línea base.
+    post_ms, post_st = [], []
+    for i in range(5):
+        payload_base = {"proveedor_id": 1, "orden_id": 99990 + i, "total": "1000.00"}
+        st, _, dt = post_json("http://127.0.0.1:9000/v1/validaciones", payload_base, timeout=2.0)
+        post_ms.append(dt)
+        post_st.append(st)
+    post_ms_ord = sorted(post_ms)
+    mediana_post = post_ms_ord[len(post_ms_ord) // 2]
+    print(f"  -> Respuestas tras Kill Switch: HTTP {post_st} | mediana {mediana_post:.1f} ms | máx {max(post_ms):.1f} ms")
 
-    # A1 inyecta entre 500ms y 1100ms; la línea base sin falla es < 300ms
-    pasa = max_lat >= 400.0 and dur2_ms < 300.0 and status2 == 200
+    # A1 inyecta entre 500 ms y 1100 ms; la línea base sin falla es < 300 ms
+    pasa = max_lat >= 400.0 and all(st == 200 for st in post_st) and mediana_post < 300.0 and max(post_ms) < 500.0
     print(f"  -> Resultado A1: {'PASA' if pasa else 'FALLA'}")
     return pasa
 
@@ -119,30 +152,28 @@ def probar_b1() -> bool:
     # Revertir con kill switch
     kill_switch(True)
     print("  -> Kill switch activado: restaurando PostgreSQL...")
-    salud = "starting"
-    for _ in range(25):
-        time.sleep(0.3)
-        salud = ejecutar_docker(["inspect", "-f", "{{.State.Health.Status}}", "pg-portal-b2b"])
-        if salud == "healthy":
-            break
+    # Antes se esperaban solo 7,5 s: PostgreSQL con shared_buffers=512MB hace recuperación al arrancar y en
+    # Windows quedaba en 'starting'; además dejaba la BD sin aceptar conexiones para la prueba B2 siguiente.
+    t0 = time.time()
+    acepta = esperar_pg_acepta_conexiones(60.0)
+    salud = esperar_salud("pg-portal-b2b", 60.0, 0.5)
+    print(f"  -> PostgreSQL salud restaurada: {salud} (acepta conexiones={acepta}) en {time.time() - t0:.1f} s")
 
-    print(f"  -> PostgreSQL salud restaurada: {salud}")
     st_app1, _ = get("http://127.0.0.1:8001/salud", timeout=2.0)
     if st_app1 != 200:
         print("  -> Refrescando apps para renovación limpia de pools...")
-        subprocess.run(["docker", "compose", "restart", "app1", "app2", "app3"], capture_output=True)
-        for _ in range(20):
-            time.sleep(0.3)
-            salud1 = ejecutar_docker(["inspect", "-f", "{{.State.Health.Status}}", "portal-app1"])
-            if salud1 == "healthy":
-                break
-    pasa = estado == "false" and salud == "healthy"
+        subprocess.run(["docker", "restart", "portal-app1", "portal-app2", "portal-app3"], capture_output=True)
+    apps_ok = all(esperar_salud(c, 90.0) == "healthy" for c in ("portal-app1", "portal-app2", "portal-app3"))
+    print(f"  -> app1..app3 sanas tras restaurar la BD: {apps_ok}")
+    pasa = estado == "false" and salud == "healthy" and acepta and apps_ok
     print(f"  -> Resultado B1: {'PASA' if pasa else 'FALLA'}")
     return pasa
 
 
 def probar_b2() -> bool:
     print("\n[HUMO B2] Contención por lock en franja crítica 91150")
+    # Precondición: la BD debe aceptar conexiones (si viene de B1, puede seguir arrancando).
+    esperar_pg_acepta_conexiones(60.0)
     activar_falla("B2")
     salida_lock = ejecutar_docker([
         "exec", "pg-portal-b2b", "psql", "-U", "postgres", "-d", "portal_b2b", "-t", "-A", "-c",
@@ -175,8 +206,10 @@ def probar_c1() -> bool:
     kill_switch(True)
     time.sleep(0.5)
     cpus_reset = ejecutar_docker(["inspect", "-f", "{{.HostConfig.NanoCpus}}", "portal-app1"])
-    print(f"  -> NanoCpus tras Kill Switch: {cpus_reset} (esperado: 2000000000 = 2.0 CPUs)")
-    pasa = cpus == "250000000" and cpus_reset == "2000000000"
+    ncpu = int(cpus_sin_limite_app1())
+    esperado = str(ncpu * 1_000_000_000)
+    print(f"  -> NanoCpus tras Kill Switch: {cpus_reset} (esperado: {esperado} = {ncpu} CPUs, todas las del motor Docker)")
+    pasa = cpus == "250000000" and cpus_reset == esperado
     print(f"  -> Resultado C1: {'PASA' if pasa else 'FALLA'}")
     return pasa
 
@@ -207,13 +240,7 @@ def probar_d1() -> bool:
     print(f"  -> portal-app2 running={running}")
 
     kill_switch(True)
-    salud = "starting"
-    for _ in range(25):
-        time.sleep(0.5)
-        salud = ejecutar_docker(["inspect", "-f", "{{.State.Health.Status}}", "portal-app2"])
-        if salud == "healthy":
-            break
-
+    salud = esperar_salud("portal-app2", 90.0, 0.5)
     print(f"  -> portal-app2 restaurado y sano: {salud}")
     pasa = running == "false" and salud == "healthy"
     print(f"  -> Resultado D1: {'PASA' if pasa else 'FALLA'}")
@@ -275,6 +302,7 @@ def probar_kill_switch_rapidez() -> bool:
 
 
 def main():
+    cpus_sin_limite_app1()   # precalienta la caché de `docker info` para no cargarla al kill switch medido
     print("=" * 65)
     print(" INICIANDO PRUEBAS DE HUMO DE LAS 8 FALLAS (RELEVO 2)")
     print("=" * 65)
