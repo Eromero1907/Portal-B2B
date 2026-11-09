@@ -1,0 +1,94 @@
+=== Q4 caliente (proveedor 1, 24 meses)
+                                                                                            QUERY PLAN                                                                                             
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Merge Left Join  (cost=10982.29..11023.29 rows=1000 width=76) (actual time=22.567..22.593 rows=25 loops=1)
+   Merge Cond: ((((generate_series('2024-09-01 00:00:00'::timestamp without time zone, '2026-09-01 00:00:00'::timestamp without time zone, '1 mon'::interval)))::date) = a.mes)
+   Buffers: shared hit=15216 read=29
+   I/O Timings: shared read=0.104
+   CTE ord
+     ->  Bitmap Heap Scan on ordenes_compra o_1  (cost=167.87..8853.41 rows=842 width=16) (actual time=1.156..5.982 rows=3986 loops=1)
+           Recheck Cond: ((proveedor_id = 1) AND (fecha_emision >= '2024-09-01'::date) AND (fecha_emision < '2026-10-01'::date))
+           Filter: ((fecha_entrega IS NOT NULL) AND ((estado)::text = 'CONFIRMADA'::text))
+           Rows Removed by Filter: 1307
+           Heap Blocks: exact=3170
+           Buffers: shared hit=3173 read=29
+           I/O Timings: shared read=0.104
+           ->  Bitmap Index Scan on idx_ordenes_proveedor_fecha  (cost=0.00..167.66 rows=5059 width=0) (actual time=0.785..0.786 rows=5293 loops=1)
+                 Index Cond: ((proveedor_id = 1) AND (fecha_emision >= '2024-09-01'::date) AND (fecha_emision < '2026-10-01'::date))
+                 Buffers: shared hit=3 read=29
+                 I/O Timings: shared read=0.104
+   ->  Sort  (cost=69.85..72.35 rows=1000 width=4) (actual time=0.014..0.017 rows=25 loops=1)
+         Sort Key: (((generate_series('2024-09-01 00:00:00'::timestamp without time zone, '2026-09-01 00:00:00'::timestamp without time zone, '1 mon'::interval)))::date)
+         Sort Method: quicksort  Memory: 25kB
+         ->  Result  (cost=0.00..20.02 rows=1000 width=4) (actual time=0.002..0.007 rows=25 loops=1)
+               ->  ProjectSet  (cost=0.00..5.02 rows=1000 width=8) (actual time=0.002..0.004 rows=25 loops=1)
+                     ->  Result  (cost=0.00..0.01 rows=1 width=0) (actual time=0.000..0.000 rows=1 loops=1)
+   ->  Sort  (cost=2059.03..2059.53 rows=200 width=84) (actual time=22.544..22.548 rows=25 loops=1)
+         Sort Key: a.mes
+         Sort Method: quicksort  Memory: 26kB
+         Buffers: shared hit=15216 read=29
+         I/O Timings: shared read=0.104
+         ->  Subquery Scan on a  (cost=2046.38..2051.38 rows=200 width=84) (actual time=22.520..22.531 rows=25 loops=1)
+               Buffers: shared hit=15216 read=29
+               I/O Timings: shared read=0.104
+               ->  HashAggregate  (cost=2046.38..2049.38 rows=200 width=84) (actual time=22.520..22.528 rows=25 loops=1)
+                     Group Key: o.mes
+                     Batches: 1  Memory Usage: 40kB
+                     Buffers: shared hit=15216 read=29
+                     I/O Timings: shared read=0.104
+                     ->  Hash Join  (cost=1419.85..1438.94 rows=40496 width=29) (actual time=21.315..22.068 rows=3986 loops=1)
+                           Hash Cond: (o.id = l.orden_id)
+                           Buffers: shared hit=15216 read=29
+                           I/O Timings: shared read=0.104
+                           ->  CTE Scan on ord o  (cost=0.00..16.84 rows=842 width=16) (actual time=1.160..1.371 rows=3986 loops=1)
+                                 Buffers: shared hit=4 read=29
+                                 I/O Timings: shared read=0.104
+                           ->  Hash  (cost=1299.61..1299.61 rows=9619 width=21) (actual time=20.100..20.101 rows=3986 loops=1)
+                                 Buckets: 16384  Batches: 1  Memory Usage: 362kB
+                                 Buffers: shared hit=15212
+                                 ->  Subquery Scan on l  (cost=1107.23..1299.61 rows=9619 width=21) (actual time=18.789..19.566 rows=3986 loops=1)
+                                       Buffers: shared hit=15212
+                                       ->  HashAggregate  (cost=1107.23..1203.42 rows=9619 width=21) (actual time=18.788..19.272 rows=3986 loops=1)
+                                             Group Key: l_1.orden_id
+                                             Batches: 1  Memory Usage: 913kB
+                                             Buffers: shared hit=15212
+                                             ->  Nested Loop  (cost=19.37..962.94 rows=9619 width=12) (actual time=6.570..15.439 rows=25508 loops=1)
+                                                   Buffers: shared hit=15212
+                                                   ->  HashAggregate  (cost=18.95..20.95 rows=200 width=4) (actual time=6.519..6.957 rows=3986 loops=1)
+                                                         Group Key: ord.id
+                                                         Batches: 1  Memory Usage: 481kB
+                                                         Buffers: shared hit=3169
+                                                         ->  CTE Scan on ord  (cost=0.00..16.84 rows=842 width=4) (actual time=0.000..5.630 rows=3986 loops=1)
+                                                               Buffers: shared hit=3169
+                                                   ->  Index Only Scan using idx_lineas_orden on lineas_orden l_1  (cost=0.43..4.60 rows=11 width=12) (actual time=0.001..0.002 rows=6 loops=3986)
+                                                         Index Cond: (orden_id = ord.id)
+                                                         Heap Fetches: 0
+                                                         Buffers: shared hit=12043
+ Planning:
+   Buffers: shared hit=245
+ Planning Time: 0.827 ms
+ Execution Time: 23.055 ms
+(67 rows)
+
+=== Q5 OFFSET 5000 (proveedor 1)
+                                                                       QUERY PLAN                                                                       
+--------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=9109.92..9110.04 rows=50 width=46) (actual time=5.418..5.426 rows=50 loops=1)
+   Buffers: shared hit=3205
+   ->  Sort  (cost=9097.42..9110.07 rows=5060 width=46) (actual time=4.877..5.287 rows=5050 loops=1)
+         Sort Key: fecha_emision DESC, id DESC
+         Sort Method: quicksort  Memory: 895kB
+         Buffers: shared hit=3205
+         ->  Bitmap Heap Scan on ordenes_compra o  (cost=143.64..8786.10 rows=5060 width=46) (actual time=0.663..3.266 rows=5293 loops=1)
+               Recheck Cond: (proveedor_id = 1)
+               Heap Blocks: exact=3170
+               Buffers: shared hit=3199
+               ->  Bitmap Index Scan on idx_ordenes_proveedor_fecha  (cost=0.00..142.37 rows=5060 width=0) (actual time=0.330..0.331 rows=5293 loops=1)
+                     Index Cond: (proveedor_id = 1)
+                     Buffers: shared hit=29
+ Planning:
+   Buffers: shared hit=24
+ Planning Time: 0.195 ms
+ Execution Time: 5.469 ms
+(17 rows)
+

@@ -1,0 +1,54 @@
+=== Q4 caliente (proveedor 1, 24 meses)
+                                                                                    QUERY PLAN                                                                                     
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Merge Left Join  (cost=560.69..743.02 rows=4325 width=76) (actual time=2.409..2.430 rows=25 loops=1)
+   Merge Cond: ((((generate_series('2024-09-01 00:00:00'::timestamp without time zone, '2026-09-01 00:00:00'::timestamp without time zone, '1 mon'::interval)))::date) = a.mes)
+   Buffers: shared hit=4 read=69
+   I/O Timings: shared read=0.289
+   ->  Sort  (cost=69.85..72.35 rows=1000 width=4) (actual time=0.017..0.019 rows=25 loops=1)
+         Sort Key: (((generate_series('2024-09-01 00:00:00'::timestamp without time zone, '2026-09-01 00:00:00'::timestamp without time zone, '1 mon'::interval)))::date)
+         Sort Method: quicksort  Memory: 25kB
+         ->  Result  (cost=0.00..20.02 rows=1000 width=4) (actual time=0.003..0.008 rows=25 loops=1)
+               ->  ProjectSet  (cost=0.00..5.02 rows=1000 width=8) (actual time=0.002..0.005 rows=25 loops=1)
+                     ->  Result  (cost=0.00..0.01 rows=1 width=0) (actual time=0.000..0.001 rows=1 loops=1)
+   ->  Sort  (cost=490.84..493.01 rows=865 width=36) (actual time=2.386..2.387 rows=25 loops=1)
+         Sort Key: a.mes
+         Sort Method: quicksort  Memory: 26kB
+         Buffers: shared hit=4 read=69
+         I/O Timings: shared read=0.289
+         ->  Subquery Scan on a  (cost=424.86..448.65 rows=865 width=36) (actual time=2.362..2.369 rows=25 loops=1)
+               Buffers: shared hit=4 read=69
+               I/O Timings: shared read=0.289
+               ->  HashAggregate  (cost=424.86..440.00 rows=865 width=36) (actual time=2.361..2.366 rows=25 loops=1)
+                     Group Key: (date_trunc('month'::text, (o.fecha_emision AT TIME ZONE 'UTC'::text)))::date
+                     Batches: 1  Memory Usage: 49kB
+                     Buffers: shared hit=4 read=69
+                     I/O Timings: shared read=0.289
+                     ->  Index Only Scan using idx_ordenes_proveedor_fecha on ordenes_compra o  (cost=0.42..411.89 rows=865 width=21) (actual time=0.058..1.878 rows=3986 loops=1)
+                           Index Cond: ((proveedor_id = 1) AND (fecha_emision >= '2024-09-01'::date) AND (fecha_emision < '2026-10-01'::date))
+                           Filter: ((fecha_entrega IS NOT NULL) AND (unidades_pedidas IS NOT NULL) AND ((estado)::text = 'CONFIRMADA'::text))
+                           Rows Removed by Filter: 1307
+                           Heap Fetches: 0
+                           Buffers: shared hit=4 read=69
+                           I/O Timings: shared read=0.289
+ Planning:
+   Buffers: shared hit=209
+ Planning Time: 0.600 ms
+ Execution Time: 2.526 ms
+(34 rows)
+
+=== Q5 OFFSET 5000 (proveedor 1)
+                                                                            QUERY PLAN                                                                            
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=343.56..346.99 rows=50 width=46) (actual time=0.808..0.816 rows=50 loops=1)
+   Buffers: shared hit=67
+   ->  Index Only Scan using idx_ordenes_proveedor_fecha on ordenes_compra o  (cost=0.42..365.52 rows=5320 width=46) (actual time=0.011..0.674 rows=5050 loops=1)
+         Index Cond: (proveedor_id = 1)
+         Heap Fetches: 0
+         Buffers: shared hit=67
+ Planning:
+   Buffers: shared hit=20
+ Planning Time: 0.088 ms
+ Execution Time: 0.827 ms
+(10 rows)
+

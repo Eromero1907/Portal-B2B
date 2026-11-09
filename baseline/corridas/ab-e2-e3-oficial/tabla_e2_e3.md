@@ -1,0 +1,41 @@
+# Tabla E2 vs E3 · corrida `ab-e2-e3-oficial`
+
+Máquina: 12th Gen Intel(R) Core(TM) i5-12500H · 15.7 GB · Docker 29.9.2. Mismo cliente que el E2 (`medicion/medir.py`, 200 ejecuciones + 20 de calentamiento, `force_custom_plan`), plataforma detenida, 5 rondas intercaladas E2 → E3. Valores en ms; E2 hoy y E3 final son medianas entre rondas (rango entre corchetes).
+
+| Consulta | Escenario | Métrica | E2 informe | Meta E3 (−10 %) | E2 hoy [rango] | E3 final [rango] | E3 vs E2 informe | E3 vs E2 hoy | Cumple meta | Mejora atribuible |
+|---|---|---|---:|---:|---:|---:|---:|---:|:---:|:---:|
+| Q1 proveedor + contrato | caliente | p50 | 0,52 | 0,468 | 0,61 [0,58–1,14] | **0,57** [0,55–0,67] | 9,2 % | -7,0 % | NO | dentro del ruido |
+| Q1 proveedor + contrato | caliente | p95 | 0,70 | 0,630 | 0,84 [0,77–2,31] | **0,71** [0,67–0,82] | 1,9 % | -15,6 % | NO | solo en mediana |
+| Q1 proveedor + contrato | caliente | p99 | 1,05 | 0,945 | 1,11 [0,95–2,58] | **0,79** [0,75–1,03] | -24,4 % | -28,8 % | SÍ | solo en mediana |
+| Q1 proveedor + contrato | frio | p50 | 0,53 | 0,477 | 0,63 [0,56–0,71] | **0,65** [0,54–0,71] | 21,7 % | 3,0 % | NO | dentro del ruido |
+| Q1 proveedor + contrato | frio | p95 | 0,60 | 0,540 | 0,83 [0,65–0,95] | **0,93** [0,62–1,00] | 54,2 % | 11,5 % | NO | dentro del ruido |
+| Q1 proveedor + contrato | frio | p99 | 0,69 | 0,621 | 0,97 [0,75–1,35] | **1,10** [0,67–2,30] | 59,0 % | 13,6 % | NO | dentro del ruido |
+| Q2 precio de 20 SKU | caliente | p50 | 0,54 | 0,486 | 0,66 [0,65–0,82] | **0,68** [0,61–0,93] | 25,4 % | 3,0 % | NO | dentro del ruido |
+| Q2 precio de 20 SKU | caliente | p95 | 0,64 | 0,576 | 0,83 [0,80–2,22] | **0,92** [0,79–1,68] | 44,0 % | 10,5 % | NO | dentro del ruido |
+| Q2 precio de 20 SKU | caliente | p99 | 0,74 | 0,666 | 1,08 [0,97–2,89] | **1,10** [0,98–2,04] | 48,9 % | 2,2 % | NO | dentro del ruido |
+| Q2 precio de 20 SKU | frio | p50 | 0,54 | 0,486 | 0,69 [0,63–0,73] | **0,65** [0,60–0,83] | 19,7 % | -6,1 % | NO | dentro del ruido |
+| Q2 precio de 20 SKU | frio | p95 | 0,66 | 0,594 | 0,87 [0,80–0,93] | **0,96** [0,72–1,11] | 45,6 % | 10,7 % | NO | dentro del ruido |
+| Q2 precio de 20 SKU | frio | p99 | 0,78 | 0,702 | 1,34 [0,86–1,45] | **1,45** [0,76–1,79] | 85,3 % | 8,2 % | NO | dentro del ruido |
+| Q3 franjas con cupo | caliente | p50 | 0,53 | 0,477 | 0,58 [0,55–0,62] | **0,60** [0,55–0,77] | 13,6 % | 4,5 % | NO | dentro del ruido |
+| Q3 franjas con cupo | caliente | p95 | 0,81 | 0,729 | 0,64 [0,61–0,98] | **0,69** [0,61–1,04] | -14,5 % | 8,4 % | SÍ | dentro del ruido |
+| Q3 franjas con cupo | caliente | p99 | 0,98 | 0,882 | 0,66 [0,62–1,11] | **0,76** [0,66–1,18] | -22,9 % | 15,0 % | SÍ | dentro del ruido |
+| Q3 franjas con cupo | frio | p50 | 0,54 | 0,486 | 0,60 [0,54–0,61] | **0,64** [0,55–0,73] | 19,4 % | 7,1 % | NO | dentro del ruido |
+| Q3 franjas con cupo | frio | p95 | 0,97 | 0,873 | 0,72 [0,62–0,90] | **0,79** [0,70–1,15] | -18,6 % | 10,1 % | SÍ | dentro del ruido |
+| Q3 franjas con cupo | frio | p99 | 1,89 | 1,701 | 0,84 [0,70–1,12] | **0,97** [0,90–1,45] | -48,7 % | 14,8 % | SÍ | dentro del ruido |
+| Q4 OTIF y fill rate | caliente | p50 | 1,15 | 1,035 | 1,51 [1,44–1,82] | **0,91** [0,82–1,24] | -21,1 % | -39,8 % | SÍ | SÍ |
+| Q4 OTIF y fill rate | caliente | p95 | 11,17 | 10,053 | 18,68 [18,14–18,98] | **2,68** [2,33–3,30] | -76,0 % | -85,6 % | SÍ | SÍ |
+| Q4 OTIF y fill rate | caliente | p99 | 11,48 | 10,332 | 20,57 [19,34–21,99] | **2,80** [2,56–3,65] | -75,6 % | -86,4 % | SÍ | SÍ |
+| Q4 OTIF y fill rate | frio | p50 | 1,14 | 1,026 | 1,00 [0,96–1,12] | **0,79** [0,69–0,91] | -30,4 % | -20,9 % | SÍ | SÍ |
+| Q4 OTIF y fill rate | frio | p95 | 1,75 | 1,575 | 1,43 [1,19–1,68] | **0,95** [0,79–1,20] | -45,9 % | -33,8 % | SÍ | solo en mediana |
+| Q4 OTIF y fill rate | frio | p99 | 2,13 | 1,917 | 1,89 [1,55–3,00] | **1,25** [0,98–1,57] | -41,5 % | -34,1 % | SÍ | solo en mediana |
+| Q5 últimas 50 órdenes | pagina1 | p50 | 0,69 | 0,621 | 0,71 [0,63–0,88] | **0,69** [0,65–0,77] | 0,5 % | -2,5 % | NO | dentro del ruido |
+| Q5 últimas 50 órdenes | pagina1 | p95 | 0,77 | 0,693 | 0,81 [0,76–1,36] | **0,84** [0,78–0,95] | 9,7 % | 4,3 % | NO | dentro del ruido |
+| Q5 últimas 50 órdenes | pagina1 | p99 | 0,98 | 0,882 | 1,12 [0,85–1,56] | **0,99** [0,85–1,37] | 1,5 % | -11,0 % | NO | solo en mediana |
+| Q5 últimas 50 órdenes | offset5000 | p50 | 2,23 | 2,007 | 4,98 [4,73–5,52] | **1,31** [1,17–1,43] | -41,5 % | -73,8 % | SÍ | SÍ |
+| Q5 últimas 50 órdenes | offset5000 | p95 | 2,67 | 2,403 | 6,57 [6,33–7,04] | **1,77** [1,61–2,49] | -33,7 % | -73,1 % | SÍ | SÍ |
+| Q5 últimas 50 órdenes | offset5000 | p99 | 3,04 | 2,736 | 7,29 [6,97–8,42] | **2,63** [1,88–3,57] | -13,4 % | -63,9 % | SÍ | SÍ |
+| Q5 últimas 50 órdenes | keyset | p50 | 0,63 | 0,567 | 0,78 [0,72–0,83] | **0,74** [0,72–0,88] | 17,5 % | -4,9 % | NO | dentro del ruido |
+| Q5 últimas 50 órdenes | keyset | p95 | 0,85 | 0,765 | 0,95 [0,83–1,63] | **1,07** [0,83–1,64] | 25,9 % | 12,9 % | NO | dentro del ruido |
+| Q5 últimas 50 órdenes | keyset | p99 | 1,11 | 0,999 | 1,32 [0,94–2,77] | **1,51** [0,87–2,04] | 36,4 % | 14,8 % | NO | dentro del ruido |
+
+**Resumen:** 14 de 33 métricas cumplen la meta frente al informe del E2; 7 tienen una mejora atribuible al sistema (≥ 10 % frente al estado E2 medido hoy y sin solape entre rondas).
