@@ -1,3 +1,4 @@
+import os
 import psycopg
 from pathlib import Path
 
@@ -19,7 +20,9 @@ def conectar():
 
 def preparar_sesion(conn):
     """Carga los PREPARE de consultas.sql y fuerza plan_cache_mode=force_custom_plan."""
-    sql_texto = (RAIZ / "datos" / "consultas.sql").read_text(encoding="utf-8")
+    # CONSULTAS_SQL (opcional, Entrega final): otra versión de las consultas, p. ej. la del E2 para el A/B E2 vs E3
+    ruta = Path(os.environ["CONSULTAS_SQL"]) if os.environ.get("CONSULTAS_SQL") else RAIZ / "datos" / "consultas.sql"
+    sql_texto = ruta.read_text(encoding="utf-8")
     with conn.cursor() as cur:
         cur.execute(sql_texto)
     conn.commit()

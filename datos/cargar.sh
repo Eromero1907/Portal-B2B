@@ -92,6 +92,17 @@ printf "  %-34s %12s %10s %14s\n" "TOTAL COPY" "$TOTAL_FILAS" "$seg_copy" "$(tas
 registrar "copy" "TOTAL" "$TOTAL_FILAS" "$seg_copy"
 
 # ---------------------------------------------------------------------
+# Fase 1b · modelo de lectura de entregas (relleno + trigger), antes de restricciones e índices
+# Se cronometra aparte: es el costo de escritura que se paga a cambio de la mejora de Q4 (palanca L4).
+# ---------------------------------------------------------------------
+echo "[1b] Modelo de lectura de entregas (resumen por orden + trigger)"
+t0=$(ahora)
+sql -d "$PGDATABASE" -v tablas=false -v modelo_lectura=true -v restricciones=false -v indices=false -f modelo-fisico.sql
+seg_ml=$(delta "$t0" "$(ahora)")
+echo "  modelo de lectura en ${seg_ml} s"
+registrar "modelo_lectura" "resumen_entrega" "$TOTAL_FILAS" "$seg_ml"
+
+# ---------------------------------------------------------------------
 # Fase 2 · restricciones (UNIQUE, FK) e índices de rendimiento, después de la carga
 # ---------------------------------------------------------------------
 echo "[2] Restricciones (UNIQUE + FK) e índices de rendimiento (post-carga)"
@@ -134,7 +145,7 @@ fi
 
 T_TOTAL_1=$(ahora)
 seg_total=$(delta "$T_TOTAL_0" "$T_TOTAL_1")
-registrar "total" "reset+copy+restricciones+indices+analyze+vacuum" "$TOTAL_FILAS" "$seg_total"
+registrar "total" "reset+copy+modelo_lectura+restricciones+indices+analyze+vacuum" "$TOTAL_FILAS" "$seg_total"
 
 # ---------------------------------------------------------------------
 # Entorno bajo el que se midió (el enunciado exige declarar el volumen y la carga)
@@ -171,6 +182,6 @@ SELECT format('%s.%s', n.nspname, c.relname)                                   A
 
 echo "====================================================================="
 echo "✓ CARGA COMPLETA · ${TOTAL_FILAS} filas en ${seg_total} s"
-echo "  COPY ${seg_copy} s · restricciones ${seg_res} s · índices ${seg_idx} s · ANALYZE ${seg_an} s · VACUUM ${seg_vac} s"
+echo "  COPY ${seg_copy} s · modelo de lectura ${seg_ml} s · restricciones ${seg_res} s · índices ${seg_idx} s · ANALYZE ${seg_an} s · VACUUM ${seg_vac} s"
 echo "  Evidencia cruda: $RESULTADOS · $ENTORNO"
 echo "====================================================================="

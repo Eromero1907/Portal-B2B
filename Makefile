@@ -41,7 +41,7 @@ DURACION ?= 300
 CALENTAMIENTO ?= 30
 SEMILLA ?= 42
 
-.PHONY: all help datos generar cargar verificar determinismo db-up db-down db-reset indices-on indices-off \
+.PHONY: comparar-e2 all help datos generar cargar verificar determinismo db-up db-down db-reset indices-on indices-off \
         cargar-sin-indices venv plataforma plataforma-down esquema-e3 reset-estado pruebas carga \
         baseline baseline-rapida objetivos fronteras humo fallas-estado kill-switch observabilidad \
         obs-up obs-down demo-vivo
@@ -217,3 +217,7 @@ palanca-p8:
 
 demo-vivo:
 	$(BASH) faults/demo_vivo.sh $(MODO)
+
+# Entrega final · evidencia E2 vs E3 (rúbrica final, criterio 4): A/B intercalado + equivalencia de Q4 + tabla
+comparar-e2:
+	$(BASH) baseline/ab_e2_e3.sh

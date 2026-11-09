@@ -78,37 +78,29 @@ SELECT f.id            AS franja_id,
 --   Referencia de SLO (Entrega 1, RNF-11): p95 < 2 500 ms y p99 < 5 000 ms sobre 24 meses.
 -- ---------------------------------------------------------------------
 PREPARE q4 (int, date, date) AS
+-- Entrega final (palanca L4): lee el modelo de lectura de entregas de ordenes_compra (unidades_pedidas,
+-- unidades_surtidas, entrega_completa, mantenidos por trigger) a través de UN índice cubriente (Index Only Scan),
+-- en lugar de agregar lineas_orden orden por orden. Mismo resultado que la versión del E2 (verificado por
+-- baseline/ab_e2_e3.sh, paso de equivalencia); `unidades_pedidas IS NOT NULL` reproduce el JOIN del E2 (órdenes sin
+-- líneas no cuentan). Versión del E2: `git show a1b9141:datos/consultas.sql`.
 WITH meses AS (
     SELECT generate_series(date_trunc('month', $2::timestamp),
                            date_trunc('month', ($3 - 1)::timestamp),
                            interval '1 month')::date AS mes
-), ord AS (
-    SELECT o.id,
-           date_trunc('month', o.fecha_emision AT TIME ZONE 'UTC')::date AS mes,
-           o.fecha_compromiso,
-           o.fecha_entrega
+), agg AS (
+    SELECT date_trunc('month', o.fecha_emision AT TIME ZONE 'UTC')::date                       AS mes,
+           count(*)                                                                             AS ordenes_entregadas,
+           count(*) FILTER (WHERE o.fecha_entrega <= o.fecha_compromiso AND o.entrega_completa) AS ordenes_otif,
+           sum(o.unidades_pedidas)                                                              AS unidades_pedidas,
+           sum(o.unidades_surtidas)                                                             AS unidades_surtidas
       FROM ordenes.ordenes_compra o
      WHERE o.proveedor_id = $1
        AND o.fecha_emision >= $2
        AND o.fecha_emision <  $3
        AND o.estado = 'CONFIRMADA'
        AND o.fecha_entrega IS NOT NULL
-), agg AS (
-    SELECT o.mes,
-           count(*)                                                                       AS ordenes_entregadas,
-           count(*) FILTER (WHERE o.fecha_entrega <= o.fecha_compromiso AND l.completa)   AS ordenes_otif,
-           sum(l.pedido)                                                                  AS unidades_pedidas,
-           sum(l.surtido)                                                                 AS unidades_surtidas
-      FROM ord o
-      CROSS JOIN LATERAL (
-          SELECT sum(li.cantidad)                               AS pedido,
-                 sum(least(li.cantidad_entregada, li.cantidad)) AS surtido,
-                 bool_and(li.cantidad_entregada >= li.cantidad) AS completa
-            FROM ordenes.lineas_orden li
-           WHERE li.orden_id = o.id
-          HAVING count(*) > 0
-      ) l
-     GROUP BY o.mes
+       AND o.unidades_pedidas IS NOT NULL
+     GROUP BY 1
 )
 SELECT m.mes,
        COALESCE(a.ordenes_entregadas, 0)                                       AS ordenes_entregadas,

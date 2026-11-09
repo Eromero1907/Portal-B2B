@@ -38,6 +38,11 @@
 \else
   \set indices true
 \endif
+-- modelo_lectura (FASE 1b) solo lo activa cargar.sh, justo después del COPY: por defecto false.
+\if :{?modelo_lectura}
+\else
+  \set modelo_lectura false
+\endif
 
 -- =====================================================================
 -- FASE 0 · ESQUEMAS Y TABLAS (sin índices secundarios)
@@ -149,6 +154,11 @@ CREATE TABLE ordenes.ordenes_compra (
     numero_orden      VARCHAR(50)    NOT NULL,
     estado            VARCHAR(30)    NOT NULL,
     idempotency_key   VARCHAR(36)    NOT NULL,   -- el generador emite 'idemp-<id>-<nnnn>' (no es UUID): VARCHAR(36) del contrato
+    -- Modelo de lectura de entregas (Entrega final, palanca L4 de Q4): resumen de las líneas de la orden, mantenido por
+    -- trigger dentro del mismo esquema. NULL si la orden no tiene líneas. Ver FASE 1b.
+    unidades_pedidas  INT,
+    unidades_surtidas INT,
+    entrega_completa  BOOLEAN,
     CONSTRAINT ck_ordenes_estado  CHECK (estado IN ('CONFIRMADA', 'RECHAZADA', 'EN_PROCESO')),
     CONSTRAINT ck_ordenes_total   CHECK (total_orden >= 0),
     CONSTRAINT ck_ordenes_entrega CHECK (fecha_entrega IS NULL OR estado = 'CONFIRMADA')
@@ -212,6 +222,85 @@ BEGIN
 END $$;
 
 CREATE TABLE auditoria.eventos_auditoria_default PARTITION OF auditoria.eventos_auditoria DEFAULT;
+
+\endif
+
+-- =====================================================================
+-- FASE 1b · MODELO DE LECTURA DE ENTREGAS (justo DESPUÉS del COPY, ANTES de restricciones e índices)
+-- Palanca L4 de la Entrega final (Q4: OTIF y fill rate). Diagnóstico medido: el 90 % del tiempo de Q4 caliente
+-- (11 de 12 ms en el servidor) eran ~4 000 agregaciones anidadas sobre lineas_orden, una por orden del proveedor.
+-- Decisión: guardar en la cabecera de la orden el resumen de sus líneas (unidades pedidas, surtidas y si la entrega
+-- fue completa). Q4 pasa a leer UN índice cubriente de ordenes_compra, sin tocar lineas_orden.
+--   · Mismo módulo y esquema (ordenes): no rompe la regla de un esquema por módulo ni agrega JOIN entre esquemas.
+--   · No es una caché: es estado derivado mantenido de forma transaccional por un trigger del mismo esquema;
+--     cualquier INSERT/UPDATE/DELETE de líneas recalcula sus órdenes en la misma transacción (consistencia fuerte).
+--   · Costo declarado: +1 UPDATE de la cabecera por sentencia que escribe líneas (crear orden) y un índice más ancho.
+-- =====================================================================
+\if :modelo_lectura
+
+-- Relleno inicial en una sola pasada (sin índices secundarios todavía: UPDATE barato; el VACUUM posterior limpia)
+UPDATE ordenes.ordenes_compra o
+   SET unidades_pedidas  = r.pedido,
+       unidades_surtidas = r.surtido,
+       entrega_completa  = r.completa
+  FROM (SELECT orden_id,
+               sum(cantidad)                               AS pedido,
+               sum(least(cantidad_entregada, cantidad))    AS surtido,
+               bool_and(cantidad_entregada >= cantidad)    AS completa
+          FROM ordenes.lineas_orden
+         GROUP BY orden_id) r
+ WHERE o.id = r.orden_id;
+
+-- Mantenimiento: triggers por SENTENCIA con tablas de transición (una sola recálculo por sentencia, no por fila;
+-- una orden de 300 líneas se recalcula una vez, no 300).
+CREATE OR REPLACE FUNCTION ordenes.f_resumen_entrega() RETURNS trigger
+LANGUAGE plpgsql AS $$
+DECLARE
+    ids int[];
+BEGIN
+    IF TG_OP = 'INSERT' THEN
+        SELECT array_agg(DISTINCT orden_id) INTO ids FROM lineas_nuevas;
+    ELSIF TG_OP = 'DELETE' THEN
+        SELECT array_agg(DISTINCT orden_id) INTO ids FROM lineas_viejas;
+    ELSE
+        SELECT array_agg(DISTINCT orden_id) INTO ids
+          FROM (SELECT orden_id FROM lineas_nuevas UNION SELECT orden_id FROM lineas_viejas) u;
+    END IF;
+    IF ids IS NULL THEN
+        RETURN NULL;
+    END IF;
+    UPDATE ordenes.ordenes_compra o
+       SET unidades_pedidas  = r.pedido,
+           unidades_surtidas = r.surtido,
+           entrega_completa  = r.completa
+      FROM (SELECT x.id,
+                   sum(l.cantidad)                             AS pedido,
+                   sum(least(l.cantidad_entregada, l.cantidad)) AS surtido,
+                   bool_and(l.cantidad_entregada >= l.cantidad) AS completa
+              FROM unnest(ids) AS x(id)
+              LEFT JOIN ordenes.lineas_orden l ON l.orden_id = x.id
+             GROUP BY x.id) r
+     WHERE o.id = r.id;
+    RETURN NULL;
+END $$;
+
+DROP TRIGGER IF EXISTS tr_resumen_entrega_ins ON ordenes.lineas_orden;
+DROP TRIGGER IF EXISTS tr_resumen_entrega_upd ON ordenes.lineas_orden;
+DROP TRIGGER IF EXISTS tr_resumen_entrega_del ON ordenes.lineas_orden;
+CREATE TRIGGER tr_resumen_entrega_ins AFTER INSERT ON ordenes.lineas_orden
+    REFERENCING NEW TABLE AS lineas_nuevas FOR EACH STATEMENT EXECUTE FUNCTION ordenes.f_resumen_entrega();
+CREATE TRIGGER tr_resumen_entrega_upd AFTER UPDATE ON ordenes.lineas_orden
+    REFERENCING NEW TABLE AS lineas_nuevas OLD TABLE AS lineas_viejas
+    FOR EACH STATEMENT EXECUTE FUNCTION ordenes.f_resumen_entrega();
+CREATE TRIGGER tr_resumen_entrega_del AFTER DELETE ON ordenes.lineas_orden
+    REFERENCING OLD TABLE AS lineas_viejas FOR EACH STATEMENT EXECUTE FUNCTION ordenes.f_resumen_entrega();
+
+COMMENT ON COLUMN ordenes.ordenes_compra.unidades_pedidas IS
+  'Modelo de lectura (Q4): suma de cantidad de las líneas. Mantenido por tr_resumen_entrega_*.';
+COMMENT ON COLUMN ordenes.ordenes_compra.unidades_surtidas IS
+  'Modelo de lectura (Q4): suma de least(cantidad_entregada, cantidad). NULL si no hay entrega registrada.';
+COMMENT ON COLUMN ordenes.ordenes_compra.entrega_completa IS
+  'Modelo de lectura (Q4): todas las líneas con cantidad_entregada >= cantidad.';
 
 \endif
 
@@ -285,9 +374,13 @@ CREATE INDEX IF NOT EXISTS idx_franjas_cedi_fecha
 --   INCLUDE (estado, fecha_compromiso, fecha_entrega): convierte Q4 en Index Only Scan puro (0 Heap Fetches,
 --   -24.5% en tiempo de ejecución de Q4 sobre proveedores hot).
 -- ---------------------------------------------------------------------
+-- Entrega final (palancas L4 y L5): el INCLUDE cubre TODAS las columnas que leen Q4 (con el modelo de lectura) y Q5,
+-- así ambas se resuelven con Index Only Scan, sin visitar el heap: Q4 sin tocar lineas_orden y Q5 OFFSET sin Bitmap
+-- Heap Scan + Sort. Costo declarado: índice más ancho y `estado` dentro del índice (sus UPDATE dejan de ser HOT).
 CREATE INDEX IF NOT EXISTS idx_ordenes_proveedor_fecha
     ON ordenes.ordenes_compra (proveedor_id, fecha_emision DESC, id DESC)
-    INCLUDE (estado, fecha_compromiso, fecha_entrega);
+    INCLUDE (estado, fecha_compromiso, fecha_entrega, entrega_completa, unidades_pedidas, unidades_surtidas,
+             numero_orden, total_orden);
 
 -- ---------------------------------------------------------------------
 -- Q4 · Líneas de una orden (agregación de fill rate y "orden completa" por orden)
