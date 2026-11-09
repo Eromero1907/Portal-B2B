@@ -1,21 +1,25 @@
 #!/usr/bin/env bash
 # =====================================================================
-# demo_vivo.sh — Reproducción en vivo para la presentación de 15 minutos
+# demo_vivo.sh — Reproducción en vivo para la presentación final (rúbrica: criterios 2 y 4)
 #
-# Demuestra en < 3 minutos con Grafana en http://localhost:3000 (refresco 5s):
-#   1. Estado Inicial (sin mecanismos de resiliencia):
-#      - Carga estable en segundo plano (100 flujos/s = 200 req/s)
-#      - Activación combinada en caliente de A1 (latencia) + D2 (errores 503) + B2 (lock franja 91150)
-#      - Observación en vivo en Grafana del salto en p99 (> 1000 ms) y tasa de errores (~13.4 %)
-#      - Reversión instantánea (< 2 s) con Kill Switch Global
-#   2. Estado Final Corregido (con Perfil M + umbral breaker 70 % + fix LockNotAvailable -> 503):
-#      - Recreación en caliente de app1..3 con docker-compose.resiliencia.yml y docker-compose.var-umbral70.yml
-#      - Re-inyección de la misma combinación y verificación del cumplimiento de SLO y degradación controlada
+# Misma carga (100 flujos/s = 200 req/s, semilla 42) y MISMA combinación en caliente en los dos estados:
+#   A1 (30 % de llamadas al crédito con +800 ± 300 ms) + D2 (503 del crédito con probabilidad 50 %) + B2 (lock de la franja 91150)
+#   t≈25 s inyección · t≈60 s kill switch global (reversión < 2 s)
+#
+#   1. Estado inicial: plataforma del E2 sin mecanismos (timeout de crédito 5 s, sin reintentos, sin breaker, sin lock_timeout)
+#   2. Estado final:   perfil M (timeout por intento 200 ms + 3 reintentos con backoff, breaker 70 %, bulkhead 20,
+#                      lock_timeout 2 s -> 503 franja_bloqueada, pool timeout 2 s, degradación 503 + Retry-After)
+#
+# Grafana: http://localhost:3000 (refresco 5 s). Las marcas de inyección y kill switch se guardan en marcas.json (epoch) y
+# faults/resumen_demo.py imprime al final la tabla ANTES / DURANTE / DESPUÉS y la comparación inicial vs final
+# (resultados/demo_comparacion.md). La comparación válida es la ventana DURANTE: volver a la línea base tras el kill
+# switch es recuperación, no corrección.
 #
 # Uso:
-#   make demo-vivo                   # corre el ciclo completo (Estado Inicial -> Estado Final)
-#   bash faults/demo_vivo.sh sin     # corre solo la demostración del Estado Inicial (90 s)
-#   bash faults/demo_vivo.sh con     # corre solo la demostración del Estado Final (90 s)
+#   make demo-vivo                   # ciclo completo (estado inicial -> estado final), ~4 min
+#   bash faults/demo_vivo.sh sin     # solo el estado inicial (~2 min)
+#   bash faults/demo_vivo.sh con     # solo el estado final (~2 min)
+#   python faults/resumen_demo.py    # vuelve a imprimir las tablas de la última corrida
 # =====================================================================
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -57,22 +61,26 @@ correr_bloque() {
         --duracion "$DURACION" --calentamiento "$CALENTAMIENTO" --semilla 42 &
     PID_CARGA=$!
 
-    sleep 18
-    echo "-> [t=18s] Inyectando COMBINACIÓN DE FALLAS EN CALIENTE: A1 (latencia) + D2 (50% HTTP 503) + B2 (lock franja 91150)..."
+    sleep 25   # ~10 s de calentamiento + ~10 s de línea base visible en Grafana antes de inyectar
+    echo "-> [t=25s] Inyectando COMBINACIÓN DE FALLAS EN CALIENTE: A1 (latencia) + D2 (50% HTTP 503) + B2 (lock franja 91150)..."
+    T_INY=$(date +%s.%N)
     FALLA_DURACION_S=35 $CTRL activar B2
     $CTRL activar A1
     $CTRL activar D2
     $CTRL estado
 
     sleep 35
-    echo "-> [t=53s] Ejecutando KILL SWITCH GLOBAL (reversión en <= 2 s)..."
+    echo "-> [t=60s] Ejecutando KILL SWITCH GLOBAL (reversión en <= 2 s)..."
+    T_KS=$(date +%s.%N)
     $CTRL kill-switch on
     $CTRL estado
 
     wait "$PID_CARGA" || true
+    echo "{\"inyeccion_epoch\": ${T_INY}, \"kill_switch_epoch\": ${T_KS}, \"combinacion\": \"A1+D2+B2\"}" > "$salida/marcas.json"
     echo "-> Resumen medido en '${etiqueta}':"
     cat "$salida/resumen.csv"
     echo
+    "$PY" faults/resumen_demo.py "$etiqueta" || true
 }
 
 if [ "$MODO" = "sin" ] || [ "$MODO" = "completo" ]; then

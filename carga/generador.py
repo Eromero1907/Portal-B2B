@@ -189,6 +189,7 @@ async def correr(args, flujos):
     async with aiohttp.ClientSession(base_url=args.objetivo, connector=conector, timeout=tiempo) as cliente:
         tareas = set()
         t0 = time.perf_counter()
+        args.inicio_epoch = time.time()  # reloj de pared del instante 0 de inicio_s: alinea la carga con las marcas de inyección
         for flujo in flujos:
             espera = flujo["t_programado"] - (time.perf_counter() - t0)
             if espera > 0:
@@ -218,6 +219,7 @@ def resumir(args, filas, flujos, duracion_real):
                    "p_contrato_vencido": args.p_contrato_vencido, "p_sku_ajeno": args.p_sku_ajeno,
                    "p_ultima_franja": args.p_ultima_franja, "objetivo": args.objetivo,
                    "timeout_cliente_s": args.timeout_cliente},
+        "inicio_epoch": round(getattr(args, "inicio_epoch", 0.0), 3),
         "flujos_planificados": len(flujos),
         "duracion_real_s": round(duracion_real, 2),
         "reintentos_cliente_max": args.reintentos_cliente,

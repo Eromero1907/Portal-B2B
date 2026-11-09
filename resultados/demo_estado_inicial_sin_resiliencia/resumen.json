@@ -11,86 +11,77 @@
     "objetivo": "http://nginx:80",
     "timeout_cliente_s": 60.0
   },
+  "inicio_epoch": 1794191930.302,
   "flujos_planificados": 8552,
-  "duracion_real_s": 110.47,
+  "duracion_real_s": 85.05,
   "reintentos_cliente_max": 0,
   "solicitudes_con_reintento": 0,
-  "solicitudes_medidas": 15014,
-  "throughput_solicitudes_s": 200.19,
+  "solicitudes_medidas": 15121,
+  "throughput_solicitudes_s": 201.61,
   "por_fase": {
     "crear": {
-      "n": 7565,
-      "throughput_s": 100.87,
-      "p50_ms": 13600.063,
-      "p95_ms": 22915.882,
-      "p99_ms": 31586.968,
-      "max_ms": 36254.317,
-      "errores": 309,
-      "tasa_error_pct": 4.085,
+      "n": 7560,
+      "throughput_s": 100.8,
+      "p50_ms": 6.916,
+      "p95_ms": 24.943,
+      "p99_ms": 41.567,
+      "max_ms": 80.288,
+      "errores": 0,
+      "tasa_error_pct": 0.0,
       "codigos": {
-        "201": 7256,
-        "502": 167,
-        "500": 142
+        "201": 7560
       },
       "resultados": {
-        "EN_PROCESO:-": 7256,
-        "-:-": 167,
-        "-:error_interno": 142
+        "EN_PROCESO:-": 7560
       },
       "por_instancia": {
-        "app3": 3413,
-        "app2": 3351,
-        "-": 309,
-        "app1": 492
+        "app2": 2731,
+        "app1": 2367,
+        "app3": 2462
       }
     },
     "confirmar": {
-      "n": 7449,
-      "throughput_s": 99.32,
-      "p50_ms": 6867.492,
-      "p95_ms": 16082.314,
-      "p99_ms": 30110.837,
-      "max_ms": 52722.335,
-      "errores": 836,
-      "tasa_error_pct": 11.223,
+      "n": 7561,
+      "throughput_s": 100.81,
+      "p50_ms": 35.483,
+      "p95_ms": 752.693,
+      "p99_ms": 1064.145,
+      "max_ms": 34832.9,
+      "errores": 994,
+      "tasa_error_pct": 13.146,
       "codigos": {
-        "200": 6613,
-        "502": 60,
-        "500": 322,
-        "503": 454
+        "200": 6567,
+        "503": 994
       },
       "resultados": {
-        "RECHAZADA:sin_contrato_vigente": 2809,
-        "RECHAZADA:proveedor_no_activo": 480,
-        "-:-": 60,
-        "-:error_interno": 322,
-        "CONFIRMADA:-": 3207,
-        "EN_PROCESO:HTTP 503": 454,
-        "RECHAZADA:sku_fuera_de_catalogo_o_precio": 12,
-        "RECHAZADA:credito_denegado": 98,
-        "RECHAZADA:sin_cupo_franja": 7
+        "RECHAZADA:sin_contrato_vigente": 3006,
+        "RECHAZADA:proveedor_no_activo": 511,
+        "CONFIRMADA:-": 2935,
+        "RECHAZADA:credito_denegado": 93,
+        "RECHAZADA:sku_fuera_de_catalogo_o_precio": 14,
+        "EN_PROCESO:HTTP 503": 994,
+        "RECHAZADA:sin_cupo_franja": 8
       },
       "por_instancia": {
-        "app3": 3442,
-        "app2": 3385,
-        "-": 382,
-        "app1": 240
+        "app2": 2667,
+        "app1": 2403,
+        "app3": 2491
       }
     }
   },
   "global": {
-    "p50_ms": 9054.398,
-    "p95_ms": 20372.096,
-    "p99_ms": 31307.583,
-    "tasa_error_pct": 7.626
+    "p50_ms": 11.477,
+    "p95_ms": 85.236,
+    "p99_ms": 978.685,
+    "tasa_error_pct": 6.574
   },
   "generador": {
-    "retraso_inicio_p99_s": 0.137,
-    "retraso_inicio_max_s": 0.3011,
+    "retraso_inicio_p99_s": 0.002,
+    "retraso_inicio_max_s": 0.0059,
     "nota": "retraso entre la hora programada y la real; si el p99 supera ~0,05 s el generador no sostuvo el ritmo y la corrida no es válida"
   },
   "slo_rnf10": {
-    "p95_menor_400ms": false,
+    "p95_menor_400ms": true,
     "errores_menor_0_5pct": false,
     "veredicto": "FALLA"
   }

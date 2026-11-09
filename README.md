@@ -30,6 +30,17 @@ make fronteras    # CI local: import-linter + un esquema por módulo
 ```
 `make help` lista todos los comandos.
 
+## Sustentación final (9 nov 2026)
+```bash
+make plataforma && make observabilidad
+make humo          # 8 fallas + kill switch (~30 s)
+make demo-vivo     # combinación A1 + D2 + B2 en vivo: estado inicial → estado final (~5 min)
+                   # → resultados/demo_*/ventanas.md y resultados/demo_comparacion.md (antes/durante/después)
+make comparar-e2   # tabla E2 vs E3 de Q1–Q5 (p50/p95/p99, frío/caliente), 5 rondas intercaladas (~10 min, deja la plataforma detenida)
+```
+Presentación: `Entrega 3/presentacion_15min.html` · guion: `Entrega 3/guion_presentacion_15min.md` · informe: `Entrega 3/informe.md` / `informe.pdf`
+(§3 combinación medida en vivo, §7 tabla E2–E3). Palancas aplicadas para la entrega final: `baseline/palancas.md` §4.
+
 ---
 
 ## Arquitectura de la plataforma (Entregable 3)
