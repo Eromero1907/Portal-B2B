@@ -3,11 +3,12 @@
 Lee baseline/corridas/<id>/tabla_e2_e3.csv (de baseline/tabla_e2_e3.py) y dibuja, en escala logarítmica, el estado E2
 medido hoy (gris, con su rango entre rondas), el estado E3 final (azul, con su rango) y el valor del informe del E2 (marca).
 
-  .venv/Scripts/python.exe baseline/grafica_e2_e3.py --corrida baseline/corridas/ab-e2-e3-maquina-jj \
+  .venv/Scripts/python.exe baseline/grafica_e2_e3.py --corrida baseline/corridas/ab-e2-e3-oficial \
       --salida "Entrega 3/evidencia/resumen_graficas/e2_vs_e3_consultas.png"
 """
 import argparse
 import csv
+import json
 from pathlib import Path
 
 import matplotlib
@@ -27,6 +28,9 @@ def main():
     ap.add_argument("--salida", required=True)
     a = ap.parse_args()
     filas = list(csv.DictReader(open(Path(a.corrida) / "tabla_e2_e3.csv", encoding="utf-8")))
+    man = Path(a.corrida) / "manifest.json"
+    cpu = json.loads(man.read_text(encoding="utf-8")).get("maquina", {}).get("cpu", "") if man.exists() else ""
+    maquina = cpu.replace("12th Gen Intel(R) Core(TM) ", "").strip() or Path(a.corrida).name
     grupos = []
     for f in filas:
         k = (f["consulta"], f["escenario"])
@@ -69,7 +73,7 @@ def main():
                         Line2D([], [], marker="o", ls="-", color=AZUL, label="Estado E3 final (mediana y rango, 5 rondas)"),
                         Line2D([], [], marker="|", ls="", color=TINTA, markersize=10, label="Valor del informe del E2")],
                loc="upper center", ncol=3, frameon=False, fontsize=10, bbox_to_anchor=(.5, .955))
-    fig.suptitle("Q1–Q5: E2 vs E3 en la misma máquina, rondas intercaladas (porcentaje = mejora atribuible frente a E2 hoy)",
+    fig.suptitle(f"Q1–Q5: E2 vs E3 en la misma máquina ({maquina}), rondas intercaladas (porcentaje = mejora atribuible frente a E2 hoy)",
                  fontsize=13, color=TINTA, y=.995)
     fig.tight_layout(rect=(0, 0, 1, .92))
     Path(a.salida).parent.mkdir(parents=True, exist_ok=True)

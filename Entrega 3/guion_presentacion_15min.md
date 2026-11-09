@@ -64,13 +64,16 @@ Resultado de referencia (ventana durante la falla, misma carga y semilla): error
 **Decir explícitamente:** no cumple el SLO (p95 < 400 ms y error < 0,5 %). El residuo es el predicho; bajarlo exigiría aprobar sin crédito (RN-11) o más reintentos, que suben el p95.
 
 ## 11:30 – 13:15 · Tabla E2–E3 (diapositiva 9) — JJ
-- Cómo se midió: estados E2 (consultas del commit `a1b9141` + índice del E2) y E3 en la misma máquina, 5 rondas intercaladas, mismo cliente del E2 (`medicion/medir.py`), plataforma detenida, semilla 42. Atribuible = E3 ≤ 0,9 × E2 de hoy y sin solape entre rondas. Q4 nueva idéntica a la del E2 en 286 comparaciones.
-- Cifras (`baseline/corridas/ab-e2-e3-maquina-jj/tabla_e2_e3.md`): Q4 caliente p95 15,70 → 2,76 ms (−82 %), p99 18,04 → 3,08 ms (−83 %); Q5 OFFSET 5000 p95 7,83 → 1,98 ms (−75 %), p99 9,51 → 2,13 ms (−78 %). Servidor: Q4 19,9 → 2,0 ms, Q5 5,0 → 0,67 ms.
+- Cómo se midió: estados E2 (consultas del commit `a1b9141` + índice del E2) y E3 en **la misma máquina del E2** (i5-12500H, corrida de Santiago), 5 rondas intercaladas, mismo cliente del E2 (`medicion/medir.py`), plataforma detenida, semilla 42. Atribuible = E3 ≤ 0,9 × E2 de hoy y sin solape entre rondas. Q4 nueva idéntica a la del E2 en 286 comparaciones.
+- Cifras (`baseline/corridas/ab-e2-e3-oficial/tabla_e2_e3.md`): Q4 caliente p95 18,68 → 2,68 ms (−86 %), p99 20,57 → 2,80 ms (−86 %), p50 1,51 → 0,91 ms (−40 %); Q4 frío p50 1,00 → 0,79 ms (−21 %); Q5 OFFSET 5000 p50 4,98 → 1,31 ms (−74 %), p95 6,57 → 1,77 ms (−73 %), p99 7,29 → 2,63 ms (−64 %). Servidor: Q4 23,1 → 2,5 ms, Q5 5,5 → 0,83 ms.
+- Réplica en la máquina de JJ (`ab-e2-e3-maquina-jj`): las mismas mejoras en Q4 caliente y Q5 OFFSET (−72 % a −83 %). La mejora no depende del equipo.
 - Qué cambió: L4 modelo de lectura de entregas (triggers de sentencia) y L5 índice cubriente.
 
 ## 13:15 – 14:30 · Lo no cumplido y los costos (diapositiva 10) — JJ
-- No aplicable: Q1, Q2, Q3, Q5 página 1 / keyset. El servidor ejecuta en ≈ 0,05 ms; el cliente ve 0,7–1,5 ms. El mismo estado E2 mide hoy 0,76–1,70 ms frente a 0,52–1,89 ms del informe: es la máquina.
-- No cumplido: Q4 caliente p50 (1,17 vs meta 1,04 ms). 9 de 33 cumplen la meta frente al informe; 6 tienen mejora atribuible.
+- 14 de 33 métricas cumplen la meta frente al informe, pero **solo 7 son atribuibles**. Las otras 7 se explican así:
+  - Q1 caliente p99 y Q3 (p95/p99, frío y caliente) "cumplen" solo porque ese día el mismo estado E2 midió por debajo del informe; no las atribuimos.
+  - Q4 frío p95/p99 bajan −34 % pero solo en mediana: las rondas se solapan.
+- No aplicable: Q1, Q2, Q3, Q5 página 1 / keyset. El servidor ejecuta en ≈ 0,05 ms y el cliente ve 0,6–1,5 ms (ida y vuelta + planificación). En la misma máquina del E2, el estado E2 mide hoy 0,58–1,34 ms frente a 0,52–1,89 ms del informe: la variación entre días es mayor que cualquier mejora posible.
 - Costos: +3,3 s en la carga, un `UPDATE` por sentencia que escribe líneas, índice 12 → 30 MB, sin HOT al confirmar.
 - E4 (complemento): P8 bajó la ruta transaccional de 437,6 a 298,9 s; es código de la ruta, no Q1–Q5. Retiramos del informe el COPY y la carga total porque cambiaron sin tocar nada.
 
@@ -83,5 +86,6 @@ Resultado de referencia (ventana durante la falla, misma carga y semilla): error
 - **¿Por qué no cumplen el SLO en el estado final?** 65 % de fallos por intento en el crédito; con 4 intentos queda 0,65⁴ ≈ 18 % de llamadas sin respuesta válida. RN-11 prohíbe aprobar sin crédito. Lo predijimos antes de medir.
 - **¿Por qué no subieron los reintentos?** Cada intento fallido por A1 cuesta 200 ms + backoff; con más intentos el p95 (ya 532 ms) empeora. Es un intercambio error ↔ latencia, como en B1.
 - **¿El modelo de lectura no es una caché?** No: es desnormalización controlada dentro de la misma transacción (triggers de sentencia), sin expiración ni lecturas obsoletas; la fuente de verdad sigue siendo `lineas_orden` y la equivalencia se verifica (286 comparaciones idénticas).
-- **¿Por qué la tabla E2–E3 es de la máquina de JJ y no la del E2?** La atribución compara E2 y E3 medidos juntos, así que no depende de la máquina. Para la columna "E2 informe", la misma prueba se corre en la máquina del E2 con `RONDAS=5 ID=ab-e2-e3-oficial make comparar-e2`.
+- **¿En qué máquina se midió la tabla?** En la del E2 (i5-12500H), la misma del informe del E2. Se repitió en la de JJ y salen las mismas mejoras; como E2 y E3 se miden juntos, la atribución no depende del equipo.
+- **¿Por qué dicen 14 de 33 si solo 7 son atribuibles?** Porque 7 métricas cumplen la meta frente al informe sin que hayamos cambiado nada en ellas (el estado E2 ese día ya midió por debajo del informe, o las rondas se solapan). Las contamos aparte.
 - **¿Por qué la corrida del compañero daba 24 % y la de hoy 4,7 %?** Esa corrida tenía la mediana previa en segundos (equipo saturado): el breaker se abría antes de inyectar. Por eso validamos la línea base antes de la demo.

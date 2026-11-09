@@ -50,7 +50,7 @@ criterios duros). Estado a 2026-10-16. `[x]` hecho y con evidencia · `[~]` parc
 - [x] Palancas P1–P3 con A/B alternado y rango de ruido: todas dentro del ruido (se reporta tal cual).
 - [x] Palanca P8 (E4): A/B −49,3 % (ruido 18,3 %); E4 completo 298,9 s vs 486,42 s del E2 (−38,5 %); equivalencia verificada (`baseline/corridas/meta-P8`).
 - [x] **Entrega final:** L4 (modelo de lectura para Q4) y L5 (índice cubriente para Q5) con A/B E2 vs E3 intercalado (`make comparar-e2`, 5 rondas): Q4 caliente p95 −82 %, Q5 OFFSET p95 −75 %, sin solape; equivalencia de Q4 idéntica (286 comparaciones). Q1–Q3 declaradas no aplicables con evidencia. Tabla: `baseline/corridas/ab-e2-e3-maquina-jj/tabla_e2_e3.md`.
-- [ ] Repetir `make comparar-e2` en la máquina del E2 (`RONDAS=5 ID=ab-e2-e3-oficial`) para que la columna "E2 informe" sea de la misma máquina.
+- [x] `make comparar-e2` en la máquina del E2 (`baseline/corridas/ab-e2-e3-oficial`, Santiago): 7 de 33 atribuibles (Q4 caliente p95 −86 %, Q5 OFFSET p50 −74 %), 14 de 33 cumplen la meta frente al informe; equivalencia idéntica. Es la tabla principal del informe; la de JJ queda como réplica.
 - [x] Demo en vivo con la combinación A1 + D2 + B2 y resumen por ventana (`make demo-vivo`, `resultados/demo_comparacion.md`).
 
 ## 7. Entrega
